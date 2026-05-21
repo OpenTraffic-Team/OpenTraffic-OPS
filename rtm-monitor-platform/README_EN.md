@@ -135,11 +135,11 @@ rtm-monitor-platform/
   - `alarmCheck` (30s) — Alarm detection
   - `cleanHostHealth` (daily at 03:30) — Clean health data older than 7 days
 
-### Agent Management (Business-side Agents)
+### Agent Dialogue
 
-- **Control Agent** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other control operations
-- **Perception Agent** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
-- **Agent Dialogue Sessions** — Session creation, paginated list, message history, rename, delete
+- **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
+- **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
+- **Session Management** — Session creation, paginated list, message history, rename, delete
 
 ### Remote Operations
 
