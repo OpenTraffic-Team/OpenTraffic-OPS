@@ -1,0 +1,27 @@
+# PostgreSQL 配置模板
+# 镜像地址
+image: postgres:16-alpine
+
+# 版本
+version: 16-alpine
+
+# 端口配置
+port: 5432
+
+# 环境变量
+env:
+  POSTGRES_USER: admin
+  POSTGRES_PASSWORD: your_secure_password_here
+  POSTGRES_DB: appdb
+
+# 数据卷
+volumes:
+  - pgdata:/var/lib/postgresql/data
+
+# 网络配置
+network: rtm-network
+
+# 资源限制
+resources:
+  memory: 512M
+  cpu: 0.5

@@ -1,0 +1,14 @@
+{
+	"platformUrl": "http://192.168.6.215:18084",
+	"ip": "",
+	"hostName": "vm-test-01",
+	"version": "1.0.0",
+	"heartbeatInterval": 30,
+	"pollInterval": 10,
+	"logLevel": "info",
+	"logFile": "",
+	"processes": [
+	],
+	"enableRemote": true,
+	"wsEndpoint": ""
+}

@@ -1,0 +1,73 @@
+server:
+  port: 18084
+  mode: release
+
+app:
+  name: RTM
+  version: 3.8.7
+  copyrightYear: 2026
+  demoEnabled: false
+  captchaType: math
+  addressEnabled: false
+  profile: D:/app/rtm-mon-ops/profile
+
+datasource:
+  driver: postgres
+  host: 191.168.6.220
+  port: 5432
+  database: rtm-go
+  username: postgres
+  password: Lpf65BsDhDNdaJmH
+  charset: utf8mb4
+  maxIdleConns: 10
+  maxOpenConns: 20
+  connMaxLifetime: 900
+  logLevel: silent
+
+redis:
+  platform:
+    host: 191.168.6.220
+    port: 6379
+    password: QUrSjwS9^4MO
+    db: 3
+    poolSize: 16
+    minIdleConns: 2
+  edge:
+    host: 191.168.6.220
+    port: 6379
+    password: QUrSjwS9^4MO
+    db: 1
+    poolSize: 8
+    minIdleConns: 0
+
+jwt:
+  header: Authorization
+  secret: abcdefghijklmnopqrstuvwxyz
+  expireTime: 480
+
+user:
+  password:
+    maxRetryCount: 5
+    lockTime: 10
+
+xss:
+  enabled: true
+  excludes:
+    - /system/notice
+  urlPatterns:
+    - /system/*
+    - /monitor/*
+    - /tool/*
+
+log:
+  level: info
+  filename: logs/rtm-server.log
+  maxSize: 100
+  maxBackups: 30
+  maxAge: 30
+  compress: true
+
+agent:
+  control: "http://47.110.91.222:8010"
+  perceive: "http://47.110.91.222:8001"
+

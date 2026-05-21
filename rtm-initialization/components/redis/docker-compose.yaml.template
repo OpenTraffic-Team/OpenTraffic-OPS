@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: rtm-redis
+    restart: unless-stopped
+    environment:
+      REDIS_PASSWORD: ${REDIS_PASSWORD:-admin123}
+    ports:
+      - "${PORT:-6379}:6379"
+    volumes:
+      - redisdata:/data
+    networks:
+      - rtm-network
+    command: redis-server --requirepass ${REDIS_PASSWORD:-admin123}
+    deploy:
+      resources:
+        limits:
+          memory: 256M
+        reservations:
+          memory: 128M
+
+volumes:
+  redisdata:
+    driver: local
+
+networks:
+  rtm-network:
+    driver: bridge

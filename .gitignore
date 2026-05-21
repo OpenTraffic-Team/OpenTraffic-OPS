@@ -1,0 +1,62 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+
+# Project-specific binaries
+rtm-initialization/backend/rtm-initialization-linux-*
+rtm-monitor-platform/backend/rtm-monitor-platform-linux-*
+rtm-initialization/backend/Building
+
+# Logs
+logs/
+*/logs/
+*.log
+
+# Local environment overrides
+.env.local
+.env.*.local
+.env
+
+# Frontend build artifacts
+*/frontend/node_modules/
+*/frontend/dist/
+node_modules/
+
+# Embedded static files (built from frontend/dist)
+*/backend/pkg/static/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+*.test
+*.out
+coverage*
+
+# Go workspace data
+rtm-initialization/backend/data/
+
+# Docker
+.dockerignore
+
+# Large container images (exceeds 256MB git limit)
+rtm-initialization/backend/pkg/assets/images/*.tar
+rtm-initialization/backend/pkg/assets/images/rtm*
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/

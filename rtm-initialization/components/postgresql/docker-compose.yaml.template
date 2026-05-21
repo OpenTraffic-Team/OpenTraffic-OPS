@@ -1,0 +1,31 @@
+version: '3.8'
+
+services:
+  postgresql:
+    image: postgres:16-alpine
+    container_name: rtm-postgresql
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-admin123}
+      POSTGRES_DB: ${POSTGRES_DB:-appdb}
+    ports:
+      - "${PORT:-5432}:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    networks:
+      - rtm-network
+    deploy:
+      resources:
+        limits:
+          memory: 512M
+        reservations:
+          memory: 256M
+
+volumes:
+  pgdata:
+    driver: local
+
+networks:
+  rtm-network:
+    driver: bridge

@@ -1,0 +1,52 @@
+# Binaries
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+bin/
+dist/
+backend/rtm-initialization-linux-*
+
+# Logs
+logs/
+backend/logs/
+*.log
+
+# Local environment overrides
+.env.local
+.env.*.local
+
+# Frontend build artifacts
+frontend/node_modules/
+frontend/dist/
+
+# Embedded static files (built from frontend/dist)
+backend/pkg/static/dist/
+
+# IDE
+.idea/
+.vscode/
+*.iml
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Go
+vendor/
+*.test
+*.out
+coverage*
+backend/data/
+
+# Docker
+.dockerignore
+
+# Large container images (exceeds 256MB git limit)
+backend/pkg/assets/images/*.tar
+backend/pkg/assets/images/rtm*
+
+# Temporary files
+*.tmp
+*.temp
