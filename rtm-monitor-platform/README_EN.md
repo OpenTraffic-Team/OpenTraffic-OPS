@@ -1,6 +1,6 @@
 # RTM Monitoring & Operations Platform
 
-RTM (Real-Time Monitor) is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of three independent deliverables: **backend service**, **frontend management console**, and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), Agent control, and dialogue capabilities.
+RTM (Real-Time Monitor) is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of two independent deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`, deployed as a single binary) and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), and Agent dialogue (control agent / perception agent).
 
 > Naming clarification: **Edge Proxy** refers to the data collection/control program deployed on monitored hosts (deliverable in `proxy/`). **System Agent modules** (Agent perception / Agent control / Agent dialogue) are business modules for interfacing with external Agents. The two have different responsibilities — **Proxy** and **Agent** are used strictly below.
 

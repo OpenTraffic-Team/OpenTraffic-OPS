@@ -66,7 +66,7 @@ A single-binary, self-contained deployment dashboard that requires no external w
 
 ### 2. rtm-monitor-platform — Monitoring & Operations Platform
 
-A full-stack monitoring and operations platform for edge computing scenarios. Consists of three deliverables: **backend service**, **frontend console**, and **edge proxy**.
+A full-stack monitoring and operations platform for edge computing scenarios. Consists of two deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`) and **edge proxy**.
 
 | Capability | Description |
 |-----------|-------------|
@@ -76,7 +76,7 @@ A full-stack monitoring and operations platform for edge computing scenarios. Co
 | Remote Terminal | Browser-based xterm terminal through WebSocket hub to proxy PTY (colors, resize support) |
 | Remote File Ops | Browse, read, edit, upload, download, delete files on proxy hosts (10MB limit, path traversal protection) |
 | Process Control | Start / stop / restart processes on edge hosts via platform commands |
-| Agent Dialogue | Conversational interaction with control and perception agents for process control and host status queries |
+| Agent Dialogue | Conversational interaction with control and perception agents for operational assistance and host status queries |
 
 **Tech Stack:**
 - Backend: Go 1.25+ (Gin, GORM, PostgreSQL, Redis, JWT v5, Gorilla WebSocket, Zap, Viper)
@@ -218,7 +218,6 @@ opentraffic-ops/
 
 - [rtm-initialization README](./rtm-initialization/README.md) — Deployment panel details (Chinese)
 - [rtm-monitor-platform README](./rtm-monitor-platform/README.md) — Monitoring platform details (Chinese)
-- [rtm-monitor-platform CLAUDE.md](./rtm-monitor-platform/CLAUDE.md) — Developer reference for Claude Code
 - [Proxy README](./rtm-monitor-platform/proxy/README.md) — Edge proxy deployment guide
 
 ---
