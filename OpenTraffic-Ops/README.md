@@ -123,29 +123,27 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 
 ## Quick Start
 
-### Requirements
+### Prerequisites
 
 - Go 1.25+ (Proxy build additionally requires Go 1.26+)
 - Node.js 18+
 - PostgreSQL 15+
 - Redis 7+ (recommend preparing **two instances / two dbs**: platform and edge separated)
 
-### 1. Clone Project
+### Development Mode
+
+#### 1. Clone Project
 
 ```bash
 git clone <repository-url>
 cd OpenTraffic-Ops
 ```
 
-### 2. Initialize Database
-
-Create PostgreSQL database (default name `rtm`):
+#### 2. Initialize Database
 
 ```sql
 CREATE DATABASE rtm WITH ENCODING = 'UTF8';
 ```
-
-Import DDL from `sql/` directory in order:
 
 ```bash
 psql -d rtm -f sql/01_sys_tables.sql
@@ -154,7 +152,7 @@ psql -d rtm -f sql/alarm/01_alarm_tables.sql
 psql -d rtm -f sql/chat/01_chat_tables.sql
 ```
 
-Create `config.yaml` under `~/.opentraffic-ops/` (reference `backend/configs/config.yaml`), and modify database connection config:
+Create `~/.opentraffic-ops/config.yaml` (reference `backend/configs/config.yaml`), and modify database connection:
 
 ```yaml
 datasource:
@@ -165,7 +163,7 @@ datasource:
   password: your_password
 ```
 
-### 3. Start Backend (Development Mode)
+#### 3. Start Backend
 
 ```bash
 cd backend
@@ -173,9 +171,9 @@ go mod download
 go run cmd/server/main.go
 ```
 
-Backend service runs at `http://localhost:18084` by default.
+Backend service starts at `http://localhost:18084`.
 
-### 4. Start Frontend (Development Mode)
+#### 4. Start Frontend
 
 ```bash
 cd frontend
@@ -183,62 +181,47 @@ npm install
 npm run dev
 ```
 
-Frontend dev server runs at `http://localhost:80`, proxying `/dev-api` and `/dev-ws-api` to `127.0.0.1:18084`.
+Frontend dev server starts at `http://localhost:80`, proxying `/dev-api` and `/dev-ws-api` to `127.0.0.1:18084`.
 
-### 5. Access System
+#### 5. Access System
 
 Open browser and visit `http://localhost`. Default credentials:
-
 - Username: `admin`
 - Password: `admin123`
 
-### 6. (Optional) Deploy Proxy to Linux Host
+To deploy Proxy to a Linux host, see [`proxy/README.md`](proxy/README.md).
 
-See [`proxy/README.md`](proxy/README.md) and [`docs/Proxy Deployment and Usage Guide.md`](docs/Proxy%20Deployment%20and%20Usage%20Guide.md).
+#### Windows Local Development Quick Debug (No dist copy needed)
 
-### Development Hot Reload (Frontend-Backend Separation)
+During development, frontend changes are frequent. Set an environment variable to let the backend load frontend assets directly from disk:
 
-Set environment variable to let backend read frontend files from disk, skipping `go:embed`:
-
-```bash
-# Windows
-cd backend
+```cmd
+# In backend directory
 set RTM_STATIC_DIR=..\frontend\dist
 go run cmd\server\main.go
 ```
 
-See `backend/pkg/static/static.go` for development / production switching logic.
+**Do not** set this variable for production builds, to ensure frontend resources are fully embedded in the binary.
 
 ---
 
 ## Server Deployment
 
-### Linux Cross-Compilation (Backend + Embedded Frontend)
+### Production Build (Single Binary)
 
-On Windows development machine, one-click cross-compile backend with frontend embedded:
+#### Windows Cross-Compile for Linux
 
-```bash
+Run `build-opentraffic-ops.bat` to generate Linux AMD64 and ARM64 binaries with frontend embedded:
+
+```cmd
 build-opentraffic-ops.bat
 ```
 
-Script execution flow:
+Output files:
+- `backend\opentraffic-ops-linux-amd64`
+- `backend\opentraffic-ops-linux-arm64`
 
-1. Clean `backend/pkg/static/dist/` and previous build artifacts
-2. Run `npm install && npm run build:prod` in `frontend/`
-3. Copy `frontend/dist/*` to `backend/pkg/static/dist/`
-4. Build amd64 and arm64 binaries with `GOOS=linux CGO_ENABLED=0`
-
-Build artifacts output to `backend/` directory:
-
-```
-backend/
-├── opentraffic-ops-linux-amd64   # AMD64 binary (frontend embedded)
-├── opentraffic-ops-linux-arm64   # ARM64 binary (frontend embedded)
-└── configs/
-    └── config.yaml                    # Reference config template
-```
-
-The binary includes frontend static resources (`go:embed`), no additional Nginx deployment needed. On Linux server, first place config file at the fixed path, then start directly:
+Upload to Linux server and run:
 
 ```bash
 mkdir -p ~/.opentraffic-ops
@@ -249,21 +232,20 @@ chmod +x opentraffic-ops-linux-amd64
 ./opentraffic-ops-linux-amd64
 ```
 
-### Proxy Cross-Compilation
+#### Proxy Cross-Compilation
 
 ```batch
 cd proxy
-build-opentraffic-ops-proxy.bat                    # Default output to proxy/dist/
+build-opentraffic-ops-proxy.bat
 ```
 
-Artifacts:
-
+Output files:
 - `proxy/dist/opentraffic-ops-proxy-linux-amd64`
 - `proxy/dist/opentraffic-ops-proxy-linux-arm64`
 
 > Proxy only supports Linux runtime; Windows / macOS are build hosts only.
 
-### Frontend Standalone Build
+#### Frontend Standalone Build
 
 ```bash
 cd frontend
@@ -275,7 +257,7 @@ npm run build:stage   # Staging
 
 The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
 
-Before first run, create the config file in the corresponding user directory (reference `backend/configs/config.yaml`):
+Before first run, create the config file (reference `backend/configs/config.yaml`):
 
 ```bash
 # Linux / macOS
@@ -292,16 +274,14 @@ Any key can be overridden via `RTM_` prefixed environment variables (`.` → `_`
 ```bash
 export RTM_DATASOURCE_HOST=192.168.1.100
 export RTM_DATASOURCE_PASSWORD=secret
-export RTM_REDIS_PLATFORM_PASSWORD=***
-export RTM_REDIS_EDGE_HOST=192.168.1.101
 ```
 
 #### Key Configuration Items
 
 ```yaml
 server:
-  port: 18084          # HTTP / WebSocket port (frontend vite proxy fixed to this port)
-  mode: release        # Run mode: debug/test/release
+  port: 18084
+  mode: release        # debug / test / release
 
 datasource:
   driver: postgres
@@ -312,11 +292,11 @@ datasource:
   password: ***
 
 redis:
-  platform:            # Platform Redis: sessions, captcha, login locks, online users
+  platform:            # sessions, captcha, login locks, online users
     host: 127.0.0.1
     port: 6379
     db: 3
-  edge:                # Edge Redis: monitoring data / Proxy command queue
+  edge:                # monitoring data / Proxy message queue
     host: 127.0.0.1
     port: 6379
     db: 1
@@ -324,35 +304,35 @@ redis:
 jwt:
   header: Authorization
   secret: ***
-  expireTime: 480      # Token expiration time (minutes)
+  expireTime: 480      # minutes
 
 agent:
   control: ""          # Control Agent external API address
   perceive: ""         # Perception Agent external API address
 ```
 
-> Platform and edge Redis roles must be configured separately (can be different dbs on the same physical instance, or two separate instances).
+> Platform and edge Redis roles must be configured separately (can be different dbs on the same instance, or two separate instances).
 > Agent configs are for interfacing with external Agent services; corresponding features are unavailable when empty.
 
 ### Logging
 
-Logs are output via Zap, default writing to `logs/` directory, with size / day-based rotation (implemented by lumberjack):
+Logs are output via Zap, default writing to `logs/` directory, with size / day-based rotation:
 
 ```
 logs/
-├── opentraffic-ops-backend.log          # Current log
-└── opentraffic-ops-backend-*.log        # Historical rotated logs
+├── opentraffic-ops-backend.log
+└── opentraffic-ops-backend-*.log
 ```
 
 Log configuration in `config.yaml`:
 
 ```yaml
 log:
-  level: info           # debug / info / warn / error
+  level: info
   filename: logs/opentraffic-ops-backend.log
-  maxSize: 100          # Single file MB
-  maxBackups: 30        # Max retention copies
-  maxAge: 30            # Max retention days
+  maxSize: 100          # MB
+  maxBackups: 30
+  maxAge: 30            # days
   compress: true
 ```
 
