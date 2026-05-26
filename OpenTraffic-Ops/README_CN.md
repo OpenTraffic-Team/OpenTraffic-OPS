@@ -96,7 +96,7 @@ OpenTraffic-Ops/
 │   ├── executor/                   # 进程启停执行器 + Shell PTY
 │   ├── filemanager/                # 远程文件管理（目录遍历防护）
 │   ├── wsclient/                   # WebSocket 客户端（自动重连）
-│   ├── build-proxy.ps1             # Windows 上交叉编译 → dist/
+│   ├── build-linux.bat             # Windows 上交叉编译 → dist/
 │   └── README.md
 ├── sql/                            # PostgreSQL DDL
 │   ├── 01_sys_tables.sql           # 系统表（用户、操作日志、登录日志）
@@ -279,10 +279,9 @@ chmod +x opentraffic-ops-linux-amd64
 
 ### Proxy 交叉编译
 
-```powershell
+```batch
 cd proxy
-.\build-proxy.ps1                  # 默认输出到 proxy/dist/
-.\build-proxy.ps1 -Version "1.1.0"
+build-linux.bat                    # 默认输出到 proxy/dist/
 ```
 
 产物：

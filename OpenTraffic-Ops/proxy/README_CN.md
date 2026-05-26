@@ -70,12 +70,9 @@ $env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o 
 
 在 Windows 开发机上使用提供的 PowerShell 脚本一键打包：
 
-```powershell
+```batch
 cd proxy
-.\build-proxy.ps1
-
-# 或指定版本号
-.\build-proxy.ps1 -Version "1.1.0"
+build-linux.bat
 ```
 
 脚本会自动编译以下目标并输出到 `dist/` 目录：

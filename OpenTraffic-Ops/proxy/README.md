@@ -70,12 +70,9 @@ If there is no error output, the cross-compilation environment is working. **Not
 
 On the Windows development machine, use the provided PowerShell script for one-click packaging:
 
-```powershell
+```batch
 cd proxy
-.\build-proxy.ps1
-
-# Or specify a version number
-.\build-proxy.ps1 -Version "1.1.0"
+build-linux.bat
 ```
 
 The script will automatically compile the following targets and output to the `dist/` directory:

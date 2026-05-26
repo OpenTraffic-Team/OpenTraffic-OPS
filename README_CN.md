@@ -216,7 +216,7 @@ build-linux.bat
 
 # 边缘代理
 cd proxy
-.\build-proxy.ps1
+build-linux.bat
 # 输出：proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
 
 # 部署面板

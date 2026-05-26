@@ -216,7 +216,7 @@ build-linux.bat
 
 # Edge proxy
 cd proxy
-.\build-proxy.ps1
+build-linux.bat
 # Outputs: proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
 
 # Deployment panel

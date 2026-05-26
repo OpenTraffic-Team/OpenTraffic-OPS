@@ -96,7 +96,7 @@ OpenTraffic-Ops/
 │   ├── executor/                   # Process start/stop executor + Shell PTY
 │   ├── filemanager/                # Remote file management (path traversal protection)
 │   ├── wsclient/                   # WebSocket client (auto-reconnect)
-│   ├── build-proxy.ps1             # Windows cross-compile → dist/
+│   ├── build-linux.bat             # Windows cross-compile → dist/
 │   └── README.md
 ├── sql/                            # PostgreSQL DDL
 │   ├── 01_sys_tables.sql           # System tables (users, operation logs, login logs)
@@ -279,10 +279,9 @@ chmod +x opentraffic-ops-linux-amd64
 
 ### Proxy Cross-Compilation
 
-```powershell
+```batch
 cd proxy
-.\build-proxy.ps1                  # Default output to proxy/dist/
-.\build-proxy.ps1 -Version "1.1.0"
+build-linux.bat                    # Default output to proxy/dist/
 ```
 
 Artifacts:
