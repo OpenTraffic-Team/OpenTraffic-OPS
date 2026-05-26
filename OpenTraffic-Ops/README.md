@@ -69,10 +69,14 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **User Management** — User CRUD, password policy, login failure lockout
 - **Personal Center** — User info maintenance, password change, avatar upload
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the System Management page here.
+
 ### Host Management
 - **Host Information** — Edge node host registration, CRUD, and status display (auto-enrolled on first proxy registration)
 - **Host Health** — Historical host health data collection and query (auto daily rotation, 7-day retention)
 - **Host Operations** — Remote operations entry point (terminal, file, process control)
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Host Management page here.
 
 ### Monitoring & Alerting
 - **Alarm Channels** — Supports email, DingTalk, WeCom, and in-app notification channels, with multiple channels configurable
@@ -86,19 +90,27 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
   - `alarmCheck` (30s) — Alarm detection
   - `cleanHostHealth` (daily at 03:30) — Clean health data older than 7 days
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Monitoring & Alerting page here.
+
 ### Agent Dialogue
 - **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
 - **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
 - **Session Management** — Session creation, paginated list, message history, rename, delete
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Agent Dialogue page here.
 
 ### Remote Operations
 - **Remote Terminal** — Browser-based xterm terminal, routed through platform WebSocket Hub directly to Proxy PTY (color and resize support)
 - **Remote File** — File browse, read, edit, upload, download, delete, and directory creation on proxy hosts (10MB single file limit, path traversal protection)
 - **Process Control** — Start / stop / restart process commands sent from platform to Proxy
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Remote Operations page here.
+
 ### System Logs
 - **Operation Logs** — Automatically records protected interface operations via `OperLog` middleware
 - **Login Logs** — Login success / failure records
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the System Logs page here.
 
 ### Edge Proxy Features
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
@@ -108,6 +120,8 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **WebSocket Long Connection** — Auto-reconnect (exponential backoff), heartbeat keepalive, safe goroutine shutdown
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Edge Proxy features here.
 
 ### Proxy Protocol Interfaces (Public, No Authentication)
 
@@ -245,14 +259,6 @@ Output files:
 
 > Proxy only supports Linux runtime; Windows / macOS are build hosts only.
 
-#### Frontend Standalone Build
-
-```bash
-cd frontend
-npm run build:prod    # Production
-npm run build:stage   # Staging
-```
-
 ### Configuration
 
 The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
@@ -370,9 +376,6 @@ log:
 - Check network connectivity between Proxy host and platform
 - Ensure platform's `/api/v1/proxy/register` endpoint is reachable
 
-### How to add a new component type (for initialization panel)
-- See [`OpenTraffic-Ops-Initialization/README.md`](../OpenTraffic-Ops-Initialization/README.md) for development guide
-
 ---
 
 ## Acknowledgments
@@ -387,12 +390,5 @@ OpenTraffic Ops is built with the following open-source projects:
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) — WebSocket implementation
 - [Zap](https://github.com/uber-go/zap) — Logging
 - [xterm.js](https://xtermjs.org/) — Browser terminal
-
-For more design and deployment details, see the `docs/` directory:
-- Development Environment Setup Guide
-- Production Deployment Guide
-- Edge Proxy Deployment and Usage Guide
-- Remote Host Management Feature Design
-- Control Agent Documentation
 
 [MIT License](../LICENSE)
