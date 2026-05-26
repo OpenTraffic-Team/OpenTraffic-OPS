@@ -22,7 +22,7 @@ OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Lin
 ┌────────────────────┐     HTTP POST      ┌──────────────────┐
 │   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops Platform │
 │   (Linux Server)              │  ◀──────────────  │  (Server)                 │
-└────────────────────┘     Return Commands  └──────────────────────┘
+└────────────────────┘     Return Metrics   └──────────────────────┘
          │
          │  WebSocket (Long Connection)
          ▼
@@ -33,7 +33,6 @@ OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Lin
 
 The Proxy periodically executes the following tasks:
 - **Heartbeat Report** (default 3s): Maintains host online status, while reporting CPU / memory / disk / network / process metrics
-- **Command Polling** (default 10s): Pulls process start/stop commands issued by the platform
 - **WebSocket Connection**: Establishes a persistent connection to the platform to receive remote control commands
 
 > **Important**: This Proxy does not support Windows or macOS. Development can be done on Windows, but only for cross-compilation; running and testing must be performed on Linux servers or virtual machines.
@@ -67,7 +66,6 @@ The Proxy periodically executes the following tasks:
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
 - **System Metric Collection** — Reports CPU / memory / disk / network / load every 3 seconds
 - **Process Monitoring** — Collects configured process running status, CPU usage, memory usage
-- **Command Execution** — Receives platform-issued `startProcess` / `stopProcess` / `restartProcess` commands
 - **WebSocket Long Connection** — Auto-reconnect (exponential backoff), heartbeat keepalive, safe goroutine shutdown
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
@@ -81,16 +79,6 @@ The Proxy periodically executes the following tasks:
 - **Load**: 1/5/15 minute average load
 - **Processes**: Running status, CPU usage, Memory usage MB
 
-### Supported Command Types
-
-The platform can send the following commands to the Proxy via the Redis command queue or WebSocket:
-
-| Command Type | Description |
-|----------|------|
-| `startProcess` | Start the specified process |
-| `stopProcess` | Stop the specified process |
-| `restartProcess` | Restart the specified process |
-
 ### Platform Interaction APIs
 
 #### HTTP APIs (No Authentication)
@@ -99,8 +87,6 @@ The platform can send the following commands to the Proxy via the Redis command 
 |------|------|------|
 | POST | `/api/v1/proxy/register` | First-time registration, reports hardware info |
 | POST | `/api/v1/proxy/heartbeat` | Heartbeat keepalive + monitoring data report |
-| POST | `/api/v1/proxy/poll` | Poll pending commands |
-| POST | `/api/v1/proxy/ack` | Report command execution result |
 
 #### WebSocket API (No Authentication)
 
@@ -192,40 +178,7 @@ scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-prox
 scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
-#### 2. Configure systemd Service (Recommended)
-
-On the target Linux server:
-
-```bash
-sudo tee /etc/systemd/system/opentraffic-ops-proxy.service > /dev/null << 'EOF'
-[Unit]
-Description=OpenTraffic Ops Proxy
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/opt/opentraffic-ops-proxy/opentraffic-ops-proxy-linux-amd64 -c /opt/opentraffic-ops-proxy/config.json
-Restart=always
-RestartSec=10
-User=root
-WorkingDirectory=/opt/opentraffic-ops-proxy
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable opentraffic-ops-proxy
-sudo systemctl start opentraffic-ops-proxy
-
-# Check status
-sudo systemctl status opentraffic-ops-proxy
-
-# View logs
-sudo journalctl -u opentraffic-ops-proxy -f
-```
-
-#### 3. Run Directly (Testing / Debugging)
+#### 2. Run Directly (Testing / Debugging)
 
 ```bash
 cd /opt/opentraffic-ops-proxy
@@ -244,7 +197,6 @@ On first run, a default config file will be automatically created at `~/.opentra
   "hostName": "",
   "version": "1.0.0",
   "heartbeatInterval": 3,
-  "pollInterval": 10,
   "logLevel": "info",
   "logFile": "",
   "enableRemote": true,
@@ -265,7 +217,6 @@ On first run, a default config file will be automatically created at `~/.opentra
 | `ip` | string | Local IP (auto-detected if empty) |
 | `hostName` | string | Host name (uses system hostname if empty) |
 | `heartbeatInterval` | int | Heartbeat interval (seconds), default 3 |
-| `pollInterval` | int | Command polling interval (seconds), default 10 |
 | `logLevel` | string | Log level: debug/info/warn/error |
 | `logFile` | string | Log file path (outputs to console if empty) |
 | `enableRemote` | bool | Remote control switch (terminal/file), default `true` |

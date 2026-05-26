@@ -22,7 +22,7 @@ OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux**（x86_64 / ARM64）
 ┌────────────────────┐     HTTP POST      ┌──────────────────┐
 │   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops Platform │
 │   (Linux 服务器)              │  ◄──────────────  │  (服务端)                 │
-└────────────────────┘     返回指令          └──────────────────────┘
+└────────────────────┘     返回心跳/指标          └──────────────────────┘
          │
          │  WebSocket（长连接）
          ▼
@@ -33,7 +33,6 @@ OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux**（x86_64 / ARM64）
 
 Proxy 定时执行以下任务：
 - **心跳上报**（默认 3s）：保持主机在线状态，同时上报 CPU / 内存 / 磁盘 / 网络 / 进程指标
-- **指令轮询**（默认 10s）：拉取平台下发的进程启停指令
 - **WebSocket 连接**：建立到平台的持久连接，接收远程控制指令
 
 > **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
@@ -67,7 +66,6 @@ Proxy 定时执行以下任务：
 - **系统信息采集** —— 注册时上报 OS 类型/版本、CPU 架构/核数/型号、内存、磁盘、MAC 地址
 - **系统指标采集** —— 3 秒周期上报 CPU / 内存 / 磁盘 / 网络 / 负载
 - **进程监控** —— 采集配置进程的运行状态、CPU 使用率、内存使用
-- **指令执行** —— 接收平台下发的 `startProcess` / `stopProcess` / `restartProcess` 指令
 - **WebSocket 长连接** —— 自动重连（指数退避）、心跳保活、读写 goroutine 安全退出
 - **远程终端** —— 基于 PTY 的持久 Shell 会话（5 分钟超时自动关闭）
 - **远程文件管理** —— 完整的文件操作能力，支持路径安全校验
@@ -81,16 +79,6 @@ Proxy 定时执行以下任务：
 - **负载**：1/5/15 分钟平均负载
 - **进程**：运行状态、CPU 使用率、内存使用 MB
 
-### 支持的指令类型
-
-平台可通过 Redis 指令队列或 WebSocket 向 Proxy 下发以下指令：
-
-| 指令类型 | 说明 |
-|----------|------|
-| `startProcess` | 启动指定进程 |
-| `stopProcess` | 停止指定进程 |
-| `restartProcess` | 重启指定进程 |
-
 ### 与平台交互的接口
 
 #### HTTP 接口（无需认证）
@@ -99,8 +87,6 @@ Proxy 定时执行以下任务：
 |------|------|------|
 | POST | `/api/v1/proxy/register` | 首次注册，上报硬件信息 |
 | POST | `/api/v1/proxy/heartbeat` | 心跳保活 + 监控数据上报 |
-| POST | `/api/v1/proxy/poll` | 轮询待执行指令 |
-| POST | `/api/v1/proxy/ack` | 指令执行结果上报 |
 
 #### WebSocket 接口（无需认证）
 
@@ -192,40 +178,7 @@ scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-prox
 scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
-#### 2. 配置 systemd 服务（推荐）
-
-在目标 Linux 服务器上执行：
-
-```bash
-sudo tee /etc/systemd/system/opentraffic-ops-proxy.service > /dev/null << 'EOF'
-[Unit]
-Description=OpenTraffic Ops Proxy
-After=network.target
-
-[Service]
-Type=simple
-ExecStart=/opt/opentraffic-ops-proxy/opentraffic-ops-proxy-linux-amd64 -c /opt/opentraffic-ops-proxy/config.json
-Restart=always
-RestartSec=10
-User=root
-WorkingDirectory=/opt/opentraffic-ops-proxy
-
-[Install]
-WantedBy=multi-user.target
-EOF
-
-sudo systemctl daemon-reload
-sudo systemctl enable opentraffic-ops-proxy
-sudo systemctl start opentraffic-ops-proxy
-
-# 查看状态
-sudo systemctl status opentraffic-ops-proxy
-
-# 查看日志
-sudo journalctl -u opentraffic-ops-proxy -f
-```
-
-#### 3. 直接运行（测试/调试）
+#### 2. 直接运行（测试/调试）
 
 ```bash
 cd /opt/opentraffic-ops-proxy
@@ -244,7 +197,6 @@ chmod +x opentraffic-ops-proxy-linux-amd64
   "hostName": "",
   "version": "1.0.0",
   "heartbeatInterval": 3,
-  "pollInterval": 10,
   "logLevel": "info",
   "logFile": "",
   "enableRemote": true,
@@ -265,7 +217,6 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 | `ip` | string | 本机 IP（留空则自动检测） |
 | `hostName` | string | 主机名（留空则使用系统主机名） |
 | `heartbeatInterval` | int | 心跳间隔（秒），默认 3 |
-| `pollInterval` | int | 指令轮询间隔（秒），默认 10 |
 | `logLevel` | string | 日志级别：debug/info/warn/error |
 | `logFile` | string | 日志文件路径（留空则输出到控制台） |
 | `enableRemote` | bool | 远程控制开关（终端/文件），默认 `true` |
