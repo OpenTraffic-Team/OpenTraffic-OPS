@@ -96,7 +96,7 @@ OpenTraffic-Ops/
 │   ├── executor/                   # 进程启停执行器 + Shell PTY
 │   ├── filemanager/                # 远程文件管理（目录遍历防护）
 │   ├── wsclient/                   # WebSocket 客户端（自动重连）
-│   ├── build-linux.bat             # Windows 上交叉编译 → dist/
+│   ├── build-opentraffic-ops-proxy.bat             # Windows 上交叉编译 → dist/
 │   └── README.md
 ├── sql/                            # PostgreSQL DDL
 │   ├── 01_sys_tables.sql           # 系统表（用户、操作日志、登录日志）
@@ -107,7 +107,7 @@ OpenTraffic-Ops/
 │   ├── 开发环境搭建指南.md
 │   ├── 生产环境部署指南.md
 │   └── Proxy部署与使用指南.md
-├── build-linux.bat                 # Windows 主机交叉编译后端 → Linux 二进制
+├── build-opentraffic-ops.bat                 # Windows 主机交叉编译后端 → Linux 二进制
 └── logs/                           # 运行时日志
 ```
 
@@ -246,7 +246,7 @@ npm run dev
 在 Windows 开发机上一键交叉编译后端，并把前端打包嵌入到二进制中：
 
 ```bash
-build-linux.bat
+build-opentraffic-ops.bat
 ```
 
 脚本执行流程：
@@ -281,7 +281,7 @@ chmod +x opentraffic-ops-linux-amd64
 
 ```batch
 cd proxy
-build-linux.bat                    # 默认输出到 proxy/dist/
+build-opentraffic-ops-proxy.bat                    # 默认输出到 proxy/dist/
 ```
 
 产物：

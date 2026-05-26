@@ -211,17 +211,17 @@ Default credentials for both systems: `admin` / `admin123`
 ```bash
 # Monitoring platform (backend + embedded frontend)
 cd OpenTraffic-Ops
-build-linux.bat
+build-opentraffic-ops.bat
 # Outputs: backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64
 
 # Edge proxy
 cd proxy
-build-linux.bat
+build-opentraffic-ops-proxy.bat
 # Outputs: proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
 
 # Deployment panel
 cd ../../OpenTraffic-Ops-Initialization
-build-linux.bat
+build-opentraffic-ops-initialization.bat
 # Outputs: backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64
 ```
 

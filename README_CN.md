@@ -211,17 +211,17 @@ npm run dev
 ```bash
 # 监控平台（后端 + 内嵌前端）
 cd OpenTraffic-Ops
-build-linux.bat
+build-opentraffic-ops.bat
 # 输出：backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64
 
 # 边缘代理
 cd proxy
-build-linux.bat
+build-opentraffic-ops-proxy.bat
 # 输出：proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
 
 # 部署面板
 cd ../../OpenTraffic-Ops-Initialization
-build-linux.bat
+build-opentraffic-ops-initialization.bat
 # 输出：backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64
 ```
 

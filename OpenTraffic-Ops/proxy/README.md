@@ -72,7 +72,7 @@ On the Windows development machine, use the provided PowerShell script for one-c
 
 ```batch
 cd proxy
-build-linux.bat
+build-opentraffic-ops-proxy.bat
 ```
 
 The script will automatically compile the following targets and output to the `dist/` directory:

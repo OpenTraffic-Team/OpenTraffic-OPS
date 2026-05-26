@@ -255,10 +255,10 @@ build.bat
 
 #### Windows 交叉编译 Linux 部署包
 
-执行 `build-linux.bat` 生成 Linux AMD64 和 ARM64 二进制：
+执行 `build-opentraffic-ops-initialization.bat` 生成 Linux AMD64 和 ARM64 二进制：
 
 ```cmd
-build-linux.bat
+build-opentraffic-ops-initialization.bat
 ```
 
 输出文件为：

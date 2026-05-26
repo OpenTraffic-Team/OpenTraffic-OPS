@@ -96,7 +96,7 @@ OpenTraffic-Ops/
 │   ├── executor/                   # Process start/stop executor + Shell PTY
 │   ├── filemanager/                # Remote file management (path traversal protection)
 │   ├── wsclient/                   # WebSocket client (auto-reconnect)
-│   ├── build-linux.bat             # Windows cross-compile → dist/
+│   ├── build-opentraffic-ops-proxy.bat             # Windows cross-compile → dist/
 │   └── README.md
 ├── sql/                            # PostgreSQL DDL
 │   ├── 01_sys_tables.sql           # System tables (users, operation logs, login logs)
@@ -107,7 +107,7 @@ OpenTraffic-Ops/
 │   ├── Development Environment Setup Guide.md
 │   ├── Production Deployment Guide.md
 │   └── Proxy Deployment and Usage Guide.md
-├── build-linux.bat                 # Windows host cross-compiles backend → Linux binary
+├── build-opentraffic-ops.bat                 # Windows host cross-compiles backend → Linux binary
 └── logs/                           # Runtime logs
 ```
 
@@ -246,7 +246,7 @@ See [`proxy/README.md`](proxy/README.md) and [`docs/Proxy Deployment and Usage G
 On Windows development machine, one-click cross-compile backend with frontend embedded:
 
 ```bash
-build-linux.bat
+build-opentraffic-ops.bat
 ```
 
 Script execution flow:
@@ -281,7 +281,7 @@ chmod +x opentraffic-ops-linux-amd64
 
 ```batch
 cd proxy
-build-linux.bat                    # Default output to proxy/dist/
+build-opentraffic-ops-proxy.bat                    # Default output to proxy/dist/
 ```
 
 Artifacts:

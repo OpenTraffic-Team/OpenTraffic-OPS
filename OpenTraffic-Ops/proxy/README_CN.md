@@ -72,7 +72,7 @@ $env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o 
 
 ```batch
 cd proxy
-build-linux.bat
+build-opentraffic-ops-proxy.bat
 ```
 
 脚本会自动编译以下目标并输出到 `dist/` 目录：

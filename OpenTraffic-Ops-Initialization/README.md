@@ -255,10 +255,10 @@ After build completes, `backend\opentraffic-ops-init.exe` is the final artifact.
 
 #### Windows Cross-Compile for Linux
 
-Run `build-linux.bat` to generate Linux AMD64 and ARM64 binaries:
+Run `build-opentraffic-ops-initialization.bat` to generate Linux AMD64 and ARM64 binaries:
 
 ```cmd
-build-linux.bat
+build-opentraffic-ops-initialization.bat
 ```
 
 Output files:
