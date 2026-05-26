@@ -1,133 +1,133 @@
 # OpenTraffic Ops Proxy
 
-[English](README_EN.md)
+[中文](README_CN.md)
 
-OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux 操作系统**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端/文件管理）。
+OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Linux servers to collect system metrics and report to the platform server, with WebSocket remote control support (terminal / file management).
 
-> ⚠️ **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
+> ⚠️ **Important**: This Proxy does not support Windows or macOS. Development can be done on Windows, but only for cross-compilation; running and testing must be performed on Linux servers or virtual machines.
 
 ---
 
-## 架构说明
+## Architecture
 
 ```
 ┌─────────────────────┐     HTTP POST      ┌─────────────────┐
 │   OpenTraffic Ops Proxy         │  ───────────────►  │  OpenTraffic Ops Platform   │
-│   (Linux 服务器)     │  ◄───────────────  │  (服务端)        │
-└─────────────────────┘     返回指令        └─────────────────┘
+│   (Linux Server)     │  ◄───────────────  │  (Server)        │
+└─────────────────────┘     Return Commands  └─────────────────┘
          │
-         │  WebSocket（长连接）
+         │  WebSocket (Long Connection)
          ▼
 ┌─────────────────────────────┐
-│  远程终端 / 文件管理 / Shell   │
+│  Remote Terminal / File Mgmt / Shell  │
 └─────────────────────────────┘
 ```
 
-Proxy 定时执行以下任务：
-- **心跳上报**（默认 3s）：保持主机在线状态，同时上报 CPU/内存/磁盘/网络/进程指标
-- **指令轮询**（默认 10s）：拉取平台下发的进程启停指令
-- **WebSocket 连接**：建立到平台的持久连接，接收远程控制指令
+The Proxy periodically executes the following tasks:
+- **Heartbeat Report** (default 3s): Maintains host online status, while reporting CPU / memory / disk / network / process metrics
+- **Command Polling** (default 10s): Pulls process start/stop commands issued by the platform
+- **WebSocket Connection**: Establishes a persistent connection to the platform to receive remote control commands
 
 ---
 
-## 支持平台
+## Supported Platforms
 
-| 操作系统 | 架构 | 支持状态 |
+| OS | Architecture | Status |
 |---------|------|---------|
-| Linux   | x86_64 (amd64) | ✅ 完全支持 |
-| Linux   | ARM64 (aarch64) | ✅ 完全支持 |
-| Windows | 任意 | ❌ 不支持 |
-| macOS   | 任意 | ❌ 不支持 |
+| Linux   | x86_64 (amd64) | ✅ Fully Supported |
+| Linux   | ARM64 (aarch64) | ✅ Fully Supported |
+| Windows | Any | ❌ Not Supported |
+| macOS   | Any | ❌ Not Supported |
 
 ---
 
-## 开发环境（Windows 交叉编译）
+## Development Environment (Windows Cross-Compilation)
 
-Proxy 采用 Go 编写，开发环境可以在 Windows 上通过**交叉编译**生成 Linux 二进制文件。
+The Proxy is written in Go. Development can be done on Windows via **cross-compilation** to produce Linux binaries.
 
-### 前置要求
+### Prerequisites
 
-- Go 1.22+（项目使用 Go 1.26.2）
+- Go 1.22+ (project uses Go 1.26.2)
 - Git
-- Windows PowerShell（用于执行一键打包脚本）
+- Windows PowerShell (for running the one-click packaging script)
 
-### 验证交叉编译环境
+### Verify Cross-Compilation Environment
 
 ```powershell
-# 检查 Go 版本
+# Check Go version
 go version
 
-# 验证能否交叉编译到 Linux
+# Verify cross-compilation to Linux
 cd proxy
 $env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o opentraffic-ops-proxy .
 ```
 
-如果输出没有报错，说明交叉编译环境正常。**注意：这个二进制在 Windows 上无法运行**，必须上传到 Linux 服务器执行。
+If there is no error output, the cross-compilation environment is working. **Note: this binary cannot run on Windows** and must be uploaded to a Linux server for execution.
 
 ---
 
-## 生产打包（Windows 一键脚本）
+## Production Packaging (Windows One-Click Script)
 
-在 Windows 开发机上使用提供的 PowerShell 脚本一键打包：
+On the Windows development machine, use the provided PowerShell script for one-click packaging:
 
 ```powershell
 cd proxy
 .\build-proxy.ps1
 
-# 或指定版本号
+# Or specify a version number
 .\build-proxy.ps1 -Version "1.1.0"
 ```
 
-脚本会自动编译以下目标并输出到 `dist/` 目录：
+The script will automatically compile the following targets and output to the `dist/` directory:
 
-| 输出文件 | 目标平台 |
+| Output File | Target Platform |
 |---------|---------|
 | `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
 | `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
 
-### 手动交叉编译（备用）
+### Manual Cross-Compilation (Alternative)
 
-如果不用脚本，也可以手动编译：
+If you prefer not to use the script, you can compile manually:
 
 ```powershell
 cd proxy
 
-# Linux x86_64（最常见的服务器）
+# Linux x86_64 (most common servers)
 $env:GOOS = "linux"
 $env:GOARCH = "amd64"
 $env:CGO_ENABLED = "0"
 go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-amd64 .
 
-# Linux ARM64（如树莓派、ARM 云服务器）
+# Linux ARM64 (e.g., Raspberry Pi, ARM cloud servers)
 $env:GOOS = "linux"
 $env:GOARCH = "arm64"
 $env:CGO_ENABLED = "0"
 go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-arm64 .
 ```
 
-### 编译参数说明
+### Build Parameter Reference
 
-| 参数 | 说明 |
+| Parameter | Description |
 |------|------|
-| `-s` | 去除符号表，减小体积 |
-| `-w` | 去除 DWARF 调试信息 |
-| `CGO_ENABLED=0` | 禁用 CGO，静态链接，确保跨发行版兼容 |
+| `-s` | Strip symbol table to reduce size |
+| `-w` | Strip DWARF debug info |
+| `CGO_ENABLED=0` | Disable CGO, static linking, ensuring cross-distro compatibility |
 
 ---
 
-## 部署到 Linux 服务器
+## Deploy to Linux Server
 
-### 1. 上传二进制和配置
+### 1. Upload Binary and Config
 
 ```bash
-# 从 Windows 上传到 Linux 服务器
+# Upload from Windows to Linux server
 scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-proxy/
 scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
-### 2. 配置 systemd 服务（推荐）
+### 2. Configure systemd Service (Recommended)
 
-在目标 Linux 服务器上执行：
+On the target Linux server:
 
 ```bash
 sudo tee /etc/systemd/system/opentraffic-ops-proxy.service > /dev/null << 'EOF'
@@ -151,14 +151,14 @@ sudo systemctl daemon-reload
 sudo systemctl enable opentraffic-ops-proxy
 sudo systemctl start opentraffic-ops-proxy
 
-# 查看状态
+# Check status
 sudo systemctl status opentraffic-ops-proxy
 
-# 查看日志
+# View logs
 sudo journalctl -u opentraffic-ops-proxy -f
 ```
 
-### 3. 直接运行（测试/调试）
+### 3. Run Directly (Testing / Debugging)
 
 ```bash
 cd /opt/opentraffic-ops-proxy
@@ -166,11 +166,11 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 ./opentraffic-ops-proxy-linux-amd64 -c config.json
 ```
 
-首次运行会自动在用户目录下创建默认配置文件 `~/.opentraffic-ops-proxy/config.json`。
+On first run, a default config file will be automatically created at `~/.opentraffic-ops-proxy/config.json`.
 
 ---
 
-## 配置文件
+## Configuration
 
 ```json
 {
@@ -194,63 +194,63 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 }
 ```
 
-| 配置项 | 类型 | 说明 |
+| Config Item | Type | Description |
 |--------|------|------|
-| `platformUrl` | string | 平台服务端地址（HTTP） |
-| `ip` | string | 本机 IP（留空则自动检测） |
-| `hostName` | string | 主机名（留空则使用系统主机名） |
-| `heartbeatInterval` | int | 心跳间隔（秒），默认 3 |
-| `pollInterval` | int | 指令轮询间隔（秒），默认 10 |
-| `logLevel` | string | 日志级别：debug/info/warn/error |
-| `logFile` | string | 日志文件路径（留空则输出到控制台） |
-| `enableRemote` | bool | 远程控制开关（终端/文件），默认 `true` |
-| `wsEndpoint` | string | WebSocket 端点（留空则自动从 `platformUrl` 推导） |
-| `processes` | array | 需要监控的进程列表 |
+| `platformUrl` | string | Platform server address (HTTP) |
+| `ip` | string | Local IP (auto-detected if empty) |
+| `hostName` | string | Host name (uses system hostname if empty) |
+| `heartbeatInterval` | int | Heartbeat interval (seconds), default 3 |
+| `pollInterval` | int | Command polling interval (seconds), default 10 |
+| `logLevel` | string | Log level: debug/info/warn/error |
+| `logFile` | string | Log file path (outputs to console if empty) |
+| `enableRemote` | bool | Remote control switch (terminal/file), default `true` |
+| `wsEndpoint` | string | WebSocket endpoint (auto-derived from `platformUrl` if empty) |
+| `processes` | array | List of processes to monitor |
 
-### 配置项说明
+### Configuration Notes
 
-- **`enableRemote`**: 设为 `false` 可禁用远程终端和文件管理功能，Proxy 将拒绝所有远程操作请求
-- **`wsEndpoint`**: 当平台 WebSocket 使用独立端口或反向代理时，可手动指定，如 `ws://192.168.1.100:8081/api/v1/proxy/ws`
+- **`enableRemote`**: Set to `false` to disable remote terminal and file management; the Proxy will reject all remote operation requests
+- **`wsEndpoint`**: When the platform WebSocket uses an independent port or reverse proxy, you can manually specify it, e.g., `ws://192.168.1.100:8081/api/v1/proxy/ws`
 
 ---
 
-## 与平台交互的接口
+## Platform Interaction APIs
 
-### HTTP 接口（无需认证）
+### HTTP APIs (No Authentication)
 
-| 方法 | 路径 | 说明 |
+| Method | Path | Description |
 |------|------|------|
-| POST | `/api/v1/proxy/register` | 首次注册，上报硬件信息 |
-| POST | `/api/v1/proxy/heartbeat` | 心跳保活 + 监控数据上报 |
-| POST | `/api/v1/proxy/poll` | 轮询待执行指令 |
-| POST | `/api/v1/proxy/ack` | 指令执行结果上报 |
+| POST | `/api/v1/proxy/register` | First-time registration, reports hardware info |
+| POST | `/api/v1/proxy/heartbeat` | Heartbeat keepalive + monitoring data report |
+| POST | `/api/v1/proxy/poll` | Poll pending commands |
+| POST | `/api/v1/proxy/ack` | Report command execution result |
 
-### WebSocket 接口（无需认证）
+### WebSocket API (No Authentication)
 
-| 路径 | 说明 |
+| Path | Description |
 |------|------|
-| `ws://platform/api/v1/proxy/ws?ip=xxx` | Proxy 建立 WebSocket 长连接 |
+| `ws://platform/api/v1/proxy/ws?ip=xxx` | Proxy establishes WebSocket long connection |
 
-WebSocket 连接建立后，平台可通过该通道下发：
-- **终端输入** (`input`) → Proxy 写入 Shell stdin
-- **终端 resize** (`resize`) → Proxy 调整终端大小
-- **文件操作** (`file_list`/`file_read`/`file_write`/`file_delete`/`file_upload`/`file_download`/`file_mkdir`)
+After the WebSocket connection is established, the platform can send:
+- **Terminal Input** (`input`) → Proxy writes to Shell stdin
+- **Terminal Resize** (`resize`) → Proxy adjusts terminal size
+- **File Operations** (`file_list`/`file_read`/`file_write`/`file_delete`/`file_upload`/`file_download`/`file_mkdir`)
 
-## 支持的指令类型
+## Supported Command Types
 
-平台可通过 Redis 指令队列或 WebSocket 向 Proxy 下发以下指令：
+The platform can send the following commands to the Proxy via the Redis command queue or WebSocket:
 
-| 指令类型 | 说明 |
+| Command Type | Description |
 |----------|------|
-| `startProcess` | 启动指定进程 |
-| `stopProcess` | 停止指定进程 |
-| `restartProcess` | 重启指定进程 |
+| `startProcess` | Start the specified process |
+| `stopProcess` | Stop the specified process |
+| `restartProcess` | Restart the specified process |
 
-## 采集指标
+## Collected Metrics
 
-- **CPU**：整体使用率（%）
-- **内存**：使用率（%）、使用 MB
-- **磁盘**：根分区使用率（%）
-- **网络**：入/出流量（KB/s）
-- **负载**：1/5/15 分钟平均负载
-- **进程**：运行状态、CPU 使用率、内存使用 MB
+- **CPU**: Overall usage (%)
+- **Memory**: Usage (%), Used MB
+- **Disk**: Root partition usage (%)
+- **Network**: In/Out throughput (KB/s)
+- **Load**: 1/5/15 minute average load
+- **Processes**: Running status, CPU usage, Memory usage MB

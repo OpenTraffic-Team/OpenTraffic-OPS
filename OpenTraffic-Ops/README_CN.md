@@ -237,7 +237,7 @@ npm run dev
 
 ### 6.（可选）部署 Proxy 到 Linux 主机
 
-参见 [`proxy/README.md`](proxy/README.md) 与 [`docs/Proxy部署与使用指南.md`](docs/Proxy部署与使用指南.md)。
+参见 [`proxy/README_CN.md`](proxy/README_CN.md) 与 [`docs/Proxy部署与使用指南.md`](docs/Proxy部署与使用指南.md)。
 
 ## 构建部署
 

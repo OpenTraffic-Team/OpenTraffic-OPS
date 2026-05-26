@@ -124,7 +124,7 @@
 
 **平台支持：** 仅 Linux x86_64 (amd64) 和 Linux ARM64 (aarch64)。Windows 和 macOS 仅用于交叉编译。
 
-[详情 →](./OpenTraffic-Ops/proxy/README.md)
+[详情 →](./OpenTraffic-Ops/proxy/README_CN.md)
 
 ---
 
@@ -257,7 +257,7 @@ opentraffic-ops/
 
 - [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README_CN.md) — 部署面板详情
 - [OpenTraffic-Ops README](./OpenTraffic-Ops/README_CN.md) — 监控平台详情
-- [Proxy README](./OpenTraffic-Ops/proxy/README.md) — 边缘代理部署指南
+- [Proxy README](./OpenTraffic-Ops/proxy/README_CN.md) — 边缘代理部署指南
 
 ---
 
