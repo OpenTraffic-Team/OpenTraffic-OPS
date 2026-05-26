@@ -1,5 +1,7 @@
 # OpenTraffic Ops Proxy
 
+[English](README_EN.md)
+
 OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux 操作系统**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端/文件管理）。
 
 > ⚠️ **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
