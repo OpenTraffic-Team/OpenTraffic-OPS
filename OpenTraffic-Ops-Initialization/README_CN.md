@@ -73,6 +73,8 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 组件状态分布柱状图
 - 组件实时监控表格（CPU / 内存 / 网络 IO），支持启停实时刷新
 
+> 🖼️ **截图占位符**：在此处添加监控大屏页面截图。
+
 ### 组件管理
 - 组件目录浏览，显示 Docker 连接状态
 - 一键安装组件（PostgreSQL、Redis）
@@ -80,6 +82,8 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 启动 / 停止 / 重启 / 卸载已安装组件
 - 查看组件详情（资源监控、日志、配置信息）
 - 内置离线镜像，无需外网即可部署
+
+> 🖼️ **截图占位符**：在此处添加组件管理页面截图。
 
 #### 支持的组件类型
 
@@ -96,6 +100,8 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 展开行查看已部署服务详情
 - 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务
 
+> 🖼️ **截图占位符**：在此处添加服务器管理页面截图。
+
 ### 远程部署
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
 - 可选同时部署配置文件
@@ -103,10 +109,14 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 防重复部署检测
 - 完整的部署记录和日志追溯
 
+> 🖼️ **截图占位符**：在此处添加远程部署页面截图。
+
 ### 配置管理
 - 查看所有已安装组件的配置列表
 - 在线编辑组件配置（端口、环境变量、数据卷、启动命令）
 - 配置保存后需手动重启组件生效
+
+> 🖼️ **截图占位符**：在此处添加配置管理页面截图。
 
 ### 使用指南
 - 平台简介与特性概览
@@ -115,6 +125,8 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 远程部署流程说明
 - PostgreSQL / Redis 默认配置与参数说明
 - 常见问题 FAQ（手风琴式交互）
+
+> 🖼️ **截图占位符**：在此处添加使用指南页面截图。
 
 ---
 
@@ -182,16 +194,6 @@ go run cmd\server\main.go
 
 ### 生产构建（单包自包含）
 
-#### Windows 本地构建
-
-在项目根目录下执行 `build.bat`：
-
-```cmd
-build.bat
-```
-
-构建完成后，`backend\opentraffic-ops-init.exe` 即为最终产物。
-
 #### Windows 交叉编译 Linux 部署包
 
 执行 `build-opentraffic-ops-initialization.bat` 生成 Linux AMD64 和 ARM64 二进制：
@@ -209,58 +211,6 @@ build-opentraffic-ops-initialization.bat
 ```bash
 chmod +x opentraffic-ops-init-linux-amd64
 ./opentraffic-ops-init-linux-amd64
-```
-
-#### Linux / macOS / 手动构建
-
-```bash
-# 1. 构建前端
-cd frontend
-npm install
-npm run build
-
-# 2. 将前端产物复制到后端的 embed 目录
-cd ..
-mkdir -p backend/pkg/static/dist
-cp -r frontend/dist/* backend/pkg/static/dist/
-
-# 3. 构建后端单文件（前端 dist 已被嵌入二进制）
-cd backend
-go build -o opentraffic-ops-init cmd/server/main.go
-```
-
-> **注意**：`go:embed` 要求被嵌入的文件必须位于 Go 模块内部，且路径中不能包含 `..`。因此必须先把 `frontend/dist` 复制到 `backend/pkg/static/dist`，再执行 `go build`。
-
-### Docker 部署
-
-#### 使用 Docker Compose（完整环境）
-
-```bash
-# 构建并启动所有服务
-docker-compose up -d
-
-# 查看日志
-docker-compose logs -f
-
-# 停止服务
-docker-compose down
-```
-
-#### 单独部署后端二进制
-
-```bash
-cd backend
-
-# 构建镜像
-docker build -t opentraffic-ops-init .
-
-# 运行容器
-docker run -d \
-  -p 8080:8080 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v opentraffic-ops-init-data:/app/data \
-  --name opentraffic-ops-init \
-  opentraffic-ops-init
 ```
 
 ### 配置说明

@@ -73,6 +73,8 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Component status distribution bar chart
 - Real-time component monitoring table (CPU / memory / network IO) with start/stop live refresh
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Dashboard page here.
+
 ### Component Management
 - Browse component catalog with Docker connection status
 - One-click install components (PostgreSQL, Redis)
@@ -80,6 +82,8 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Start / stop / restart / uninstall installed components
 - View component details (resource monitoring, logs, configuration)
 - Built-in offline images — no internet required for deployment
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Component Management page here.
 
 #### Supported Component Types
 
@@ -96,6 +100,8 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Expandable rows to view deployed service details
 - Supported operations: start / stop / restart / configure / uninstall remote services
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Server Management page here.
+
 ### Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
 - Optionally deploy configuration files simultaneously
@@ -103,10 +109,14 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Duplicate deployment detection
 - Complete deployment records and log traceability
 
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Remote Deployment page here.
+
 ### Configuration Management
 - View configuration list of all installed components
 - Edit component configurations online (ports, environment variables, volumes, startup commands)
 - Manual restart required after configuration changes take effect
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the Configuration Management page here.
 
 ### User Guide
 - Platform introduction and feature overview
@@ -115,6 +125,8 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Remote deployment process instructions
 - PostgreSQL / Redis default configuration and parameter descriptions
 - Common FAQ (accordion-style interaction)
+
+> 🖼️ **Screenshot placeholder**: Add a screenshot of the User Guide page here.
 
 ---
 
@@ -182,16 +194,6 @@ go run cmd\server\main.go
 
 ### Production Build (Single Binary)
 
-#### Windows Local Build
-
-Run `build.bat` in the project root:
-
-```cmd
-build.bat
-```
-
-After build completes, `backend\opentraffic-ops-init.exe` is the final artifact.
-
 #### Windows Cross-Compile for Linux
 
 Run `build-opentraffic-ops-initialization.bat` to generate Linux AMD64 and ARM64 binaries:
@@ -209,58 +211,6 @@ Upload to Linux server and run:
 ```bash
 chmod +x opentraffic-ops-init-linux-amd64
 ./opentraffic-ops-init-linux-amd64
-```
-
-#### Linux / macOS / Manual Build
-
-```bash
-# 1. Build frontend
-cd frontend
-npm install
-npm run build
-
-# 2. Copy frontend artifacts to backend embed directory
-cd ..
-mkdir -p backend/pkg/static/dist
-cp -r frontend/dist/* backend/pkg/static/dist/
-
-# 3. Build backend single binary (frontend dist embedded)
-cd backend
-go build -o opentraffic-ops-init cmd/server/main.go
-```
-
-> **Note**: `go:embed` requires embedded files to be within the Go module, and paths cannot contain `..`. Therefore, `frontend/dist` must first be copied to `backend/pkg/static/dist` before running `go build`.
-
-### Docker Deployment
-
-#### Using Docker Compose (Full Environment)
-
-```bash
-# Build and start all services
-docker-compose up -d
-
-# View logs
-docker-compose logs -f
-
-# Stop services
-docker-compose down
-```
-
-#### Deploy Backend Binary Alone
-
-```bash
-cd backend
-
-# Build image
-docker build -t opentraffic-ops-init .
-
-# Run container
-docker run -d \
-  -p 8080:8080 \
-  -v /var/run/docker.sock:/var/run/docker.sock \
-  -v opentraffic-ops-init-data:/app/data \
-  --name opentraffic-ops-init \
-  opentraffic-ops-init
 ```
 
 ### Configuration
