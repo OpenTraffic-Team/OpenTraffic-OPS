@@ -2,9 +2,25 @@
 
 [中文](README_CN.md)
 
-RTM (Real-Time Monitor) is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of two independent deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`, deployed as a single binary) and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), and Agent dialogue (control agent / perception agent).
+## Table of Contents
 
-> Naming clarification: **Edge Proxy** refers to the data collection/control program deployed on monitored hosts (deliverable in `proxy/`). **System Agent dialogue** (control agent / perception agent) is the business module for interfacing with external Agents. The two have different responsibilities — **Proxy** and **Agent** are used strictly below.
+- [Project Introduction](#project-introduction)
+- [Tech Stack](#tech-stack)
+- [Features](#features)
+- [Quick Start](#quick-start)
+- [Server Deployment](#server-deployment)
+- [FAQ](#faq)
+- [Acknowledgments](#acknowledgments)
+
+---
+
+## Project Introduction
+
+OpenTraffic Ops is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of two independent deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`, deployed as a single binary) and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), and Agent dialogue (control agent / perception agent).
+
+> **Naming clarification**: **Edge Proxy** refers to the data collection/control program deployed on monitored hosts (deliverable in `proxy/`). **System Agent dialogue** (control agent / perception agent) is the business module for interfacing with external Agents. The two have different responsibilities — **Proxy** and **Agent** are used strictly below.
+
+---
 
 ## Tech Stack
 
@@ -45,87 +61,20 @@ RTM (Real-Time Monitor) is a full-stack monitoring and operations management pla
 
 > Proxy and backend do not share code; they interact via HTTP/WS protocol. Can only run on Linux (amd64 / arm64); Windows is for cross-compilation only.
 
-## Project Structure
+---
 
-```
-OpenTraffic-Ops/
-├── backend/                        # Go backend service (module: opentraffic-ops-backend)
-│   ├── cmd/server/main.go          # Main entry point
-│   ├── internal/
-│   │   ├── config/                 # Config loading (Viper + RTM_ env var overrides)
-│   │   ├── constant/               # Status codes, Redis key prefixes, etc.
-│   │   ├── dto/                    # Request/response DTOs
-│   │   ├── handler/                # Gin handlers (including Agent proxy, chat sessions)
-│   │   ├── middleware/             # JWT, XSS, CORS, Recovery, OperLog, Replay, WSAuth
-│   │   ├── model/                  # GORM data models (alarms, chat sessions)
-│   │   ├── repository/             # Data access layer
-│   │   ├── router/                 # Centralized route registration (router.go)
-│   │   ├── service/                # Business logic + built-in scheduler + alarm engine
-│   │   ├── ws/                     # WebSocket Hub (frontend ↔ Proxy bridge)
-│   │   └── utils/                  # Utility functions
-│   ├── pkg/
-│   │   ├── cache/                  # Redis wrapper
-│   │   ├── captcha/                # Image/arithmetic captcha
-│   │   ├── crypto/                 # RSA and other encryption tools
-│   │   ├── jwt/                    # JWT utilities
-│   │   ├── response/               # Unified response wrapper
-│   │   └── static/                 # Frontend embedded static resources (go:embed all:dist)
-│   └── configs/                    # Reference config templates
-│       └── config.yaml
-├── frontend/                       # Vue3 + Vite management console
-│   ├── src/
-│   │   ├── api/                    # Axios wrappers grouped by module
-│   │   │   ├── business/           # Host, health, alarms
-│   │   │   ├── control-agent/      # Control Agent dialogue
-│   │   │   ├── perceive-agent/     # Perception Agent dialogue
-│   │   │   ├── remote/             # Terminal, file
-│   │   │   ├── system/             # Users
-│   │   │   └── monitor/            # Operation logs, login logs
-│   │   ├── assets/  components/  directive/  layout/
-│   │   ├── router/                 # Frontend routes (static business routes)
-│   │   ├── store/                  # Pinia state management
-│   │   ├── utils/                  # Utilities (including jsencrypt)
-│   │   └── views/                  # Pages (system / monitor / business)
-│   ├── package.json
-│   └── vite.config.js
-├── proxy/                          # Edge Proxy (module: opentraffic-ops-proxy, Linux only)
-│   ├── main.go                     # Proxy entry (heartbeat, polling, WS client)
-│   ├── client/                     # HTTP client (register, heartbeat, poll, ACK)
-│   ├── collector/                  # System/process metric collection
-│   ├── config/                     # Proxy config (JSON)
-│   ├── executor/                   # Process start/stop executor + Shell PTY
-│   ├── filemanager/                # Remote file management (path traversal protection)
-│   ├── wsclient/                   # WebSocket client (auto-reconnect)
-│   ├── build-opentraffic-ops-proxy.bat             # Windows cross-compile → dist/
-│   └── README.md
-├── sql/                            # PostgreSQL DDL
-│   ├── 01_sys_tables.sql           # System tables (users, operation logs, login logs)
-│   ├── 03_bu_tables.sql            # Business tables (host info, host health)
-│   ├── alarm/01_alarm_tables.sql   # Alarm channels / rules / records / notification logs
-│   └── chat/01_chat_tables.sql     # Agent dialogue sessions and messages
-├── docs/                           # Chinese design and deployment documents
-│   ├── Development Environment Setup Guide.md
-│   ├── Production Deployment Guide.md
-│   └── Proxy Deployment and Usage Guide.md
-├── build-opentraffic-ops.bat                 # Windows host cross-compiles backend → Linux binary
-└── logs/                           # Runtime logs
-```
-
-## Feature Modules
+## Features
 
 ### System Management
-
 - **User Management** — User CRUD, password policy, login failure lockout
 - **Personal Center** — User info maintenance, password change, avatar upload
 
 ### Host Management
-
 - **Host Information** — Edge node host registration, CRUD, and status display (auto-enrolled on first proxy registration)
 - **Host Health** — Historical host health data collection and query (auto daily rotation, 7-day retention)
 - **Host Operations** — Remote operations entry point (terminal, file, process control)
 
 ### Monitoring & Alerting
-
 - **Alarm Channels** — Supports email, DingTalk, WeCom, and in-app notification channels, with multiple channels configurable
 - **Alarm Rules** — Multi-dimensional rule orchestration:
   - Metric-based: CPU / memory / disk / network / load
@@ -138,24 +87,20 @@ OpenTraffic-Ops/
   - `cleanHostHealth` (daily at 03:30) — Clean health data older than 7 days
 
 ### Agent Dialogue
-
 - **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
 - **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
 - **Session Management** — Session creation, paginated list, message history, rename, delete
 
 ### Remote Operations
-
 - **Remote Terminal** — Browser-based xterm terminal, routed through platform WebSocket Hub directly to Proxy PTY (color and resize support)
 - **Remote File** — File browse, read, edit, upload, download, delete, and directory creation on proxy hosts (10MB single file limit, path traversal protection)
 - **Process Control** — Start / stop / restart process commands sent from platform to Proxy
 
 ### System Logs
-
 - **Operation Logs** — Automatically records protected interface operations via `OperLog` middleware
 - **Login Logs** — Login success / failure records
 
 ### Edge Proxy Features
-
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
 - **System Metric Collection** — Reports CPU / memory / disk / network / load every 3 seconds
 - **Process Monitoring** — Collects configured process running status, CPU usage, memory usage
@@ -163,6 +108,18 @@ OpenTraffic-Ops/
 - **WebSocket Long Connection** — Auto-reconnect (exponential backoff), heartbeat keepalive, safe goroutine shutdown
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
+
+### Proxy Protocol Interfaces (Public, No Authentication)
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/api/v1/proxy/register` | Proxy first-time registration, reports hardware info |
+| POST | `/api/v1/proxy/heartbeat` | Heartbeat keepalive + monitoring data report (3s cycle) |
+| POST | `/api/v1/proxy/poll` | Poll pending commands (process start/stop) |
+| POST | `/api/v1/proxy/ack` | Report command execution result |
+| GET | `/api/v1/proxy/ws?ip=<host>` | WebSocket long connection (terminal/file) |
+
+---
 
 ## Quick Start
 
@@ -239,7 +196,22 @@ Open browser and visit `http://localhost`. Default credentials:
 
 See [`proxy/README.md`](proxy/README.md) and [`docs/Proxy Deployment and Usage Guide.md`](docs/Proxy%20Deployment%20and%20Usage%20Guide.md).
 
-## Build & Deploy
+### Development Hot Reload (Frontend-Backend Separation)
+
+Set environment variable to let backend read frontend files from disk, skipping `go:embed`:
+
+```bash
+# Windows
+cd backend
+set RTM_STATIC_DIR=..\frontend\dist
+go run cmd\server\main.go
+```
+
+See `backend/pkg/static/static.go` for development / production switching logic.
+
+---
+
+## Server Deployment
 
 ### Linux Cross-Compilation (Backend + Embedded Frontend)
 
@@ -299,7 +271,7 @@ npm run build:prod    # Production
 npm run build:stage   # Staging
 ```
 
-## Configuration
+### Configuration
 
 The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
 
@@ -324,7 +296,7 @@ export RTM_REDIS_PLATFORM_PASSWORD=***
 export RTM_REDIS_EDGE_HOST=192.168.1.101
 ```
 
-### Key Configuration Items
+#### Key Configuration Items
 
 ```yaml
 server:
@@ -362,121 +334,7 @@ agent:
 > Platform and edge Redis roles must be configured separately (can be different dbs on the same physical instance, or two separate instances).
 > Agent configs are for interfacing with external Agent services; corresponding features are unavailable when empty.
 
-### Development Hot Reload (Frontend-Backend Separation)
-
-Set environment variable to let backend read frontend files from disk, skipping `go:embed`, avoiding recompiling backend for every frontend change:
-
-```bash
-# Windows
-cd backend
-set RTM_STATIC_DIR=..\frontend\dist
-go run cmd\server\main.go
-```
-
-See `backend/pkg/static/static.go` for development / production switching logic.
-
-## Backend Architecture
-
-Standard layered structure. `cmd/server/main.go` handles dependency injection, `internal/router/router.go` is the **sole** route registration center — new handlers must be mounted there (no auto-discovery).
-
-```
-handler   →  service  →  repository  →  model (GORM)
-   ↑           ↑
-  dto      (business logic, may call multiple repos)
-```
-
-- Public route group `public`: login, get public key, proxy reporting (`/api/v1/proxy/*`), etc.
-- Auth route group `auth`: all business APIs mounted after `middleware.JWTAuth()` validation.
-- WebSocket: frontend terminal `/ws/terminal` (`WSAuth` validates token in query params); Proxy long connection `/api/v1/proxy/ws` (no JWT, security by network reachability).
-- WebSocket Hub (`internal/ws/hub.go`) bridges frontend sessions and Proxy connections, handling remote terminal passthrough and remote file operations.
-- Scheduler (`internal/service/scheduler.go`) started from `main.go`, carries three built-in jobs: offline detection, alarm detection, health data cleanup.
-- Alarm Engine (`internal/service/alarm_engine.go`) checks alarm rules every 30 seconds, supporting threshold breach duration judgment and auto-recovery.
-
-### Standard Response
-
-All HTTP responses go through `pkg/response`, HTTP status fixed at 200, real business status in `code` field:
-
-```go
-response.Success(c, data)                 // 200 / "Operation successful"
-response.SuccessWithMsg(c, msg, data)
-response.SuccessPage(c, total, rows)      // {code, msg, data: {total, rows}}
-response.Error(c, msg)                    // 500
-response.Unauthorized(c, msg)             // 401 (used by JWT middleware)
-response.Forbidden(c, msg)                // 403
-```
-
-Frontend interceptors judge business state by `code` (200 / 401 / 403 / 500 / 601).
-
-### Auth Flow
-
-1. `GET /getPublicKey` retrieves RSA public key
-2. Frontend encrypts password with public key, then `POST /login`
-3. Backend issues JWT, frontend carries it in `Authorization: Bearer <token>`
-4. `JWTAuth` middleware parses token, reads `LoginUser` from platform Redis `login_tokens:<uuid>`, and injects `userId` / `username` / `uuid` / `claims` into Gin Context (accessed via `middleware.GetUserID(c)` etc.)
-5. `GetInfo` auto-refreshes token when `loginUser.NeedRefresh()` is true
-
-## Frontend Architecture
-
-- `src/api/` grouped by domain: `system/`, `monitor/`, `business/`, `remote/`, `control-agent/`, `perceive-agent/`, plus `login.js`, `menu.js`.
-- `src/views/` aligns with API grouping: `business/host-info/`, `business/alarm-config/`, `business/remote-terminal/`, `business/agent-control/`, `business/agent-perceive/`, etc.
-- Login flow (`src/store/modules/user.js`): fetch public key → `utils/jsencrypt.js` encrypt password → `login()`, uniformly unpacks `{code, msg, data}` responses.
-- Path aliases: `@` → `src/`, `~` → project root (see `vite.config.js`).
-- Dev API base `/dev-api`, WebSocket base `/dev-ws-api`, both proxied to `127.0.0.1:18084`.
-
-## Development Guide
-
-### Backend Development Conventions
-
-- **Handler** — Gin request entry, responsible for parameter validation and response wrapping; each handler type must provide `RegisterRoutes(*gin.RouterGroup)`, explicitly called from `router.go`.
-- **Service** — Business logic layer, constructor receives `*gorm.DB` and (when necessary) other services.
-- **Repository** — Data access layer, wraps GORM queries; not directly exposed externally.
-- **DTO / Model** — `internal/dto/*` for external interaction, `internal/model/*` are GORM models. **Do not return models directly to frontend**.
-- **Constants Reuse** — Status codes, Redis key prefixes, `del_flag`, captcha types, etc. centralized in `internal/constant/constant.go`. Hardcoded literals are prohibited.
-- **Audit Logging** — CRUD handlers requiring operation logs should receive `operLogService` in constructor, recorded uniformly by `OperLog` middleware.
-
-### Frontend Development Conventions
-
-- API interfaces go in `src/api/`, grouped by module.
-- Page components go in `src/views/` under corresponding modules.
-- Common components go in `src/components/`.
-- State management uses Pinia, modules defined in `src/store/modules/`.
-
-## API Documentation
-
-The project follows RESTful design style with unified response format:
-
-```json
-{
-  "code": 200,
-  "msg": "Operation successful",
-  "data": {}
-}
-```
-
-Authentication: request header `Authorization: Bearer <token>`; WebSocket passes token via query parameter `?token=<...>`.
-
-### Proxy Protocol Interfaces (Public, No Authentication Required)
-
-| Method | Path | Description |
-|--------|------|-------------|
-| POST | `/api/v1/proxy/register` | Proxy first-time registration, reports hardware info |
-| POST | `/api/v1/proxy/heartbeat` | Heartbeat keepalive + monitoring data report (3s cycle) |
-| POST | `/api/v1/proxy/poll` | Poll pending commands (process start/stop) |
-| POST | `/api/v1/proxy/ack` | Report command execution result |
-| GET | `/api/v1/proxy/ws?ip=<host>` | WebSocket long connection (terminal/file) |
-
-## Security Features
-
-- JWT Token authentication + Token auto-refresh
-- RSA password encryption in transit
-- XSS filtering middleware (enabled by `xss.urlPatterns` / `xss.excludes`)
-- Replay attack protection (`Replay` middleware)
-- Login failure lockout (`user.password.maxRetryCount` / `lockTime`)
-- SQL injection protection (GORM parameterized queries)
-- CORS cross-origin control
-- Remote file path security validation (directory traversal prevention)
-
-## Logging
+### Logging
 
 Logs are output via Zap, default writing to `logs/` directory, with size / day-based rotation (implemented by lumberjack):
 
@@ -486,7 +344,7 @@ logs/
 └── opentraffic-ops-backend-*.log        # Historical rotated logs
 ```
 
-Log level, filename, single file size, retention count, retention days, and compression are all configurable in `config.yaml` `log` block:
+Log configuration in `config.yaml`:
 
 ```yaml
 log:
@@ -498,16 +356,63 @@ log:
   compress: true
 ```
 
-## Documentation
+---
 
-More design and deployment details in `docs/`:
+## FAQ
 
+### Database connection failed / migration error
+- Verify PostgreSQL is running and accessible
+- Check `datasource` config in `~/.opentraffic-ops/config.yaml`
+- Ensure DDL scripts in `sql/` were executed in correct order
+
+### Redis connection failed
+- Verify Redis instances are running
+- Check `redis.platform` and `redis.edge` configs
+- Platform and edge Redis can be the same instance with different db numbers
+
+### Frontend shows "Connection refused" to backend
+- Ensure backend is running on port 18084
+- Check Vite proxy config in `frontend/vite.config.js`
+- For production, ensure `server.port` in config.yaml matches the expected port
+
+### WebSocket terminal not connecting
+- Check if the target Proxy is online (host status in platform)
+- Verify token is passed correctly via query parameter
+- Check firewall rules for WebSocket port
+
+### Alarm notifications not sending
+- Verify alarm channel configuration (email server, DingTalk webhook, etc.)
+- Check alarm rules have correct thresholds and are enabled
+- Review notification logs for send failure reasons
+
+### Proxy not registering with platform
+- Verify `platformUrl` in Proxy `config.json` points to correct platform address
+- Check network connectivity between Proxy host and platform
+- Ensure platform's `/api/v1/proxy/register` endpoint is reachable
+
+### How to add a new component type (for initialization panel)
+- See [`OpenTraffic-Ops-Initialization/README.md`](../OpenTraffic-Ops-Initialization/README.md) for development guide
+
+---
+
+## Acknowledgments
+
+OpenTraffic Ops is built with the following open-source projects:
+
+- [Go](https://golang.org/) / [Gin](https://github.com/gin-gonic/gin) / [GORM](https://gorm.io/) — Backend framework and ORM
+- [Vue.js](https://vuejs.org/) / [Vite](https://vitejs.dev/) — Frontend framework and build tool
+- [Element Plus](https://element-plus.org/) — UI component library
+- [PostgreSQL](https://www.postgresql.org/) — Primary database
+- [Redis](https://redis.io/) — Cache and messaging
+- [Gorilla WebSocket](https://github.com/gorilla/websocket) — WebSocket implementation
+- [Zap](https://github.com/uber-go/zap) — Logging
+- [xterm.js](https://xtermjs.org/) — Browser terminal
+
+For more design and deployment details, see the `docs/` directory:
 - Development Environment Setup Guide
 - Production Deployment Guide
 - Edge Proxy Deployment and Usage Guide
 - Remote Host Management Feature Design
-- Control Agent Documentation (System-side Agent Control Features)
-
-## License
+- Control Agent Documentation
 
 [MIT License](../LICENSE)

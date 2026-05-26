@@ -2,48 +2,120 @@
 
 [English](README.md)
 
-OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux 操作系统**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端/文件管理）。
+## 目录
 
-> ⚠️ **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
+- [项目简介](#项目简介)
+- [技术栈](#技术栈)
+- [功能描述](#功能描述)
+- [快速开始](#快速开始)
+- [服务器部署](#服务器部署)
+- [常见问题](#常见问题)
+- [致谢](#致谢)
 
 ---
 
-## 架构说明
+## 项目简介
+
+OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端 / 文件管理）。
 
 ```
-┌─────────────────────┐     HTTP POST      ┌─────────────────┐
-│   OpenTraffic Ops Proxy         │  ───────────────►  │  OpenTraffic Ops Platform   │
-│   (Linux 服务器)     │  ◄───────────────  │  (服务端)        │
-└─────────────────────┘     返回指令        └─────────────────┘
+┌────────────────────┐     HTTP POST      ┌──────────────────┐
+│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops Platform │
+│   (Linux 服务器)              │  ◄──────────────  │  (服务端)                 │
+└────────────────────┘     返回指令          └──────────────────────┘
          │
          │  WebSocket（长连接）
          ▼
-┌─────────────────────────────┐
-│  远程终端 / 文件管理 / Shell   │
-└─────────────────────────────┘
+┌──────────────────────────────┐
+│  远程终端 / 文件管理 / Shell  │
+└──────────────────────────────┘
 ```
 
 Proxy 定时执行以下任务：
-- **心跳上报**（默认 3s）：保持主机在线状态，同时上报 CPU/内存/磁盘/网络/进程指标
+- **心跳上报**（默认 3s）：保持主机在线状态，同时上报 CPU / 内存 / 磁盘 / 网络 / 进程指标
 - **指令轮询**（默认 10s）：拉取平台下发的进程启停指令
 - **WebSocket 连接**：建立到平台的持久连接，接收远程控制指令
 
----
+> **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
 
-## 支持平台
+### 支持平台
 
 | 操作系统 | 架构 | 支持状态 |
 |---------|------|---------|
-| Linux   | x86_64 (amd64) | ✅ 完全支持 |
-| Linux   | ARM64 (aarch64) | ✅ 完全支持 |
-| Windows | 任意 | ❌ 不支持 |
-| macOS   | 任意 | ❌ 不支持 |
+| Linux   | x86_64 (amd64) | 完全支持 |
+| Linux   | ARM64 (aarch64) | 完全支持 |
+| Windows | 任意 | 不支持 |
+| macOS   | 任意 | 不支持 |
 
 ---
 
-## 开发环境（Windows 交叉编译）
+## 技术栈
 
-Proxy 采用 Go 编写，开发环境可以在 Windows 上通过**交叉编译**生成 Linux 二进制文件。
+| 技术          | 版本     | 说明                 |
+| ----------- | ------ | ------------------ |
+| Go          | 1.26+  | 编程语言（**仅 Linux**）  |
+| gopsutil    | v3     | 主机指标采集             |
+| Gorilla WS  | v1.5   | 与平台的 WebSocket 长连接 |
+| creack/pty  | v1.1   | 远程终端 PTY 实现        |
+
+> Proxy 与后端不共享代码，通过 HTTP/WS 协议交互；只能运行在 Linux（amd64 / arm64）上，Windows 仅用于交叉编译。
+
+---
+
+## 功能描述
+
+- **系统信息采集** —— 注册时上报 OS 类型/版本、CPU 架构/核数/型号、内存、磁盘、MAC 地址
+- **系统指标采集** —— 3 秒周期上报 CPU / 内存 / 磁盘 / 网络 / 负载
+- **进程监控** —— 采集配置进程的运行状态、CPU 使用率、内存使用
+- **指令执行** —— 接收平台下发的 `startProcess` / `stopProcess` / `restartProcess` 指令
+- **WebSocket 长连接** —— 自动重连（指数退避）、心跳保活、读写 goroutine 安全退出
+- **远程终端** —— 基于 PTY 的持久 Shell 会话（5 分钟超时自动关闭）
+- **远程文件管理** —— 完整的文件操作能力，支持路径安全校验
+
+### 采集指标
+
+- **CPU**：整体使用率（%）
+- **内存**：使用率（%）、使用 MB
+- **磁盘**：根分区使用率（%）
+- **网络**：入/出流量（KB/s）
+- **负载**：1/5/15 分钟平均负载
+- **进程**：运行状态、CPU 使用率、内存使用 MB
+
+### 支持的指令类型
+
+平台可通过 Redis 指令队列或 WebSocket 向 Proxy 下发以下指令：
+
+| 指令类型 | 说明 |
+|----------|------|
+| `startProcess` | 启动指定进程 |
+| `stopProcess` | 停止指定进程 |
+| `restartProcess` | 重启指定进程 |
+
+### 与平台交互的接口
+
+#### HTTP 接口（无需认证）
+
+| 方法 | 路径 | 说明 |
+|------|------|------|
+| POST | `/api/v1/proxy/register` | 首次注册，上报硬件信息 |
+| POST | `/api/v1/proxy/heartbeat` | 心跳保活 + 监控数据上报 |
+| POST | `/api/v1/proxy/poll` | 轮询待执行指令 |
+| POST | `/api/v1/proxy/ack` | 指令执行结果上报 |
+
+#### WebSocket 接口（无需认证）
+
+| 路径 | 说明 |
+|------|------|
+| `ws://platform/api/v1/proxy/ws?ip=xxx` | Proxy 建立 WebSocket 长连接 |
+
+WebSocket 连接建立后，平台可通过该通道下发：
+- **终端输入** (`input`) → Proxy 写入 Shell stdin
+- **终端 resize** (`resize`) → Proxy 调整终端大小
+- **文件操作** (`file_list`/`file_read`/`file_write`/`file_delete`/`file_upload`/`file_download`/`file_mkdir`)
+
+---
+
+## 快速开始
 
 ### 前置要求
 
@@ -64,27 +136,7 @@ $env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o 
 
 如果输出没有报错，说明交叉编译环境正常。**注意：这个二进制在 Windows 上无法运行**，必须上传到 Linux 服务器执行。
 
----
-
-## 生产打包（Windows 一键脚本）
-
-在 Windows 开发机上使用提供的 PowerShell 脚本一键打包：
-
-```batch
-cd proxy
-build-opentraffic-ops-proxy.bat
-```
-
-脚本会自动编译以下目标并输出到 `dist/` 目录：
-
-| 输出文件 | 目标平台 |
-|---------|---------|
-| `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
-| `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
-
 ### 手动交叉编译（备用）
-
-如果不用脚本，也可以手动编译：
 
 ```powershell
 cd proxy
@@ -112,9 +164,27 @@ go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-arm64 .
 
 ---
 
-## 部署到 Linux 服务器
+## 服务器部署
 
-### 1. 上传二进制和配置
+### 生产打包（Windows 一键脚本）
+
+在 Windows 开发机上使用提供的 PowerShell 脚本一键打包：
+
+```batch
+cd proxy
+build-opentraffic-ops-proxy.bat
+```
+
+脚本会自动编译以下目标并输出到 `dist/` 目录：
+
+| 输出文件 | 目标平台 |
+|---------|---------|
+| `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
+| `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
+
+### 部署到 Linux 服务器
+
+#### 1. 上传二进制和配置
 
 ```bash
 # 从 Windows 上传到 Linux 服务器
@@ -122,7 +192,7 @@ scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-prox
 scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
-### 2. 配置 systemd 服务（推荐）
+#### 2. 配置 systemd 服务（推荐）
 
 在目标 Linux 服务器上执行：
 
@@ -155,7 +225,7 @@ sudo systemctl status opentraffic-ops-proxy
 sudo journalctl -u opentraffic-ops-proxy -f
 ```
 
-### 3. 直接运行（测试/调试）
+#### 3. 直接运行（测试/调试）
 
 ```bash
 cd /opt/opentraffic-ops-proxy
@@ -165,9 +235,7 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 
 首次运行会自动在用户目录下创建默认配置文件 `~/.opentraffic-ops-proxy/config.json`。
 
----
-
-## 配置文件
+### 配置文件
 
 ```json
 {
@@ -204,50 +272,48 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 | `wsEndpoint` | string | WebSocket 端点（留空则自动从 `platformUrl` 推导） |
 | `processes` | array | 需要监控的进程列表 |
 
-### 配置项说明
-
+**配置项说明**：
 - **`enableRemote`**: 设为 `false` 可禁用远程终端和文件管理功能，Proxy 将拒绝所有远程操作请求
 - **`wsEndpoint`**: 当平台 WebSocket 使用独立端口或反向代理时，可手动指定，如 `ws://192.168.1.100:8081/api/v1/proxy/ws`
 
 ---
 
-## 与平台交互的接口
+## 常见问题
 
-### HTTP 接口（无需认证）
+### 为什么编译后的二进制文件不能在 Windows 上运行？
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| POST | `/api/v1/proxy/register` | 首次注册，上报硬件信息 |
-| POST | `/api/v1/proxy/heartbeat` | 心跳保活 + 监控数据上报 |
-| POST | `/api/v1/proxy/poll` | 轮询待执行指令 |
-| POST | `/api/v1/proxy/ack` | 指令执行结果上报 |
+Proxy 使用了 Linux 特有的系统调用（`creack/pty`、`/proc` 文件系统访问），在 Windows 上不可用。二进制文件**必须**在 Linux（amd64 或 arm64）上运行。Windows 仅用作交叉编译的构建主机。
 
-### WebSocket 接口（无需认证）
+### 连接平台被拒绝 / 超时
 
-| 路径 | 说明 |
-|------|------|
-| `ws://platform/api/v1/proxy/ws?ip=xxx` | Proxy 建立 WebSocket 长连接 |
+- 检查 `config.json` 中的 `platformUrl` 是否指向正确的 OpenTraffic Ops 服务器地址和端口
+- 检查 Proxy 主机与平台服务器之间的防火墙规则
+- 确保平台服务器正在运行且可达
 
-WebSocket 连接建立后，平台可通过该通道下发：
-- **终端输入** (`input`) → Proxy 写入 Shell stdin
-- **终端 resize** (`resize`) → Proxy 调整终端大小
-- **文件操作** (`file_list`/`file_read`/`file_write`/`file_delete`/`file_upload`/`file_download`/`file_mkdir`)
+### 首次运行时找不到配置文件
 
-## 支持的指令类型
+如果不指定 `-c config.json` 启动 Proxy，它会尝试在 `~/.opentraffic-ops-proxy/config.json` 创建默认配置。确保运行 Proxy 的用户对其主目录有写权限。
 
-平台可通过 Redis 指令队列或 WebSocket 向 Proxy 下发以下指令：
+### WebSocket 频繁断开
 
-| 指令类型 | 说明 |
-|----------|------|
-| `startProcess` | 启动指定进程 |
-| `stopProcess` | 停止指定进程 |
-| `restartProcess` | 重启指定进程 |
+- 检查 Proxy 与平台之间的网络稳定性
+- 确认平台的 WebSocket 端点（`wsEndpoint`）配置正确
+- 查看日志 `journalctl -u opentraffic-ops-proxy -f` 获取错误信息
 
-## 采集指标
+### 进程监控无数据
 
-- **CPU**：整体使用率（%）
-- **内存**：使用率（%）、使用 MB
-- **磁盘**：根分区使用率（%）
-- **网络**：入/出流量（KB/s）
-- **负载**：1/5/15 分钟平均负载
-- **进程**：运行状态、CPU 使用率、内存使用 MB
+- 检查 `config.json` 中的 `processes` 数组是否正确配置，`pattern` 值是否准确
+- `pattern` 用于通过 `ps` / `pgrep` 匹配进程名称
+
+---
+
+## 致谢
+
+OpenTraffic Ops Proxy 基于以下开源项目构建：
+
+- [Go](https://golang.org/) —— 编程语言
+- [gopsutil](https://github.com/shirou/gopsutil) —— 系统指标采集
+- [Gorilla WebSocket](https://github.com/gorilla/websocket) —— WebSocket 客户端实现
+- [creack/pty](https://github.com/creack/pty) —— 远程终端 PTY
+
+[MIT License](../LICENSE)
