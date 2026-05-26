@@ -161,9 +161,9 @@ CREATE DATABASE rtm WITH ENCODING = 'UTF8';
 
 ```bash
 psql -d rtm -f sql/01_sys_tables.sql
-psql -d rtm -f sql/03_bu_tables.sql
-psql -d rtm -f sql/alarm/01_alarm_tables.sql
-psql -d rtm -f sql/chat/01_chat_tables.sql
+psql -d rtm -f sql/02_bu_tables.sql
+psql -d rtm -f sql/03_chat_tables.sql
+psql -d rtm -f sql/04_alarm_tables.sql
 ```
 
 Create `~/.opentraffic-ops/config.yaml` (reference `backend/configs/config.yaml`), and modify database connection:

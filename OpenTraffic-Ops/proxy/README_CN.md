@@ -20,7 +20,7 @@ OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux**（x86_64 / ARM64）
 
 ```
 ┌────────────────────┐     HTTP POST      ┌──────────────────┐
-│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops Platform │
+│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops │
 │   (Linux 服务器)              │  ◄──────────────  │  (服务端)                 │
 └────────────────────┘     返回心跳/指标          └──────────────────────┘
          │

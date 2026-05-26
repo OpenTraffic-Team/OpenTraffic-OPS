@@ -20,7 +20,7 @@ OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Lin
 
 ```
 ┌────────────────────┐     HTTP POST      ┌──────────────────┐
-│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops Platform │
+│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops │
 │   (Linux Server)              │  ◀──────────────  │  (Server)                 │
 └────────────────────┘     Return Metrics   └──────────────────────┘
          │
