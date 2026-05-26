@@ -5,8 +5,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"rtm-server/internal/config"
-	"rtm-server/pkg/jwt"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/pkg/jwt"
 )
 
 // WSAuth WebSocket JWT认证中间件

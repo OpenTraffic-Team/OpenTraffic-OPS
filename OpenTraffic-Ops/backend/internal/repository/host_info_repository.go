@@ -7,8 +7,8 @@ import (
 	"gorm.io/gorm"
 	"gorm.io/gorm/clause"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/model"
 )
 
 // HostInfoRepository 主机信息数据访问

@@ -10,14 +10,14 @@ A full-stack edge computing operations platform composed of two integrated subsy
                     ┌─────────────────────────────────┐
                     │      OpenTraffic Ops            │
                     │  ┌─────────────────────────┐    │
-                    │  │  rtm-initialization     │    │
+                    │  │  OpenTraffic-Ops-Init   │    │
                     │  │  (Deployment Panel)     │    │
                     │  │  - Docker management    │    │
-                    │  │  - SSH remote deploy    │────┼──► Deploys rtm-monitor-platform
-                    │  │  - Component lifecycle  │    │    and rtm-proxy binaries
+                    │  │  - SSH remote deploy    │────┼──► Deploys OpenTraffic-Ops
+                    │  │  - Component lifecycle  │    │    and proxy binaries
                     │  └─────────────────────────┘    │    to remote Linux servers
                     │  ┌─────────────────────────┐    │
-                    │  │  rtm-monitor-platform   │    │
+                    │  │  OpenTraffic-Ops        │    │
                     │  │  (Monitoring & Ops)     │    │
                     │  │  - Host monitoring      │◄───┼──── Receives metrics from
                     │  │  - Alerting engine      │    │    edge proxies
@@ -29,7 +29,7 @@ A full-stack edge computing operations platform composed of two integrated subsy
                                          │ WebSocket / HTTP
                                          │
                     ┌────────────────────┴─────────────┐
-                    │      rtm-proxy (Edge Agent)      │
+                    │      proxy (Edge Agent)          │
                     │  - System metrics collection     │
                     │  - Process monitoring            │
                     │  - Remote terminal PTY           │
@@ -42,7 +42,7 @@ A full-stack edge computing operations platform composed of two integrated subsy
 
 ## Subsystems
 
-### 1. rtm-initialization — Deployment Panel
+### 1. OpenTraffic-Ops-Initialization — Deployment Panel
 
 A single-binary, self-contained deployment dashboard that requires no external web server (Nginx) or database (PostgreSQL).
 
@@ -51,20 +51,29 @@ A single-binary, self-contained deployment dashboard that requires no external w
 | Docker Management | One-click install/start/stop/uninstall of middleware (PostgreSQL, Redis) with custom ports, env vars, volumes |
 | Real-time Monitoring | Live resource stats (CPU / memory / network / disk) for containers |
 | SSH Server Management | Centralized SSH connection configs for multiple remote Linux servers (password or key auth) |
-| Remote Binary Deploy | Deploy `rtm-proxy` and `rtm-monitor-platform` binaries to remote servers via SSH/SFTP |
+| Remote Binary Deploy | Deploy `proxy` and `OpenTraffic-Ops` binaries to remote servers via SSH/SFTP |
 | Remote Config Edit | View and edit remote configuration files (`config.json`, `config.yaml`) online |
 | Remote Service Control | Start / stop / restart services on remote hosts via PID files |
 | Deployment Audit | Full operation logs, execution results, and deployment history |
+
+**Key Features:**
+- **Docker Component Management**: One-click install/start/stop/uninstall of PostgreSQL, Redis with custom ports, environment variables, and data volumes
+- **Real-time Monitoring**: Live component resource stats (CPU / memory / network / disk) with log auto-refresh
+- **SSH Server Management**: Centralized management of multiple remote Linux server SSH configs, supporting both password and key authentication
+- **Remote Binary Deployment**: One-click deploy `opentraffic-ops` and `opentraffic-ops-proxy` binaries to remote Linux servers via SSH/SFTP, with duplicate deployment detection
+- **Remote Config Management**: Online view and edit of remote server configuration files
+- **Remote Service Control**: Start/stop/restart services on remote hosts via PID files
+- **Deployment Audit Trail**: Full operation logs and execution results for every deployment
 
 **Tech Stack:** Go 1.21+ (Gin, SQLite, Docker SDK, `crypto/ssh`), Vue 3 + TypeScript + Vite, Element Plus
 
 **Key Design:** Frontend is embedded into the Go binary via `go:embed`. The backend serves both API and SPA static files on a single port with custom SPA fallback logic — zero Nginx dependency.
 
-[Details &rarr;](./rtm-initialization/README.md)
+[Details →](./OpenTraffic-Ops-Initialization/README.md)
 
 ---
 
-### 2. rtm-monitor-platform — Monitoring & Operations Platform
+### 2. OpenTraffic-Ops — Monitoring & Operations Platform
 
 A full-stack monitoring and operations platform for edge computing scenarios. Consists of two deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`) and **edge proxy**.
 
@@ -78,6 +87,15 @@ A full-stack monitoring and operations platform for edge computing scenarios. Co
 | Process Control | Start / stop / restart processes on edge hosts via platform commands |
 | Agent Dialogue | Conversational interaction with control and perception agents for operational assistance and host status queries |
 
+**Key Features:**
+- **System Management**: User management, personal center/profile management
+- **Host Management**: Edge node CRUD, 7-day health history with automatic daily cleanup, operational entry points
+- **Monitoring & Alerting**: Multi-channel alert notifications (Email, DingTalk, WeCom, In-App), threshold-based rules for CPU / memory / disk / network / load / host-offline / agent-offline, alert records, notification logs
+- **Built-in Schedulers**: `dealOffline` (60s), `alarmCheck` (30s), `cleanHostHealth` (daily at 03:30)
+- **Agent Dialogue**: Control agent and perception agent conversations, session management
+- **Remote Operations**: Browser-based xterm terminal via WebSocket Hub + PTY, remote file operations (10MB limit, path traversal protection), process control (start/stop/restart)
+- **System Logs**: Operation logs, login logs
+
 **Tech Stack:**
 - Backend: Go 1.25+ (Gin, GORM, PostgreSQL, Redis, JWT v5, Gorilla WebSocket, Zap, Viper)
 - Frontend: Vue 3 + Vite, Element Plus, Pinia, ECharts, xterm.js
@@ -85,38 +103,57 @@ A full-stack monitoring and operations platform for edge computing scenarios. Co
 
 **Key Design:** The backend serves the SPA via `go:embed` as a single binary. The edge proxy (`proxy/`) is a separate Go module that communicates with the platform via HTTP/WebSocket — deployed independently on each monitored host.
 
-[Details &rarr;](./rtm-monitor-platform/README.md)
+[Details →](./OpenTraffic-Ops/README.md)
+
+---
+
+### 3. proxy — Edge Agent
+
+Deployed on each monitored edge host. Responsible for system metrics collection and reporting to the platform server, with WebSocket remote control support (terminal / file management).
+
+**Key Features:**
+- System info collection (OS, CPU, memory, disk, MAC address)
+- 3-second periodic metrics reporting (CPU / memory / disk / network / load)
+- Process monitoring (running status, CPU%, memory usage)
+- Command execution (startProcess / stopProcess / restartProcess)
+- WebSocket long connection (auto-reconnect, exponential backoff, heartbeat keepalive)
+- Remote terminal (persistent PTY shell, 5-minute timeout)
+- Remote file management (path safety validation)
+
+**Platform Support:** Linux x86_64 (amd64) and Linux ARM64 (aarch64) only. Windows and macOS can only be used for cross-compilation.
+
+[Details →](./OpenTraffic-Ops/proxy/README.md)
 
 ---
 
 ## Relationship Between Subsystems
 
 ```
-┌─────────────────────┐      deploys      ┌──────────────────────────┐
-│ rtm-initialization  │ ─────────────────►│ rtm-monitor-platform     │
-│ (this machine)      │  SSH/SFTP         │ (remote Linux server)    │
-│                     │                   │                          │
-│ - Docker mgmt       │      deploys      │ - Host monitoring        │
-│ - SSH configs       │ ─────────────────►│ - Alerting               │
-│ - Binary deploy     │                   │ - Remote ops             │
-└─────────────────────┘                   └────────────┬─────────────┘
-                                                       │
-                                                       │ HTTP / WebSocket
-                                                       │
-                                              ┌────────▼──────────────┐
-                                              │ rtm-proxy             │
-                                              │ (on each edge host)   │
-                                              │ - Metrics collection  │
-                                              │ - Remote terminal     │
-                                              │ - File operations     │
-                                              └───────────────────────┘
+┌─────────────────────────────┐      deploys      ┌──────────────────────────┐
+│ OpenTraffic-Ops-Init        │ ─────────────────►│ OpenTraffic-Ops          │
+│ (this machine)              │  SSH/SFTP         │ (remote Linux server)    │
+│                             │                   │                          │
+│ - Docker mgmt               │      deploys      │ - Host monitoring        │
+│ - SSH configs               │ ─────────────────►│ - Alerting               │
+│ - Binary deploy             │                   │ - Remote ops             │
+└─────────────────────────────┘                   └────────────┬─────────────┘
+                                                               │
+                                                               │ HTTP / WebSocket
+                                                               │
+                                                      ┌────────▼──────────────┐
+                                                      │ proxy                 │
+                                                      │ (on each edge host)   │
+                                                      │ - Metrics collection  │
+                                                      │ - Remote terminal     │
+                                                      │ - File operations     │
+                                                      └───────────────────────┘
 ```
 
-1. **`rtm-initialization`** is your control plane — run it on your local machine or a bastion host. It manages Docker containers (PostgreSQL, Redis) and deploys the monitoring stack to remote servers.
+1. **`OpenTraffic-Ops-Initialization`** is your control plane — run it on your local machine or a bastion host. It manages Docker containers (PostgreSQL, Redis) and deploys the monitoring stack to remote servers.
 
-2. **`rtm-monitor-platform`** runs as a server on a central or edge node. It collects metrics, triggers alerts, and provides the Web UI for operators.
+2. **`OpenTraffic-Ops`** runs as a server on a central or edge node. It collects metrics, triggers alerts, and provides the Web UI for operators.
 
-3. **`rtm-proxy`** runs on each host you want to monitor. It reports metrics every 3 seconds and accepts remote commands (terminal, file, process) from the platform.
+3. **`proxy`** runs on each host you want to monitor. It reports metrics every 3 seconds and accepts remote commands (terminal, file, process) from the platform.
 
 ---
 
@@ -126,14 +163,14 @@ A full-stack monitoring and operations platform for edge computing scenarios. Co
 
 - Go 1.25+ (proxy build requires Go 1.26+)
 - Node.js 18+
-- Docker & Docker Compose (for `rtm-initialization` container management)
-- PostgreSQL 15+ (for `rtm-monitor-platform`)
+- Docker & Docker Compose (for `OpenTraffic-Ops-Initialization` container management)
+- PostgreSQL 15+ (for `OpenTraffic-Ops`)
 - Redis 7+ (two instances recommended: platform + edge)
 
 ### Start the Deployment Panel
 
 ```bash
-cd rtm-initialization/backend
+cd OpenTraffic-Ops-Initialization/backend
 go mod download
 go run cmd/server/main.go
 # Service runs on http://localhost:8080
@@ -146,7 +183,7 @@ go run cmd/server/main.go
 psql -c "CREATE DATABASE rtm WITH ENCODING = 'UTF8';"
 
 # 2. Import DDL
-cd rtm-monitor-platform
+cd OpenTraffic-Ops
 psql -d rtm -f sql/01_sys_tables.sql
 psql -d rtm -f sql/03_bu_tables.sql
 psql -d rtm -f sql/alarm/01_alarm_tables.sql
@@ -171,19 +208,19 @@ Default credentials for both systems: `admin` / `admin123`
 
 ```bash
 # Monitoring platform (backend + embedded frontend)
-cd rtm-monitor-platform
+cd OpenTraffic-Ops
 build-linux.bat
-# Outputs: backend/rtm-monitor-platform-linux-amd64, backend/rtm-monitor-platform-linux-arm64
+# Outputs: backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64
 
 # Edge proxy
 cd proxy
 .\build-proxy.ps1
-# Outputs: proxy/dist/rtm-proxy-linux-amd64, proxy/dist/rtm-proxy-linux-arm64
+# Outputs: proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
 
 # Deployment panel
-cd ../../rtm-initialization
+cd ../../OpenTraffic-Ops-Initialization
 build-linux.bat
-# Outputs: backend/rtm-initialization-linux-amd64, backend/rtm-initialization-linux-arm64
+# Outputs: backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64
 ```
 
 ---
@@ -192,33 +229,33 @@ build-linux.bat
 
 ```
 opentraffic-ops/
-├── rtm-initialization/          # Deployment Panel
-│   ├── backend/                 # Go backend (Gin, SQLite, Docker SDK)
-│   ├── frontend/                # Vue 3 + TypeScript SPA
-│   ├── components/              # Docker Compose templates
+├── OpenTraffic-Ops-Initialization/  # Deployment Panel
+│   ├── backend/                     # Go backend (Gin, SQLite, Docker SDK)
+│   ├── frontend/                    # Vue 3 + TypeScript SPA
+│   ├── components/                  # Docker Compose templates
 │   ├── docker-compose.yaml
-│   └── README.md                # (Chinese, detailed)
+│   └── README.md                    # (Chinese, detailed)
 │
-├── rtm-monitor-platform/        # Monitoring & Operations Platform
-│   ├── backend/                 # Go backend (Gin, GORM, PostgreSQL, Redis)
-│   ├── frontend/                # Vue 3 SPA
-│   ├── proxy/                   # Edge proxy (Linux only, separate Go module)
-│   ├── sql/                     # PostgreSQL DDL
-│   ├── docs/                    # Design & deployment guides (Chinese)
-│   └── README.md                # (Chinese, detailed)
+├── OpenTraffic-Ops/                 # Monitoring & Operations Platform
+│   ├── backend/                     # Go backend (Gin, GORM, PostgreSQL, Redis)
+│   ├── frontend/                    # Vue 3 SPA
+│   ├── proxy/                       # Edge proxy (Linux only, separate Go module)
+│   ├── sql/                         # PostgreSQL DDL
+│   ├── docs/                        # Design & deployment guides (Chinese)
+│   └── README.md                    # (Chinese, detailed)
 │
-├── README.md                    # This file
-├── .gitignore                   # Root-level combined ignore rules
-└── LICENSE                      # MIT License
+├── README.md                        # This file
+├── .gitignore                       # Root-level combined ignore rules
+└── LICENSE                          # MIT License
 ```
 
 ---
 
 ## Documentation
 
-- [rtm-initialization README](./rtm-initialization/README.md) — Deployment panel details (Chinese)
-- [rtm-monitor-platform README](./rtm-monitor-platform/README.md) — Monitoring platform details (Chinese)
-- [Proxy README](./rtm-monitor-platform/proxy/README.md) — Edge proxy deployment guide
+- [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README.md) — Deployment panel details (Chinese)
+- [OpenTraffic-Ops README](./OpenTraffic-Ops/README.md) — Monitoring platform details (Chinese)
+- [Proxy README](./OpenTraffic-Ops/proxy/README.md) — Edge proxy deployment guide
 
 ---
 

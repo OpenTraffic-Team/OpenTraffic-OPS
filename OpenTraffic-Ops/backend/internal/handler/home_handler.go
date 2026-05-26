@@ -3,8 +3,8 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"rtm-server/internal/service"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // HomeHandler 首页处理器

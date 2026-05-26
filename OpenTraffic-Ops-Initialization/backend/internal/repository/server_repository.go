@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"rtm-initialization-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/model"
 )
 
 // ServerRepository 服务器仓储

@@ -12,9 +12,9 @@ import (
 
 	"github.com/gorilla/websocket"
 
-	"rtm-proxy/config"
-	"rtm-proxy/executor"
-	"rtm-proxy/filemanager"
+	"opentraffic-ops-proxy/config"
+	"opentraffic-ops-proxy/executor"
+	"opentraffic-ops-proxy/filemanager"
 )
 
 const (

@@ -3,13 +3,13 @@ package main
 import (
 	"fmt"
 	"log"
-	"rtm-initialization-backend/internal/controller"
-	"rtm-initialization-backend/internal/middleware"
-	"rtm-initialization-backend/internal/repository"
-	"rtm-initialization-backend/internal/service"
-	"rtm-initialization-backend/pkg/config"
-	"rtm-initialization-backend/pkg/crypto"
-	"rtm-initialization-backend/pkg/static"
+	"opentraffic-ops-init-backend/internal/controller"
+	"opentraffic-ops-init-backend/internal/middleware"
+	"opentraffic-ops-init-backend/internal/repository"
+	"opentraffic-ops-init-backend/internal/service"
+	"opentraffic-ops-init-backend/pkg/config"
+	"opentraffic-ops-init-backend/pkg/crypto"
+	"opentraffic-ops-init-backend/pkg/static"
 
 	"github.com/gin-gonic/gin"
 )
@@ -69,7 +69,7 @@ func main() {
 	r.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
 			"status": "ok",
-			"service": "rtm-initialization-backend",
+			"service": "opentraffic-ops-init-backend",
 		})
 	})
 
@@ -155,7 +155,7 @@ func main() {
 
 	// 启动服务器
 	addr := fmt.Sprintf("%s:%d", cfg.Server.Host, cfg.Server.Port)
-	log.Printf("Starting RTM Initialization Backend Server on %s", addr)
+	log.Printf("Starting OpenTraffic Ops Init Backend Server on %s", addr)
 	if err := r.Run(addr); err != nil {
 		log.Fatalf("Failed to start server: %v", err)
 	}

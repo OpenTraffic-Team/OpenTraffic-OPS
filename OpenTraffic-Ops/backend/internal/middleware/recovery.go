@@ -6,7 +6,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // Recovery Panic恢复中间件

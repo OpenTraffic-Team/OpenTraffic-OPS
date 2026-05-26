@@ -7,9 +7,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/repository"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/repository"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // titleMaxRunes 标题最大字符数（rune）

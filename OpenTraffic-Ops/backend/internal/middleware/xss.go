@@ -7,8 +7,8 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"rtm-server/internal/config"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // XSS XSS过滤中间件

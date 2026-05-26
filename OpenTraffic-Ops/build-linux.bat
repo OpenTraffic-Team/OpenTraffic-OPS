@@ -4,7 +4,7 @@ setlocal enabledelayedexpansion
 cd /d "%~dp0"
 
 echo =========================================
-echo  RTM Monitor Platform - Linux Cross Build
+echo  OpenTraffic Ops - Linux Cross Build
 echo =========================================
 echo.
 
@@ -12,8 +12,8 @@ echo [1/6] Cleaning old embed directory and previous builds...
 if exist "backend\pkg\static\dist" (
     rmdir /s /q "backend\pkg\static\dist"
 )
-if exist "backend\rtm-monitor-platform-linux-*" (
-    del /q "backend\rtm-monitor-platform-linux-*"
+if exist "backend\opentraffic-ops-linux-*" (
+    del /q "backend\opentraffic-ops-linux-*"
 )
 
 echo [2/6] Installing frontend dependencies...
@@ -58,23 +58,23 @@ set "BUILD_FAILED=0"
 :: amd64
 echo   --> Building amd64 ...
 set GOARCH=amd64
-go build -ldflags "-s -w" -o rtm-monitor-platform-linux-amd64 cmd\server\main.go
+go build -ldflags "-s -w" -o opentraffic-ops-linux-amd64 cmd\server\main.go
 if errorlevel 1 (
     echo       [FAIL] amd64 build failed
     set "BUILD_FAILED=1"
 ) else (
-    echo       [OK] rtm-monitor-platform-linux-amd64
+    echo       [OK] opentraffic-ops-linux-amd64
 )
 
 :: arm64
 echo   --> Building arm64 ...
 set GOARCH=arm64
-go build -ldflags "-s -w" -o rtm-monitor-platform-linux-arm64 cmd\server\main.go
+go build -ldflags "-s -w" -o opentraffic-ops-linux-arm64 cmd\server\main.go
 if errorlevel 1 (
     echo       [FAIL] arm64 build failed
     set "BUILD_FAILED=1"
 ) else (
-    echo       [OK] rtm-monitor-platform-linux-arm64
+    echo       [OK] opentraffic-ops-linux-arm64
 )
 
 cd /d "%~dp0"
@@ -92,15 +92,15 @@ echo  Build success!
 echo =========================================
 echo.
 echo Output binaries in backend\:
-for %%f in (backend\rtm-monitor-platform-linux-*) do (
+for %%f in (backend\opentraffic-ops-linux-*) do (
     echo   - %%~nxf
 )
 echo.
 echo Deploy example:
-echo   # 先创建配置文件到 ~/.rtm-monitor-platform/config.yaml
-echo   mkdir -p ~/.rtm-monitor-platform
-echo   cp backend/configs/config.yaml ~/.rtm-monitor-platform/config.yaml
-echo   chmod +x rtm-monitor-platform-linux-amd64
-echo   ./rtm-monitor-platform-linux-amd64
+echo   # 先创建配置文件到 ~/.opentraffic-ops/config.yaml
+echo   mkdir -p ~/.opentraffic-ops
+echo   cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+echo   chmod +x opentraffic-ops-linux-amd64
+echo   ./opentraffic-ops-linux-amd64
 echo.
 pause

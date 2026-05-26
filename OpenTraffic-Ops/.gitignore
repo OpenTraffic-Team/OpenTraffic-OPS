@@ -7,7 +7,7 @@
 bin/
 dist/
 proxy/dist/
-backend/rtm-monitor-platform-linux-*
+backend/opentraffic-ops-linux-*
 backend/Building
 
 # Logs

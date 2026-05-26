@@ -6,9 +6,9 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"rtm-server/internal/model"
-	"rtm-server/internal/repository"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/model"
+	"opentraffic-ops-backend/internal/repository"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // AlarmNotifier 告警通知服务

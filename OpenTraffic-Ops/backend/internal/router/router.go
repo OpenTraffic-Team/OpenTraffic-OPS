@@ -4,10 +4,10 @@ import (
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
 
-	"rtm-server/internal/config"
-	"rtm-server/internal/handler"
-	"rtm-server/internal/middleware"
-	"rtm-server/internal/service"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/internal/handler"
+	"opentraffic-ops-backend/internal/middleware"
+	"opentraffic-ops-backend/internal/service"
 )
 
 // RouterServices 路由创建的所有服务集合

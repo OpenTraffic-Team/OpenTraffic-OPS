@@ -6,9 +6,9 @@ import (
 
 	"gorm.io/gorm"
 
-	"rtm-server/internal/constant"
-	"rtm-server/internal/model"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/constant"
+	"opentraffic-ops-backend/internal/model"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // ChatRepository Agent聊天会话/消息数据访问

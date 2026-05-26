@@ -4,9 +4,9 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"rtm-server/internal/config"
-	"rtm-server/pkg/jwt"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/pkg/jwt"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // JWTAuth JWT认证中间件

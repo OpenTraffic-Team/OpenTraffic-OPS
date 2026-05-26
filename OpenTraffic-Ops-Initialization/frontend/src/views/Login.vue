@@ -97,7 +97,7 @@
 
     <!-- 底部版权 -->
     <div class="login-footer">
-      <p> RTM Initialization Platform </p>
+      <p> OpenTraffic Ops Init Platform </p>
     </div>
   </div>
 </template>

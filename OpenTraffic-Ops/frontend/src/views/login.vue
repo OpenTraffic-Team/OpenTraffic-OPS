@@ -23,7 +23,7 @@
           <div class="brand-logo">
             <svg-icon icon-class="dashboard" class="logo-svg" />
           </div>
-          <h2 class="brand-title">RTM 监控运维平台</h2>
+          <h2 class="brand-title">OpenTraffic Ops 监控运维平台</h2>
           <p class="brand-desc">实时主机监控 · 智能告警 · 远程运维</p>
         </div>
         <div class="feature-list">
@@ -104,7 +104,7 @@
 
     <!-- 底部版权 -->
     <div class="login-footer">
-      <p> RTM Monitor Platform </p>
+      <p> OpenTraffic Ops Monitor Platform </p>
     </div>
   </div>
 </template>

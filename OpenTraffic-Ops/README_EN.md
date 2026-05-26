@@ -1,4 +1,4 @@
-# RTM Monitoring & Operations Platform
+# OpenTraffic Ops Monitoring & Operations Platform
 
 RTM (Real-Time Monitor) is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of two independent deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`, deployed as a single binary) and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), and Agent dialogue (control agent / perception agent).
 
@@ -6,7 +6,7 @@ RTM (Real-Time Monitor) is a full-stack monitoring and operations management pla
 
 ## Tech Stack
 
-### Backend (`backend/`, Go module `rtm-server`)
+### Backend (`backend/`, Go module `opentraffic-ops-backend`)
 
 | Technology | Version | Description |
 |-----------|---------|-------------|
@@ -32,7 +32,7 @@ RTM (Real-Time Monitor) is a full-stack monitoring and operations management pla
 | Axios | 1.7 | HTTP client |
 | xterm.js | 5.3 | Browser terminal |
 
-### Edge Proxy (`proxy/`, Go module `rtm-proxy`, independent deliverable)
+### Edge Proxy (`proxy/`, Go module `opentraffic-ops-proxy`, independent deliverable)
 
 | Technology | Version | Description |
 |-----------|---------|-------------|
@@ -46,8 +46,8 @@ RTM (Real-Time Monitor) is a full-stack monitoring and operations management pla
 ## Project Structure
 
 ```
-rtm-monitor-platform/
-├── backend/                        # Go backend service (module: rtm-server)
+OpenTraffic-Ops/
+├── backend/                        # Go backend service (module: opentraffic-ops-backend)
 │   ├── cmd/server/main.go          # Main entry point
 │   ├── internal/
 │   │   ├── config/                 # Config loading (Viper + RTM_ env var overrides)
@@ -86,7 +86,7 @@ rtm-monitor-platform/
 │   │   └── views/                  # Pages (system / monitor / business)
 │   ├── package.json
 │   └── vite.config.js
-├── proxy/                          # Edge Proxy (module: rtm-proxy, Linux only)
+├── proxy/                          # Edge Proxy (module: opentraffic-ops-proxy, Linux only)
 │   ├── main.go                     # Proxy entry (heartbeat, polling, WS client)
 │   ├── client/                     # HTTP client (register, heartbeat, poll, ACK)
 │   ├── collector/                  # System/process metric collection
@@ -175,7 +175,7 @@ rtm-monitor-platform/
 
 ```bash
 git clone <repository-url>
-cd rtm-monitor-platform
+cd OpenTraffic-Ops
 ```
 
 ### 2. Initialize Database
@@ -195,7 +195,7 @@ psql -d rtm -f sql/alarm/01_alarm_tables.sql
 psql -d rtm -f sql/chat/01_chat_tables.sql
 ```
 
-Create `config.yaml` under `~/.rtm-monitor-platform/` (reference `backend/configs/config.yaml`), and modify database connection config:
+Create `config.yaml` under `~/.opentraffic-ops/` (reference `backend/configs/config.yaml`), and modify database connection config:
 
 ```yaml
 datasource:
@@ -258,8 +258,8 @@ Build artifacts output to `backend/` directory:
 
 ```
 backend/
-├── rtm-monitor-platform-linux-amd64   # AMD64 binary (frontend embedded)
-├── rtm-monitor-platform-linux-arm64   # ARM64 binary (frontend embedded)
+├── opentraffic-ops-linux-amd64   # AMD64 binary (frontend embedded)
+├── opentraffic-ops-linux-arm64   # ARM64 binary (frontend embedded)
 └── configs/
     └── config.yaml                    # Reference config template
 ```
@@ -267,12 +267,12 @@ backend/
 The binary includes frontend static resources (`go:embed`), no additional Nginx deployment needed. On Linux server, first place config file at the fixed path, then start directly:
 
 ```bash
-mkdir -p ~/.rtm-monitor-platform
-cp backend/configs/config.yaml ~/.rtm-monitor-platform/config.yaml
-# Edit ~/.rtm-monitor-platform/config.yaml for production settings
+mkdir -p ~/.opentraffic-ops
+cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+# Edit ~/.opentraffic-ops/config.yaml for production settings
 
-chmod +x rtm-monitor-platform-linux-amd64
-./rtm-monitor-platform-linux-amd64
+chmod +x opentraffic-ops-linux-amd64
+./opentraffic-ops-linux-amd64
 ```
 
 ### Proxy Cross-Compilation
@@ -285,8 +285,8 @@ cd proxy
 
 Artifacts:
 
-- `proxy/dist/rtm-proxy-linux-amd64`
-- `proxy/dist/rtm-proxy-linux-arm64`
+- `proxy/dist/opentraffic-ops-proxy-linux-amd64`
+- `proxy/dist/opentraffic-ops-proxy-linux-arm64`
 
 > Proxy only supports Linux runtime; Windows / macOS are build hosts only.
 
@@ -300,18 +300,18 @@ npm run build:stage   # Staging
 
 ## Configuration
 
-The backend uses a single `config.yaml` file, always loaded from `~/.rtm-monitor-platform/config.yaml`, shared between development and production.
+The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
 
 Before first run, create the config file in the corresponding user directory (reference `backend/configs/config.yaml`):
 
 ```bash
 # Linux / macOS
-mkdir -p ~/.rtm-monitor-platform
-cp backend/configs/config.yaml ~/.rtm-monitor-platform/config.yaml
+mkdir -p ~/.opentraffic-ops
+cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
 
 # Windows
-mkdir %USERPROFILE%\.rtm-monitor-platform
-copy backend\configs\config.yaml %USERPROFILE%\.rtm-monitor-platform\config.yaml
+mkdir %USERPROFILE%\.opentraffic-ops
+copy backend\configs\config.yaml %USERPROFILE%\.opentraffic-ops\config.yaml
 ```
 
 Any key can be overridden via `RTM_` prefixed environment variables (`.` → `_`):
@@ -481,8 +481,8 @@ Logs are output via Zap, default writing to `logs/` directory, with size / day-b
 
 ```
 logs/
-├── rtm-server.log          # Current log
-└── rtm-server-*.log        # Historical rotated logs
+├── opentraffic-ops-backend.log          # Current log
+└── opentraffic-ops-backend-*.log        # Historical rotated logs
 ```
 
 Log level, filename, single file size, retention count, retention days, and compression are all configurable in `config.yaml` `log` block:
@@ -490,7 +490,7 @@ Log level, filename, single file size, retention count, retention days, and comp
 ```yaml
 log:
   level: info           # debug / info / warn / error
-  filename: logs/rtm-server.log
+  filename: logs/opentraffic-ops-backend.log
   maxSize: 100          # Single file MB
   maxBackups: 30        # Max retention copies
   maxAge: 30            # Max retention days

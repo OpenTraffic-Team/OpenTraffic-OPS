@@ -1,8 +1,8 @@
-# RTM 部署面板
+# OpenTraffic Ops 部署面板
 
 ## 项目简介
 
-RTM 部署面板是一个**单包自包含**的综合运维平台，集成了 **Docker 容器组件管理** 与 **SSH 远程服务器部署** 两大核心能力。平台后端由 Go 提供单一 HTTP 服务，前端通过 `go:embed` 嵌入二进制，**无需额外安装 Nginx 或配置反向代理**——只需运行一个二进制文件即可启动完整服务。
+OpenTraffic Ops 部署面板是一个**单包自包含**的综合运维平台，集成了 **Docker 容器组件管理** 与 **SSH 远程服务器部署** 两大核心能力。平台后端由 Go 提供单一 HTTP 服务，前端通过 `go:embed` 嵌入二进制，**无需额外安装 Nginx 或配置反向代理**——只需运行一个二进制文件即可启动完整服务。
 
 ### 核心能力
 
@@ -11,8 +11,8 @@ RTM 部署面板是一个**单包自包含**的综合运维平台，集成了 **
 | Docker 组件管理 | 一键安装、启动、停止、卸载常用中间件（PostgreSQL、Redis），支持自定义端口、环境变量、数据卷和启动命令 |
 | 实时监控 | 查看组件实时资源占用（CPU / 内存 / 网络 / 磁盘），支持日志实时刷新和自动刷新 |
 | SSH 服务器管理 | 统一管理多台远程 Linux 服务器的 SSH 连接配置，支持密码和密钥两种认证方式 |
-| 远程二进制部署 | 通过 SSH/SFTP 将 rtm-proxy 和 rtm-monitor-platform 二进制文件一键部署到远程服务器 |
-| 远程配置管理 | 在线查看和编辑远程服务器上的软件配置文件（rtm-proxy 的 config.json、rtm-monitor-platform 的 config.yaml） |
+| 远程二进制部署 | 通过 SSH/SFTP 将 opentraffic-ops-proxy 和 opentraffic-ops 二进制文件一键部署到远程服务器 |
+| 远程配置管理 | 在线查看和编辑远程服务器上的软件配置文件（opentraffic-ops-proxy 的 config.json、opentraffic-ops 的 config.yaml） |
 | 远程服务管理 | 通过 PID 文件管理远程服务的启动、停止、重启，无需 root 权限 |
 | 部署记录追溯 | 完整记录每次远程部署的操作日志、执行结果和历史记录 |
 
@@ -78,8 +78,8 @@ RTM 部署面板是一个**单包自包含**的综合运维平台，集成了 **
 
 ### 4. 远程部署
 - 选择目标服务器，部署内置二进制文件：
-  - `rtm-proxy` — RTM 采集代理程序
-  - `rtm-monitor-platform` — RTM 监控平台服务
+  - `opentraffic-ops-proxy` — OpenTraffic Ops Proxy 采集代理程序
+  - `opentraffic-ops` — OpenTraffic Ops 监控平台服务
 - 可选同时部署配置文件
 - 支持加载默认配置模板
 - 防重复部署检测
@@ -200,7 +200,7 @@ baseURL: '/api'
 
 ```bash
 git clone <repository-url>
-cd rtm-initialization
+cd OpenTraffic-Ops-Initialization
 ```
 
 #### 2. 启动后端
@@ -249,7 +249,7 @@ npm run dev
 build.bat
 ```
 
-构建完成后，`backend\rtm-initialization.exe` 即为最终产物。
+构建完成后，`backend\opentraffic-ops-init.exe` 即为最终产物。
 
 #### Windows 交叉编译 Linux 部署包
 
@@ -260,14 +260,14 @@ build-linux.bat
 ```
 
 输出文件为：
-- `backend\rtm-initialization-linux-amd64`
-- `backend\rtm-initialization-linux-arm64`
+- `backend\opentraffic-ops-init-linux-amd64`
+- `backend\opentraffic-ops-init-linux-arm64`
 
 上传至 Linux 服务器并运行：
 
 ```bash
-chmod +x rtm-initialization-linux-amd64
-./rtm-initialization-linux-amd64
+chmod +x opentraffic-ops-init-linux-amd64
+./opentraffic-ops-init-linux-amd64
 ```
 
 #### Linux / macOS / 手动构建
@@ -285,7 +285,7 @@ cp -r frontend/dist/* backend/pkg/static/dist/
 
 # 3. 构建后端单文件（前端 dist 已被嵌入二进制）
 cd backend
-go build -o rtm-initialization cmd/server/main.go
+go build -o opentraffic-ops-init cmd/server/main.go
 ```
 
 > **注意**：`go:embed` 要求被嵌入的文件必须位于 Go 模块内部，且路径中不能包含 `..`。因此必须先把 `frontend/dist` 复制到 `backend/pkg/static/dist`，再执行 `go build`。
@@ -327,21 +327,21 @@ docker-compose down
 cd backend
 
 # 构建镜像
-docker build -t rtm-initialization .
+docker build -t opentraffic-ops-init .
 
 # 运行容器
 docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v rtm-data:/app/data \
-  --name rtm-initialization \
-  rtm-initialization
+  --name opentraffic-ops-init \
+  opentraffic-ops-init
 ```
 
 ## 项目结构
 
 ```
-rtm-initialization/
+opentraffic-ops-init/
 ├── backend/                      # Go 后端
 │   ├── cmd/server/              # 入口文件
 │   ├── internal/
@@ -483,7 +483,7 @@ DELETE /api/servers/:id
 # 测试 SSH 连接
 POST /api/servers/:id/test
 
-# 获取 rtm-proxy 配置
+# 获取 opentraffic-ops-proxy 配置
 GET /api/servers/:id/proxy-config
 PUT /api/servers/:id/proxy-config
 

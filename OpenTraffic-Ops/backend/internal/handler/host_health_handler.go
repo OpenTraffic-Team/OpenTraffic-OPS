@@ -5,8 +5,8 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"rtm-server/internal/service"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // HostHealthHandler 主机健康度处理器

@@ -5,8 +5,8 @@ import (
 
 	"gorm.io/gorm"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/model"
 )
 
 // AlarmNotifyLogRepository 告警通知日志数据访问

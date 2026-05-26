@@ -8,9 +8,9 @@ bin/
 dist/
 
 # Project-specific binaries
-rtm-initialization/backend/rtm-initialization-linux-*
-rtm-monitor-platform/backend/rtm-monitor-platform-linux-*
-rtm-initialization/backend/Building
+OpenTraffic-Ops-Initialization/backend/opentraffic-ops-init-linux-*
+OpenTraffic-Ops/backend/opentraffic-ops-linux-*
+OpenTraffic-Ops-Initialization/backend/Building
 
 # Logs
 logs/
@@ -46,14 +46,14 @@ vendor/
 coverage*
 
 # Go workspace data
-rtm-initialization/backend/data/
+OpenTraffic-Ops-Initialization/backend/data/
 
 # Docker
 .dockerignore
 
 # Large container images (exceeds 256MB git limit)
-rtm-initialization/backend/pkg/assets/images/*.tar
-rtm-initialization/backend/pkg/assets/images/rtm*
+OpenTraffic-Ops-Initialization/backend/pkg/assets/images/*.tar
+OpenTraffic-Ops-Initialization/backend/pkg/assets/images/opentraffic-ops*
 
 # Temporary files
 *.tmp

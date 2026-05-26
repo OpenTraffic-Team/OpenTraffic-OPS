@@ -1,12 +1,12 @@
-# RTM 监控运维平台
+# OpenTraffic Ops 监控运维平台
 
-RTM（Real-Time Monitor）监控运维平台是一个面向边缘计算场景的全栈监控管理系统，由 **监控平台服务**（后端内嵌前端，通过 `go:embed` 单二进制部署）和 **边缘端 Proxy** 两个独立交付件组成，支持主机管理、健康度采集、阈值告警、远程运维（终端 / 文件 / 进程）、Agent 对话（控制 Agent / 感知 Agent）等能力。
+OpenTraffic Ops 监控运维平台是一个面向边缘计算场景的全栈监控管理系统，由 **监控平台服务**（后端内嵌前端，通过 `go:embed` 单二进制部署）和 **边缘端 Proxy** 两个独立交付件组成，支持主机管理、健康度采集、阈值告警、远程运维（终端 / 文件 / 进程）、Agent 对话（控制 Agent / 感知 Agent）等能力。
 
 > 命名说明：**边缘端 Proxy** 指部署在被监控主机上的采集/控制程序（即 `proxy/` 目录交付件）。**系统功能中的 Agent 对话**分为控制 Agent 和感知 Agent 两种类型，是平台对接外部 Agent 的业务模块。二者职责不同，下文严格区分使用 **Proxy** 与 **Agent** 两个术语。
 
 ## 技术架构
 
-### 后端技术栈（`backend/`，Go module `rtm-server`）
+### 后端技术栈（`backend/`，Go module `opentraffic-ops-backend`）
 
 | 技术         | 版本     | 说明                |
 | ---------- | ------ | ----------------- |
@@ -32,7 +32,7 @@ RTM（Real-Time Monitor）监控运维平台是一个面向边缘计算场景的
 | Axios        | 1.7  | HTTP 客户端  |
 | xterm.js     | 5.3  | 浏览器端终端    |
 
-### 边缘端 Proxy 技术栈（`proxy/`，Go module `rtm-proxy`，独立交付件）
+### 边缘端 Proxy 技术栈（`proxy/`，Go module `opentraffic-ops-proxy`，独立交付件）
 
 | 技术          | 版本     | 说明                 |
 | ----------- | ------ | ------------------ |
@@ -46,8 +46,8 @@ RTM（Real-Time Monitor）监控运维平台是一个面向边缘计算场景的
 ## 项目结构
 
 ```
-rtm-monitor-platform-go/
-├── backend/                        # Go 后端服务（module: rtm-server）
+OpenTraffic-Ops/
+├── backend/                        # Go 后端服务（module: opentraffic-ops-backend）
 │   ├── cmd/server/main.go          # 主程序入口
 │   ├── internal/
 │   │   ├── config/                 # 配置加载（Viper + RTM_ 环境变量覆盖）
@@ -86,7 +86,7 @@ rtm-monitor-platform-go/
 │   │   └── views/                  # 页面（system / monitor / business）
 │   ├── package.json
 │   └── vite.config.js
-├── proxy/                          # 边缘端 Proxy（module: rtm-proxy，仅 Linux 运行）
+├── proxy/                          # 边缘端 Proxy（module: opentraffic-ops-proxy，仅 Linux 运行）
 │   ├── main.go                     # Proxy 入口（心跳、轮询、WS 客户端）
 │   ├── client/                     # HTTP 客户端（注册、心跳、轮询、ACK）
 │   ├── collector/                  # 系统/进程指标采集
@@ -175,7 +175,7 @@ rtm-monitor-platform-go/
 
 ```bash
 git clone <repository-url>
-cd rtm-monitor-platform-go
+cd OpenTraffic-Ops-go
 ```
 
 ### 2. 初始化数据库
@@ -195,7 +195,7 @@ psql -d rtm -f sql/alarm/01_alarm_tables.sql
 psql -d rtm -f sql/chat/01_chat_tables.sql
 ```
 
-在 `~/.rtm-monitor-platform/` 目录下创建 `config.yaml`（可参考 `backend/configs/config.yaml`），修改数据库连接配置：
+在 `~/.opentraffic-ops/` 目录下创建 `config.yaml`（可参考 `backend/configs/config.yaml`），修改数据库连接配置：
 
 ```yaml
 datasource:
@@ -258,8 +258,8 @@ build-linux.bat
 
 ```
 backend/
-├── rtm-monitor-platform-linux-amd64   # AMD64 二进制（前端已嵌入）
-├── rtm-monitor-platform-linux-arm64   # ARM64 二进制（前端已嵌入）
+├── OpenTraffic-Ops-linux-amd64   # AMD64 二进制（前端已嵌入）
+├── OpenTraffic-Ops-linux-arm64   # ARM64 二进制（前端已嵌入）
 └── configs/
     └── config.yaml                    # 参考配置模板
 ```
@@ -267,12 +267,12 @@ backend/
 二进制自带前端静态资源（`go:embed`），无需额外部署 Nginx。Linux 服务器上需先将配置文件放到固定路径，然后直接启动：
 
 ```bash
-mkdir -p ~/.rtm-monitor-platform
-cp backend/configs/config.yaml ~/.rtm-monitor-platform/config.yaml
-# 编辑 ~/.rtm-monitor-platform/config.yaml 修改生产环境配置
+mkdir -p ~/.OpenTraffic-Ops
+cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+# 编辑 ~/.opentraffic-ops/config.yaml 修改生产环境配置
 
-chmod +x rtm-monitor-platform-linux-amd64
-./rtm-monitor-platform-linux-amd64
+chmod +x OpenTraffic-Ops-linux-amd64
+./OpenTraffic-Ops-linux-amd64
 ```
 
 ### Proxy 交叉编译
@@ -285,8 +285,8 @@ cd proxy
 
 产物：
 
-- `proxy/dist/rtm-proxy-linux-amd64`
-- `proxy/dist/rtm-proxy-linux-arm64`
+- `proxy/dist/opentraffic-ops-proxy-linux-amd64`
+- `proxy/dist/opentraffic-ops-proxy-linux-arm64`
 
 > Proxy 仅支持 Linux 运行；Windows / macOS 仅用作构建主机。
 
@@ -300,18 +300,18 @@ npm run build:stage   # 测试环境
 
 ## 配置文件说明
 
-后端使用单一配置文件 `config.yaml`，固定从 `~/.rtm-monitor-platform/config.yaml` 加载，开发和生产环境共用。
+后端使用单一配置文件 `config.yaml`，固定从 `~/.opentraffic-ops/config.yaml` 加载，开发和生产环境共用。
 
 首次运行前，在对应用户目录下创建配置文件（可参考 `backend/configs/config.yaml`）：
 
 ```bash
 # Linux / macOS
-mkdir -p ~/.rtm-monitor-platform
-cp backend/configs/config.yaml ~/.rtm-monitor-platform/config.yaml
+mkdir -p ~/.OpenTraffic-Ops
+cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
 
 # Windows
-mkdir %USERPROFILE%\.rtm-monitor-platform
-copy backend\configs\config.yaml %USERPROFILE%\.rtm-monitor-platform\config.yaml
+mkdir %USERPROFILE%\.opentraffic-ops
+copy backend\configs\config.yaml %USERPROFILE%\.opentraffic-ops\config.yaml
 ```
 
 任意 Key 都可以通过 `RTM_` 前缀的环境变量覆盖（`.` → `_`）：
@@ -481,8 +481,8 @@ response.Forbidden(c, msg)                // 403
 
 ```
 logs/
-├── rtm-server.log          # 当前日志
-└── rtm-server-*.log        # 历史轮转日志
+├── opentraffic-ops-backend.log          # 当前日志
+└── opentraffic-ops-backend-*.log        # 历史轮转日志
 ```
 
 日志级别、文件名、单文件大小、保留份数、保留天数、是否压缩等均可在 `config.yaml` 的 `log` 块中配置：
@@ -490,7 +490,7 @@ logs/
 ```yaml
 log:
   level: info           # debug / info / warn / error
-  filename: logs/rtm-server.log
+  filename: logs/opentraffic-ops-backend.log
   maxSize: 100          # 单文件 MB
   maxBackups: 30        # 最多保留份数
   maxAge: 30            # 最长保留天数

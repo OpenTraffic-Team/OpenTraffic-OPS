@@ -1,6 +1,6 @@
-# RTM Proxy
+# OpenTraffic Ops Proxy
 
-RTM 监控运维平台 —— 边缘端 Proxy。**仅支持 Linux 操作系统**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端/文件管理）。
+OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux 操作系统**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端/文件管理）。
 
 > ⚠️ **重要说明**：本 Proxy 不支持 Windows 和 macOS。开发环境在 Windows 上，但只能用于交叉编译；运行和测试必须在 Linux 服务器/虚拟机上进行。
 
@@ -10,7 +10,7 @@ RTM 监控运维平台 —— 边缘端 Proxy。**仅支持 Linux 操作系统**
 
 ```
 ┌─────────────────────┐     HTTP POST      ┌─────────────────┐
-│   RTM Proxy         │  ───────────────►  │  RTM Platform   │
+│   OpenTraffic Ops Proxy         │  ───────────────►  │  OpenTraffic Ops Platform   │
 │   (Linux 服务器)     │  ◄───────────────  │  (服务端)        │
 └─────────────────────┘     返回指令        └─────────────────┘
          │
@@ -57,7 +57,7 @@ go version
 
 # 验证能否交叉编译到 Linux
 cd proxy
-$env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o rtm-proxy .
+$env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o opentraffic-ops-proxy .
 ```
 
 如果输出没有报错，说明交叉编译环境正常。**注意：这个二进制在 Windows 上无法运行**，必须上传到 Linux 服务器执行。
@@ -80,8 +80,8 @@ cd proxy
 
 | 输出文件 | 目标平台 |
 |---------|---------|
-| `rtm-proxy-linux-amd64` | Linux x86_64 |
-| `rtm-proxy-linux-arm64` | Linux ARM64 |
+| `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
+| `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
 
 ### 手动交叉编译（备用）
 
@@ -94,13 +94,13 @@ cd proxy
 $env:GOOS = "linux"
 $env:GOARCH = "amd64"
 $env:CGO_ENABLED = "0"
-go build -ldflags "-s -w" -o rtm-proxy-linux-amd64 .
+go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-amd64 .
 
 # Linux ARM64（如树莓派、ARM 云服务器）
 $env:GOOS = "linux"
 $env:GOARCH = "arm64"
 $env:CGO_ENABLED = "0"
-go build -ldflags "-s -w" -o rtm-proxy-linux-arm64 .
+go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-arm64 .
 ```
 
 ### 编译参数说明
@@ -119,8 +119,8 @@ go build -ldflags "-s -w" -o rtm-proxy-linux-arm64 .
 
 ```bash
 # 从 Windows 上传到 Linux 服务器
-scp rtm-proxy-linux-amd64 root@your-server:/opt/rtm-proxy/
-scp config.json root@your-server:/opt/rtm-proxy/
+scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-proxy/
+scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
 ### 2. 配置 systemd 服务（推荐）
@@ -128,43 +128,43 @@ scp config.json root@your-server:/opt/rtm-proxy/
 在目标 Linux 服务器上执行：
 
 ```bash
-sudo tee /etc/systemd/system/rtm-proxy.service > /dev/null << 'EOF'
+sudo tee /etc/systemd/system/opentraffic-ops-proxy.service > /dev/null << 'EOF'
 [Unit]
-Description=RTM Proxy
+Description=OpenTraffic Ops Proxy
 After=network.target
 
 [Service]
 Type=simple
-ExecStart=/opt/rtm-proxy/rtm-proxy-linux-amd64 -c /opt/rtm-proxy/config.json
+ExecStart=/opt/opentraffic-ops-proxy/opentraffic-ops-proxy-linux-amd64 -c /opt/opentraffic-ops-proxy/config.json
 Restart=always
 RestartSec=10
 User=root
-WorkingDirectory=/opt/rtm-proxy
+WorkingDirectory=/opt/opentraffic-ops-proxy
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
 sudo systemctl daemon-reload
-sudo systemctl enable rtm-proxy
-sudo systemctl start rtm-proxy
+sudo systemctl enable opentraffic-ops-proxy
+sudo systemctl start opentraffic-ops-proxy
 
 # 查看状态
-sudo systemctl status rtm-proxy
+sudo systemctl status opentraffic-ops-proxy
 
 # 查看日志
-sudo journalctl -u rtm-proxy -f
+sudo journalctl -u opentraffic-ops-proxy -f
 ```
 
 ### 3. 直接运行（测试/调试）
 
 ```bash
-cd /opt/rtm-proxy
-chmod +x rtm-proxy-linux-amd64
-./rtm-proxy-linux-amd64 -c config.json
+cd /opt/opentraffic-ops-proxy
+chmod +x opentraffic-ops-proxy-linux-amd64
+./opentraffic-ops-proxy-linux-amd64 -c config.json
 ```
 
-首次运行会自动在用户目录下创建默认配置文件 `~/.rtm-proxy/config.json`。
+首次运行会自动在用户目录下创建默认配置文件 `~/.opentraffic-ops-proxy/config.json`。
 
 ---
 

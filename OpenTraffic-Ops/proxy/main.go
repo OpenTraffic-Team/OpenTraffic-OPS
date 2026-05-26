@@ -11,11 +11,11 @@ import (
 	"syscall"
 	"time"
 
-	"rtm-proxy/client"
-	"rtm-proxy/collector"
-	"rtm-proxy/config"
-	"rtm-proxy/executor"
-	"rtm-proxy/wsclient"
+	"opentraffic-ops-proxy/client"
+	"opentraffic-ops-proxy/collector"
+	"opentraffic-ops-proxy/config"
+	"opentraffic-ops-proxy/executor"
+	"opentraffic-ops-proxy/wsclient"
 )
 
 var (
@@ -43,7 +43,7 @@ func main() {
 	flag.Parse()
 
 	if *versionFlg {
-		fmt.Printf("rtm-proxy version %s (built: %s, go: %s)\n", agentVersion, buildTime, goVersion)
+		fmt.Printf("opentraffic-ops-proxy version %s (built: %s, go: %s)\n", agentVersion, buildTime, goVersion)
 		os.Exit(0)
 	}
 
@@ -65,7 +65,7 @@ func main() {
 		hostName, _ = os.Hostname()
 	}
 
-	log.Printf("[RTM Agent] 启动...")
+	log.Printf("[Proxy Agent] 启动...")
 	log.Printf("  版本: %s", agentVersion)
 	log.Printf("  平台: %s", cfg.PlatformURL)
 	log.Printf("  IP: %s", ip)
@@ -124,10 +124,10 @@ func main() {
 	signal.Notify(sigCh, syscall.SIGINT, syscall.SIGTERM)
 	<-sigCh
 
-	log.Println("[RTM Agent] 正在退出...")
+	log.Println("[Proxy Agent] 正在退出...")
 	close(ctx)
 	wg.Wait()
-	log.Println("[RTM Agent] 已退出")
+	log.Println("[Proxy Agent] 已退出")
 }
 
 // doRegister 首次注册

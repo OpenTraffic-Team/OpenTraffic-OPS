@@ -14,8 +14,8 @@ import (
 	"strings"
 	"time"
 
-	"rtm-server/internal/constant"
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/constant"
+	"opentraffic-ops-backend/internal/model"
 )
 
 func (e *AlarmEngine) sendDingTalkNotification(ctx context.Context, record *model.AlarmRecord, ch model.AlarmChannel) (bool, string) {

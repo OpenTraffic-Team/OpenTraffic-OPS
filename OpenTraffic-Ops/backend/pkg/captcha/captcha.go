@@ -7,7 +7,7 @@ import (
 	"github.com/mojocn/base64Captcha"
 	"github.com/redis/go-redis/v9"
 
-	"rtm-server/pkg/cache"
+	"opentraffic-ops-backend/pkg/cache"
 )
 
 const (

@@ -4,11 +4,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"path/filepath"
-	"rtm-initialization-backend/internal/model"
-	"rtm-initialization-backend/internal/repository"
-	"rtm-initialization-backend/pkg/assets"
-	"rtm-initialization-backend/pkg/crypto"
-	"rtm-initialization-backend/pkg/ssh"
+	"opentraffic-ops-init-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/repository"
+	"opentraffic-ops-init-backend/pkg/assets"
+	"opentraffic-ops-init-backend/pkg/crypto"
+	"opentraffic-ops-init-backend/pkg/ssh"
 	"strings"
 	"time"
 
@@ -241,13 +241,13 @@ var softwareConfigMeta = map[string]struct {
 	ConfigFile   string
 	EmbeddedName string
 }{
-	"rtm-proxy": {
-		ConfigDir:    "~/.rtm-proxy",
+	"opentraffic-ops-proxy": {
+		ConfigDir:    "~/.opentraffic-ops-proxy",
 		ConfigFile:   "config.json",
 		EmbeddedName: "config.json",
 	},
-	"rtm-monitor-platform": {
-		ConfigDir:    "~/.rtm-monitor-platform",
+	"opentraffic-ops": {
+		ConfigDir:    "~/.opentraffic-ops",
 		ConfigFile:   "config.yaml",
 		EmbeddedName: "config.yaml",
 	},
@@ -268,9 +268,9 @@ func getDefaultConfig(softwareName string) string {
 	return "{}"
 }
 
-// getDefaultProxyConfig 兼容旧调用，从嵌入资源读取默认配置
+// getDefaultProxyConfig 从嵌入资源读取默认 proxy 配置
 func getDefaultProxyConfig() string {
-	return getDefaultConfig("rtm-proxy")
+	return getDefaultConfig("opentraffic-ops-proxy")
 }
 
 // GetDefaultSoftwareConfig 获取指定软件的默认配置（嵌入资源）
@@ -380,25 +380,25 @@ func (s *ServerService) UpdateSoftwareConfig(id string, softwareName string, con
 	return nil
 }
 
-// UpdateProxyConfigRequest 更新rtm-proxy配置请求
+// UpdateProxyConfigRequest 更新 proxy 配置请求
 type UpdateProxyConfigRequest struct {
 	Content string `json:"content" binding:"required"`
 }
 
-// GetProxyConfig 获取远程服务器上的rtm-proxy配置（兼容旧接口）
+// GetProxyConfig 获取远程服务器上的 proxy 配置
 func (s *ServerService) GetProxyConfig(id string) (string, error) {
-	return s.GetSoftwareConfig(id, "rtm-proxy")
+	return s.GetSoftwareConfig(id, "opentraffic-ops-proxy")
 }
 
-// UpdateProxyConfig 更新远程服务器上的rtm-proxy配置（兼容旧接口）
+// UpdateProxyConfig 更新远程服务器上的 proxy 配置
 func (s *ServerService) UpdateProxyConfig(id string, content string) error {
-	return s.UpdateSoftwareConfig(id, "rtm-proxy", content)
+	return s.UpdateSoftwareConfig(id, "opentraffic-ops-proxy", content)
 }
 
 // binaryFileMapForControl 服务控制用的二进制文件名映射
 var binaryFileMapForControl = map[string]string{
-	"rtm-proxy":            "rtm-proxy-linux-amd64",
-	"rtm-monitor-platform": "rtm-monitor-platform-linux-amd64",
+	"opentraffic-ops-proxy": "opentraffic-ops-proxy-linux-amd64",
+	"opentraffic-ops":       "opentraffic-ops-linux-amd64",
 }
 
 // pidFilePath 生成pid文件远程路径

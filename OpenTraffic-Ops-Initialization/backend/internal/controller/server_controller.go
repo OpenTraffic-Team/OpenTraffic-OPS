@@ -2,7 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"rtm-initialization-backend/internal/service"
+	"opentraffic-ops-init-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )
@@ -100,7 +100,7 @@ func (ctrl *ServerController) TestServerConnection(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"message": "Connection successful"})
 }
 
-// GetProxyConfig 获取rtm-proxy配置
+// GetProxyConfig 获取opentraffic-ops-proxy配置
 func (ctrl *ServerController) GetProxyConfig(c *gin.Context) {
 	id := c.Param("id")
 
@@ -113,7 +113,7 @@ func (ctrl *ServerController) GetProxyConfig(c *gin.Context) {
 	c.JSON(http.StatusOK, gin.H{"content": content})
 }
 
-// UpdateProxyConfig 更新rtm-proxy配置
+// UpdateProxyConfig 更新opentraffic-ops-proxy配置
 func (ctrl *ServerController) UpdateProxyConfig(c *gin.Context) {
 	id := c.Param("id")
 

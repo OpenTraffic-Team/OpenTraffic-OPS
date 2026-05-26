@@ -1,4 +1,4 @@
-# RTM Deployment Panel
+# OpenTraffic Ops Init Deployment Panel
 
 ## Overview
 
@@ -11,8 +11,8 @@ RTM Deployment Panel is a **single-binary, self-contained** comprehensive operat
 | Docker Component Management | One-click install, start, stop, and uninstall common middleware (PostgreSQL, Redis) with custom ports, environment variables, volumes, and startup commands |
 | Real-time Monitoring | View real-time resource usage (CPU / memory / network / disk) of components, with live log refresh and auto-refresh support |
 | SSH Server Management | Centrally manage SSH connection configurations for multiple remote Linux servers, supporting both password and key authentication |
-| Remote Binary Deployment | Deploy `rtm-proxy` and `rtm-monitor-platform` binaries to remote servers via SSH/SFTP with one click |
-| Remote Configuration Management | View and edit software configuration files on remote servers online (`config.json` for rtm-proxy, `config.yaml` for rtm-monitor-platform) |
+| Remote Binary Deployment | Deploy `opentraffic-ops-proxy` and `opentraffic-ops` binaries to remote servers via SSH/SFTP with one click |
+| Remote Configuration Management | View and edit software configuration files on remote servers online (`config.json` for opentraffic-ops-proxy, `config.yaml` for opentraffic-ops) |
 | Remote Service Management | Start, stop, and restart services on remote servers via PID files, without requiring root privileges |
 | Deployment Audit Trail | Complete logging of every remote deployment operation, execution results, and historical records |
 
@@ -78,8 +78,8 @@ RTM Deployment Panel is a **single-binary, self-contained** comprehensive operat
 
 ### 4. Remote Deployment
 - Select target servers to deploy built-in binaries:
-  - `rtm-proxy` — RTM data collection agent
-  - `rtm-monitor-platform` — RTM monitoring platform service
+  - `opentraffic-ops-proxy` — OpenTraffic Ops Proxy data collection agent
+  - `opentraffic-ops` — OpenTraffic Ops monitoring platform service
 - Optionally deploy configuration files simultaneously
 - Support loading default configuration templates
 - Duplicate deployment detection
@@ -200,7 +200,7 @@ During development, Vite proxies `/api` to `localhost:8080`; in production, fron
 
 ```bash
 git clone <repository-url>
-cd rtm-initialization
+cd OpenTraffic-Ops-Initialization
 ```
 
 #### 2. Start Backend
@@ -249,7 +249,7 @@ Run `build.bat` in the project root:
 build.bat
 ```
 
-After build completes, `backend\rtm-initialization.exe` is the final artifact.
+After build completes, `backend\opentraffic-ops-init.exe` is the final artifact.
 
 #### Windows Cross-Compile for Linux
 
@@ -260,14 +260,14 @@ build-linux.bat
 ```
 
 Output files:
-- `backend\rtm-initialization-linux-amd64`
-- `backend\rtm-initialization-linux-arm64`
+- `backend\opentraffic-ops-init-linux-amd64`
+- `backend\opentraffic-ops-init-linux-arm64`
 
 Upload to Linux server and run:
 
 ```bash
-chmod +x rtm-initialization-linux-amd64
-./rtm-initialization-linux-amd64
+chmod +x opentraffic-ops-init-linux-amd64
+./opentraffic-ops-init-linux-amd64
 ```
 
 #### Linux / macOS / Manual Build
@@ -285,7 +285,7 @@ cp -r frontend/dist/* backend/pkg/static/dist/
 
 # 3. Build backend single binary (frontend dist embedded)
 cd backend
-go build -o rtm-initialization cmd/server/main.go
+go build -o opentraffic-ops-init cmd/server/main.go
 ```
 
 > **Note**: `go:embed` requires embedded files to be within the Go module, and paths cannot contain `..`. Therefore, `frontend/dist` must first be copied to `backend/pkg/static/dist` before running `go build`.
@@ -327,21 +327,21 @@ If you have already embedded the frontend into the binary, you can build and run
 cd backend
 
 # Build image
-docker build -t rtm-initialization .
+docker build -t opentraffic-ops-init .
 
 # Run container
 docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
   -v rtm-data:/app/data \
-  --name rtm-initialization \
-  rtm-initialization
+  --name opentraffic-ops-init \
+  opentraffic-ops-init
 ```
 
 ## Project Structure
 
 ```
-rtm-initialization/
+opentraffic-ops-init/
 ├── backend/                      # Go backend
 │   ├── cmd/server/              # Entry files
 │   ├── internal/
@@ -483,7 +483,7 @@ DELETE /api/servers/:id
 # Test SSH connection
 POST /api/servers/:id/test
 
-# Get rtm-proxy config
+# Get opentraffic-ops-proxy config
 GET /api/servers/:id/proxy-config
 PUT /api/servers/:id/proxy-config
 

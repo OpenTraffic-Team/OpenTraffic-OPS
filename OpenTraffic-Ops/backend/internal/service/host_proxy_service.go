@@ -9,8 +9,8 @@ import (
 	"github.com/redis/go-redis/v9"
 	"go.uber.org/zap"
 
-	"rtm-server/internal/config"
-	"rtm-server/internal/dto"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/internal/dto"
 )
 
 // HostProxyCommandTTL 待执行指令存活时长

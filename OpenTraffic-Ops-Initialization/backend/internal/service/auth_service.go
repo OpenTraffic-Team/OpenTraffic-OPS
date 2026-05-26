@@ -3,8 +3,8 @@ package service
 import (
 	"errors"
 	"fmt"
-	"rtm-initialization-backend/internal/model"
-	"rtm-initialization-backend/internal/repository"
+	"opentraffic-ops-init-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/repository"
 	"time"
 
 	"github.com/golang-jwt/jwt/v5"

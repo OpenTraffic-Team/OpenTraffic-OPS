@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"io"
 	"path/filepath"
-	"rtm-initialization-backend/internal/model"
-	"rtm-initialization-backend/internal/repository"
-	"rtm-initialization-backend/pkg/assets"
-	"rtm-initialization-backend/pkg/ssh"
+	"opentraffic-ops-init-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/repository"
+	"opentraffic-ops-init-backend/pkg/assets"
+	"opentraffic-ops-init-backend/pkg/ssh"
 	"strings"
 	"time"
 )
@@ -30,14 +30,14 @@ func NewDeployService(serverService *ServerService) *DeployService {
 // DeployRequest 部署请求
 type DeployRequest struct {
 	ServerID      string  `json:"server_id" binding:"required"`
-	BinaryName    string  `json:"binary_name" binding:"required,oneof=rtm-proxy rtm-monitor-platform"`
+	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops"`
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
 }
 
 // binaryFileMap 二进制文件名映射
 var binaryFileMap = map[string]string{
-	"rtm-proxy":             "rtm-proxy-linux-amd64",
-	"rtm-monitor-platform":    "rtm-monitor-platform-linux-amd64",
+	"opentraffic-ops-proxy": "opentraffic-ops-proxy-linux-amd64",
+	"opentraffic-ops":       "opentraffic-ops-linux-amd64",
 }
 
 // Deploy 执行部署
@@ -196,7 +196,7 @@ func (s *DeployService) updateRecordFailed(id int, log string) {
 // UndeployRequest 卸载请求
  type UndeployRequest struct {
 	ServerID   string `json:"server_id" binding:"required"`
-	BinaryName string `json:"binary_name" binding:"required,oneof=rtm-proxy rtm-monitor-platform"`
+	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops"`
 }
 
 // Undeploy 执行卸载

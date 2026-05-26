@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"go.uber.org/zap"
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/model"
 )
 
 func (e *AlarmEngine) sendEmailNotification(ctx context.Context, record *model.AlarmRecord, ch model.AlarmChannel) (bool, string) {

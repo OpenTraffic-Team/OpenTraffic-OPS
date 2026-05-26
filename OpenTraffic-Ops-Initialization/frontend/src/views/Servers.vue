@@ -102,12 +102,12 @@
           <el-table-column label="服务状态" width="160">
             <template #default="{ row }">
               <div class="service-status-row">
-                <div class="status-item" @click="openServiceConfig(row, 'rtm-proxy')">
-                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'rtm-proxy')"></span>
-                  <span class="status-name">proxy</span>
+                <div class="status-item" @click="openServiceConfig(row, 'opentraffic-ops-proxy')">
+                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops-proxy')"></span>
+                  <span class="status-name">opentraffic-ops-proxy</span>
                 </div>
-                <div class="status-item" @click="openServiceConfig(row, 'rtm-monitor-platform')">
-                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'rtm-monitor-platform')"></span>
+                <div class="status-item" @click="openServiceConfig(row, 'opentraffic-ops')">
+                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops')"></span>
                   <span class="status-name">monitor</span>
                 </div>
               </div>
@@ -201,14 +201,14 @@
         <el-form-item label="选择二进制" required>
           <el-select v-model="deployForm.binary_name" placeholder="选择要部署的二进制文件" style="width: 100%" popper-class="light-select-dropdown">
             <el-option
-              :label="deployedSoftwares.has('rtm-proxy') ? 'rtm-proxy (Linux AMD64) — 已部署' : 'rtm-proxy (Linux AMD64)'"
-              value="rtm-proxy"
-              :disabled="deployedSoftwares.has('rtm-proxy')"
+              :label="deployedSoftwares.has('opentraffic-ops-proxy') ? 'opentraffic-ops-proxy (Linux AMD64) — 已部署' : 'opentraffic-ops-proxy (Linux AMD64)'"
+              value="opentraffic-ops-proxy"
+              :disabled="deployedSoftwares.has('opentraffic-ops-proxy')"
             />
             <el-option
-              :label="deployedSoftwares.has('rtm-monitor-platform') ? 'rtm-monitor-platform (Linux AMD64) — 已部署' : 'rtm-monitor-platform (Linux AMD64)'"
-              value="rtm-monitor-platform"
-              :disabled="deployedSoftwares.has('rtm-monitor-platform')"
+              :label="deployedSoftwares.has('opentraffic-ops') ? 'opentraffic-ops (Linux AMD64) — 已部署' : 'opentraffic-ops (Linux AMD64)'"
+              value="opentraffic-ops"
+              :disabled="deployedSoftwares.has('opentraffic-ops')"
             />
           </el-select>
         </el-form-item>
@@ -302,8 +302,8 @@
       <el-form class="dark-form">
         <el-form-item label="软件类型">
           <el-select v-model="configSoftwareName" placeholder="选择软件" style="width: 100%" @change="onConfigSoftwareChange" popper-class="light-select-dropdown">
-            <el-option label="rtm-proxy" value="rtm-proxy" />
-            <el-option label="rtm-monitor-platform" value="rtm-monitor-platform" />
+            <el-option label="opentraffic-ops-proxy" value="opentraffic-ops-proxy" />
+            <el-option label="opentraffic-ops" value="opentraffic-ops" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -368,22 +368,22 @@ const serverForm = reactive<CreateServerRequest>({
 
 const deployForm = reactive<DeployRequest>({
   server_id: '',
-  binary_name: 'rtm-proxy'
+  binary_name: 'opentraffic-ops-proxy'
 })
 
 const deployWithConfig = ref(false)
 const deployConfigContent = ref('')
-const configSoftwareName = ref('rtm-proxy')
+const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
 
-const softwareList = ['rtm-proxy', 'rtm-monitor-platform']
+const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops']
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
 
 const configFileNameMap: Record<string, string> = {
-  'rtm-proxy': 'config.json',
-  'rtm-monitor-platform': 'config.yaml'
+  'opentraffic-ops-proxy': 'config.json',
+  'opentraffic-ops': 'config.yaml'
 }
 
 onMounted(() => {
@@ -501,7 +501,7 @@ async function handleTest(server: Server) {
 async function openDeployDialog(server: Server) {
   currentServer.value = server
   deployForm.server_id = server.id
-  deployForm.binary_name = 'rtm-proxy'
+  deployForm.binary_name = 'opentraffic-ops-proxy'
   deployWithConfig.value = false
   deployConfigContent.value = ''
   await loadDeployedSoftwares(server.id)

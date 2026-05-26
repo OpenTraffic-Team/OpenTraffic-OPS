@@ -3,9 +3,9 @@ package service
 import (
 	"context"
 	"fmt"
-	"rtm-initialization-backend/internal/model"
-	"rtm-initialization-backend/internal/repository"
-	"rtm-initialization-backend/pkg/docker"
+	"opentraffic-ops-init-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/repository"
+	"opentraffic-ops-init-backend/pkg/docker"
 )
 
 // MonitorService 监控服务

@@ -1,4 +1,4 @@
-# build-proxy.ps1 - RTM Proxy Windows build script (cross-compile to Linux)
+# build-proxy.ps1 - OpenTraffic Ops Proxy Windows build script (cross-compile to Linux)
 #
 # Usage:
 #   .\build-proxy.ps1
@@ -33,7 +33,7 @@ $GoVer = (go version).Split(" ")[2]
 
 $Ldflags = "-s -w -X main.proxyVersion=$Version -X main.buildTime=$BuildTime -X main.goVersion=$GoVer"
 
-Info "RTM Proxy version: $Version"
+Info "OpenTraffic Ops Proxy version: $Version"
 Info "Build time: $BuildTime"
 
 if (-not (Test-Path $OutputDir)) {
@@ -54,7 +54,7 @@ foreach ($target in $Targets) {
     $os = $target.GOOS
     $arch = $target.GOARCH
     $suffix = $target.Suffix
-    $outputFile = "rtm-proxy-$suffix"
+    $outputFile = "opentraffic-ops-proxy-$suffix"
     $outputPath = Join-Path $DistDir $outputFile
 
     Write-Host ""
@@ -88,7 +88,7 @@ Write-Host "========================================" -ForegroundColor Cyan
 
 if ($SuccessCount -gt 0) {
     OK "Success: $SuccessCount targets"
-    $items = Get-ChildItem $DistDir -Filter "rtm-proxy-*"
+    $items = Get-ChildItem $DistDir -Filter "opentraffic-ops-proxy-*"
     foreach ($item in $items) {
         $size = [math]::Round($item.Length / 1MB, 2)
         Write-Host "  - $($item.Name) ($size MB)" -ForegroundColor Green
@@ -104,6 +104,6 @@ Info "Output directory: $DistDir"
 Write-Host ""
 Write-Host "Next steps:" -ForegroundColor Cyan
 Write-Host "  1. Upload the binary to your Linux server" -ForegroundColor White
-Write-Host "  2. scp $DistDir\rtm-proxy-linux-amd64 user@host:/opt/rtm-proxy/" -ForegroundColor Gray
-Write-Host "  3. On server: chmod +x /opt/rtm-proxy/rtm-proxy-linux-amd64" -ForegroundColor Gray
-Write-Host "  4. Start: ./rtm-proxy-linux-amd64" -ForegroundColor Gray
+Write-Host "  2. scp $DistDir\opentraffic-ops-proxy-linux-amd64 user@host:/opt/opentraffic-ops-proxy/" -ForegroundColor Gray
+Write-Host "  3. On server: chmod +x /opt/opentraffic-ops-proxy/opentraffic-ops-proxy-linux-amd64" -ForegroundColor Gray
+Write-Host "  4. Start: ./opentraffic-ops-proxy-linux-amd64" -ForegroundColor Gray

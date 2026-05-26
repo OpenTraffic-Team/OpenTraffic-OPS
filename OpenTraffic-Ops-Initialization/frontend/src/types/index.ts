@@ -131,7 +131,7 @@ export interface CreateServerRequest {
 
 export interface DeployRequest {
   server_id: string
-  binary_name: 'rtm-proxy' | 'rtm-monitor-platform'
+  binary_name: 'opentraffic-ops-proxy' | 'opentraffic-ops'
   config_content?: string
 }
 

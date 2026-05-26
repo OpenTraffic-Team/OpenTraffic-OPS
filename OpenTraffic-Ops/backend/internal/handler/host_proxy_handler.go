@@ -3,9 +3,9 @@ package handler
 import (
 	"github.com/gin-gonic/gin"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/service"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // HostProxyHandler HostProxy 上报接口处理器

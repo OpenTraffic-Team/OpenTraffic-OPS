@@ -2,8 +2,8 @@ package controller
 
 import (
 	"net/http"
-	"rtm-initialization-backend/internal/middleware"
-	"rtm-initialization-backend/internal/service"
+	"opentraffic-ops-init-backend/internal/middleware"
+	"opentraffic-ops-init-backend/internal/service"
 	"strconv"
 
 	"github.com/gin-gonic/gin"

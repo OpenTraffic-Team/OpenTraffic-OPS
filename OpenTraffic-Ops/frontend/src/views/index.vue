@@ -394,7 +394,7 @@ onBeforeUnmount(() => {
   padding: 20px;
 }
 
-// ========== 统计卡片 (rtm-initialization style) ==========
+// ========== 统计卡片 (OpenTraffic-Ops-Initialization style) ==========
 .panel-group {
   margin-bottom: 20px;
 

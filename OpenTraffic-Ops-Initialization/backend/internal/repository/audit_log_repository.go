@@ -1,7 +1,7 @@
 package repository
 
 import (
-	"rtm-initialization-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/model"
 )
 
 // AuditLogRepository 审计日志仓储

@@ -6,7 +6,7 @@
 *.dylib
 bin/
 dist/
-backend/rtm-initialization-linux-*
+backend/opentraffic-ops-init-linux-*
 
 # Logs
 logs/
@@ -45,7 +45,7 @@ backend/data/
 
 # Large container images (exceeds 256MB git limit)
 backend/pkg/assets/images/*.tar
-backend/pkg/assets/images/rtm*
+backend/pkg/assets/images/opentraffic-ops*
 
 # Temporary files
 *.tmp

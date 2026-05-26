@@ -3,7 +3,7 @@ package model
 import (
 	"gorm.io/gorm"
 
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // AlarmRecord 告警记录模型 bu_alarm_record

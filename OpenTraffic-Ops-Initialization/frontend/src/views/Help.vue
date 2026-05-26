@@ -14,7 +14,7 @@
           <div class="help-section">
             <p class="lead">
               RTM部署面板 是一个集 Docker 容器组件部署与 SSH 远程服务器管理于一体的综合运维平台。
-              它既能帮助你在本地环境快速安装、启动、监控常用中间件，也支持通过 SSH 将 rtm-proxy 等二进制文件
+              它既能帮助你在本地环境快速安装、启动、监控常用中间件，也支持通过 SSH 将 opentraffic-ops-proxy 等二进制文件
               一键部署到远程 Linux 服务器，实现分布式节点的统一管理。
             </p>
             <div class="feature-grid">
@@ -116,7 +116,7 @@
         <el-tab-pane label="服务器管理">
           <div class="help-section">
             <p class="lead">
-              服务器管理模块用于维护远程 Linux 服务器的 SSH 连接配置。配置完成后，即可通过平台将 rtm-proxy
+              服务器管理模块用于维护远程 Linux 服务器的 SSH 连接配置。配置完成后，即可通过平台将 opentraffic-ops-proxy
               等二进制文件一键部署到目标服务器，并支持远程配置编辑和部署历史追溯。
             </p>
 
@@ -159,7 +159,7 @@
           <div class="help-section">
             <p class="lead">
               远程部署功能允许你通过 SSH 将内置的二进制文件上传到目标 Linux 服务器，上传后可通过平台直接管理服务的启停。
-              目前支持部署 rtm-proxy 和 rtm-monitor-platform 两个组件。
+              目前支持部署 opentraffic-ops-proxy 和 opentraffic-ops 两个组件。
             </p>
 
             <h3 class="section-title"><span class="title-num">01</span>可部署的二进制文件</h3>
@@ -182,14 +182,14 @@
             <p class="section-desc">部署完成后，平台使用进程文件（PID 文件）来管理服务生命周期，无需 root 权限：</p>
             <pre class="code-block"># 上传二进制文件到部署路径
 # 设置可执行权限
-chmod +x /opt/rtm/rtm-proxy-linux-amd64
+chmod +x /opt/rtm/opentraffic-ops-proxy-linux-amd64
 
 # 启动服务（通过平台按钮操作）
-cd /opt/rtm && setsid ./rtm-proxy-linux-amd64 > /dev/null 2>&1 &lt;/dev/null & echo $! > rtm-proxy.pid
+cd /opt/rtm && setsid ./opentraffic-ops-proxy-linux-amd64 > /dev/null 2>&1 &lt;/dev/null & echo $! > opentraffic-ops-proxy.pid
 
 # 停止服务（通过平台按钮操作）
-kill $(cat /opt/rtm/rtm-proxy.pid)
-rm -f /opt/rtm/rtm-proxy.pid</pre>
+kill $(cat /opt/rtm/opentraffic-ops-proxy.pid)
+rm -f /opt/rtm/opentraffic-ops-proxy.pid</pre>
 
             <div class="tip-box">
               <el-icon><WarningFilled /></el-icon>
@@ -359,8 +359,8 @@ const serverOperations = reactive([
   { name: '新增', desc: '填写服务器 SSH 连接信息，保存到平台数据库中。敏感信息（密码、私钥）会被加密存储。' },
   { name: '编辑', desc: '修改服务器的连接配置。如果密码或私钥留空，则保留原有值不做修改。' },
   { name: '测试', desc: '使用保存的凭据尝试建立 SSH 连接，验证配置是否正确。' },
-  { name: '部署', desc: '选择二进制文件（rtm-proxy 或 rtm-monitor-platform），通过 SFTP 上传到远程服务器的部署路径。同一服务器上同一服务只能部署一次。' },
-  { name: '配置', desc: '查看和编辑远程服务器上 rtm-proxy 的 <code>config.json</code> 配置文件。' },
+  { name: '部署', desc: '选择二进制文件（opentraffic-ops-proxy 或 opentraffic-ops），通过 SFTP 上传到远程服务器的部署路径。同一服务器上同一服务只能部署一次。' },
+  { name: '配置', desc: '查看和编辑远程服务器上 opentraffic-ops-proxy 的 <code>config.json</code> 配置文件。' },
   { name: '删除', desc: '从平台中移除服务器配置记录。此操作不会删除远程服务器上的任何文件。' },
 ])
 
@@ -370,13 +370,13 @@ const authTypes = reactive([
 ])
 
 const deployBinaries = reactive([
-  { key: 'rtm-proxy', value: 'RTM 采集代理程序，部署到远程服务器后负责采集系统指标并上报。' },
-  { key: 'rtm-monitor-platform', value: 'RTM 监控平台服务，提供监控数据的聚合、存储和展示能力。' },
+  { key: 'opentraffic-ops-proxy', value: 'OpenTraffic Ops Proxy 采集代理程序，部署到远程服务器后负责采集系统指标并上报。' },
+  { key: 'opentraffic-ops', value: 'OpenTraffic Ops 监控平台服务，提供监控数据的聚合、存储和展示能力。' },
 ])
 
 const deploySteps = reactive([
   { name: '选择服务器', desc: '在服务器管理列表中点击「部署」按钮，进入部署对话框。' },
-  { name: '选择二进制', desc: '选择要部署的文件：rtm-proxy 或 rtm-monitor-platform。' },
+  { name: '选择二进制', desc: '选择要部署的文件：opentraffic-ops-proxy 或 opentraffic-ops。' },
   { name: '加载配置（可选）', desc: '可加载默认配置或自定义配置文件内容，部署时会自动写入到远程服务器。' },
   { name: '执行部署', desc: '平台通过 SSH 连接到目标服务器，使用 SFTP 上传二进制文件，设置可执行权限，并创建配置文件。' },
   { name: '查看记录', desc: '部署完成后可在「部署记录」中查看详细日志，包括每一步的执行结果。' },
@@ -456,8 +456,8 @@ const faqs = reactive([
     a: '「进行中」表示部署任务已提交但尚未完成。如果长时间处于此状态，可能是网络中断或 SSH 连接异常导致的。可以尝试重新部署或查看具体日志排查原因。'
   },
   {
-    q: '如何更新已部署的 rtm-proxy 配置？',
-    a: '在服务器管理页面找到目标服务器，点击「配置」按钮，即可查看和编辑远程服务器上的 <code>~/.rtm-proxy/config.json</code> 文件。保存后需要手动重启 rtm-proxy 服务使配置生效。'
+    q: '如何更新已部署的 opentraffic-ops-proxy 配置？',
+    a: '在服务器管理页面找到目标服务器，点击「配置」按钮，即可查看和编辑远程服务器上的 <code>~/.opentraffic-ops-proxy/config.json</code> 文件。保存后需要手动重启 opentraffic-ops-proxy 服务使配置生效。'
   },
 ])
 </script>

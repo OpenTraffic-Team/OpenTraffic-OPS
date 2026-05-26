@@ -4,8 +4,8 @@ import (
 	"context"
 
 	"gorm.io/gorm"
-	"rtm-server/internal/dto"
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/model"
 )
 
 // UserRepository 用户数据访问

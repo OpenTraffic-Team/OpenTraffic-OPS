@@ -9,8 +9,8 @@ import (
 	"github.com/gorilla/websocket"
 	"go.uber.org/zap"
 
-	"rtm-server/internal/middleware"
-	"rtm-server/internal/ws"
+	"opentraffic-ops-backend/internal/middleware"
+	"opentraffic-ops-backend/internal/ws"
 )
 
 var upgrader = websocket.Upgrader{

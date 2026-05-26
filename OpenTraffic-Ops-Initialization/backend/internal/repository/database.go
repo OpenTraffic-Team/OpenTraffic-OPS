@@ -2,7 +2,7 @@ package repository
 
 import (
 	"fmt"
-	"rtm-initialization-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/model"
 	"time"
 
 	"github.com/glebarez/sqlite"

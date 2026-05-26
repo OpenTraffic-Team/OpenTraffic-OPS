@@ -3,7 +3,7 @@ package model
 import (
 	"gorm.io/gorm"
 
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // BaseEntity 基础实体（嵌入到各模型中）

@@ -1,4 +1,4 @@
-module rtm-proxy
+module opentraffic-ops-proxy
 
 go 1.26.2
 

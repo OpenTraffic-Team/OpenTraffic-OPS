@@ -5,9 +5,9 @@ import (
 	"io"
 	"net/http"
 	"os"
-	"rtm-initialization-backend/internal/middleware"
-	"rtm-initialization-backend/internal/model"
-	"rtm-initialization-backend/internal/service"
+	"opentraffic-ops-init-backend/internal/middleware"
+	"opentraffic-ops-init-backend/internal/model"
+	"opentraffic-ops-init-backend/internal/service"
 	"time"
 
 	"github.com/gin-gonic/gin"

@@ -6,10 +6,10 @@ import (
 
 	"gorm.io/gorm"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/model"
-	"rtm-server/internal/repository"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/model"
+	"opentraffic-ops-backend/internal/repository"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // AlarmRecordService 告警记录服务

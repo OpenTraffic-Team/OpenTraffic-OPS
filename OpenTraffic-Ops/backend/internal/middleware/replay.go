@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"rtm-server/pkg/cache"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/pkg/cache"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // Replay 防重放攻击中间件

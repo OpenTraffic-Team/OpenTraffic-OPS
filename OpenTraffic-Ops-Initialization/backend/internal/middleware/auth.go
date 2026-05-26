@@ -3,7 +3,7 @@ package middleware
 import (
 	"net/http"
 	"strings"
-	"rtm-initialization-backend/internal/service"
+	"opentraffic-ops-init-backend/internal/service"
 
 	"github.com/gin-gonic/gin"
 )

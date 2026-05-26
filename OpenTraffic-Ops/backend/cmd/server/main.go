@@ -13,12 +13,12 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.uber.org/zap"
 
-	"rtm-server/internal/config"
-	"rtm-server/internal/middleware"
-	"rtm-server/internal/router"
-	"rtm-server/internal/service"
-	"rtm-server/pkg/response"
-	"rtm-server/pkg/static"
+	"opentraffic-ops-backend/internal/config"
+	"opentraffic-ops-backend/internal/middleware"
+	"opentraffic-ops-backend/internal/router"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/pkg/response"
+	"opentraffic-ops-backend/pkg/static"
 )
 
 func init() {
@@ -33,7 +33,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	// 加载配置（固定路径：~/.rtm-monitor-platform/config.yaml）
+	// 加载配置（固定路径：~/.opentraffic-ops/config.yaml）
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		fmt.Printf("Failed to load config: %v\n", err)
@@ -46,7 +46,7 @@ func main() {
 		os.Exit(1)
 	}
 
-	zap.L().Info("Starting RTM Server",
+	zap.L().Info("Starting OpenTraffic Ops Server",
 		zap.String("version", config.Version),
 		zap.String("build_time", config.BuildTime),
 		zap.String("go_version", config.GoVersion),

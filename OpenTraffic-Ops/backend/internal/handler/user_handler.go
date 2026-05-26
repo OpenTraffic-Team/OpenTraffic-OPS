@@ -5,10 +5,10 @@ import (
 	"strings"
 
 	"github.com/gin-gonic/gin"
-	"rtm-server/internal/dto"
-	"rtm-server/internal/middleware"
-	"rtm-server/internal/service"
-	"rtm-server/pkg/response"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/middleware"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/pkg/response"
 )
 
 // UserHandler 用户处理器

@@ -1,5 +1,5 @@
 {
-  "name": "rtm-initialization-frontend",
+  "name": "opentraffic-ops-init-frontend",
   "version": "1.0.0",
   "private": true,
   "type": "module",

@@ -32,12 +32,12 @@ export const serverApi = {
     return request.post<any, { message: string }>(`/servers/${id}/test`)
   },
 
-  // 获取rtm-proxy配置（兼容旧接口）
+  // 获取opentraffic-ops-proxy配置（兼容旧接口）
   getProxyConfig(id: string) {
     return request.get<any, { content: string }>(`/servers/${id}/proxy-config`)
   },
 
-  // 更新rtm-proxy配置（兼容旧接口）
+  // 更新opentraffic-ops-proxy配置（兼容旧接口）
   updateProxyConfig(id: string, content: string) {
     return request.put(`/servers/${id}/proxy-config`, { content })
   },

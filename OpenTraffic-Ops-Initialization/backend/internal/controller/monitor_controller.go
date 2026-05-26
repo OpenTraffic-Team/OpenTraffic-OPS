@@ -2,7 +2,7 @@ package controller
 
 import (
 	"net/http"
-	"rtm-initialization-backend/internal/service"
+	"opentraffic-ops-init-backend/internal/service"
 	"time"
 
 	"github.com/gin-gonic/gin"

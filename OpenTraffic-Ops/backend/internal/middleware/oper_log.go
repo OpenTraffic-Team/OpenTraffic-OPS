@@ -9,9 +9,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/service"
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/service"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // 业务类型常量（与Java BusinessType对应）

@@ -1,4 +1,4 @@
-module rtm-server
+module opentraffic-ops-backend
 
 go 1.25.0
 

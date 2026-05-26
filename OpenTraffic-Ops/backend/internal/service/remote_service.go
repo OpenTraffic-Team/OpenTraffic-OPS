@@ -5,8 +5,8 @@ import (
 	"encoding/json"
 	"fmt"
 
-	"rtm-server/internal/dto"
-	"rtm-server/internal/ws"
+	"opentraffic-ops-backend/internal/dto"
+	"opentraffic-ops-backend/internal/ws"
 )
 
 // RemoteService 远程文件操作服务

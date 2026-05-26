@@ -61,7 +61,7 @@ xss:
 
 log:
   level: info
-  filename: logs/rtm-server.log
+  filename: logs/opentraffic-ops-backend.log
   maxSize: 100
   maxBackups: 30
   maxAge: 30

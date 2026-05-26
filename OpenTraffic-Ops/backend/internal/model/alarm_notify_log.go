@@ -3,7 +3,7 @@ package model
 import (
 	"gorm.io/gorm"
 
-	"rtm-server/internal/utils"
+	"opentraffic-ops-backend/internal/utils"
 )
 
 // AlarmNotifyLog 告警通知日志模型 bu_alarm_notify_log

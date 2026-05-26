@@ -18,7 +18,7 @@
               <rect x="36" y="36" width="20" height="20" rx="4" fill="#a78bfa"/>
             </svg>
           </div>
-          <h2>RTM 部署面板</h2>
+          <h2>OpenTraffic Ops 部署面板</h2>
         </div>
         <el-menu
           class="side-menu"

@@ -6,7 +6,7 @@ import (
 	"go.uber.org/zap"
 	"gorm.io/gorm"
 
-	"rtm-server/internal/model"
+	"opentraffic-ops-backend/internal/model"
 )
 
 // HostHealthRepository 主机健康度数据访问
