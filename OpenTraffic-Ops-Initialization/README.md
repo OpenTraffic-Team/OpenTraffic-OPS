@@ -1,126 +1,128 @@
-# OpenTraffic Ops 部署面板
+# OpenTraffic Ops Init Deployment Panel
 
-## 项目简介
+[中文](README_CN.md)
 
-OpenTraffic Ops 部署面板是一个**单包自包含**的综合运维平台，集成了 **Docker 容器组件管理** 与 **SSH 远程服务器部署** 两大核心能力。平台后端由 Go 提供单一 HTTP 服务，前端通过 `go:embed` 嵌入二进制，**无需额外安装 Nginx 或配置反向代理**——只需运行一个二进制文件即可启动完整服务。
+## Overview
 
-### 核心能力
+OpenTraffic Ops Init Deployment Panel is a **single-binary, self-contained** comprehensive operations platform that integrates two core capabilities: **Docker container management** and **SSH remote server deployment**. The backend is powered by a single Go HTTP service, and the frontend is embedded into the binary via `go:embed` — **no additional Nginx or reverse proxy configuration required**. Simply run one binary to launch the complete service.
 
-| 能力 | 说明 |
-|------|------|
-| Docker 组件管理 | 一键安装、启动、停止、卸载常用中间件（PostgreSQL、Redis），支持自定义端口、环境变量、数据卷和启动命令 |
-| 实时监控 | 查看组件实时资源占用（CPU / 内存 / 网络 / 磁盘），支持日志实时刷新和自动刷新 |
-| SSH 服务器管理 | 统一管理多台远程 Linux 服务器的 SSH 连接配置，支持密码和密钥两种认证方式 |
-| 远程二进制部署 | 通过 SSH/SFTP 将 opentraffic-ops-proxy 和 opentraffic-ops 二进制文件一键部署到远程服务器 |
-| 远程配置管理 | 在线查看和编辑远程服务器上的软件配置文件（opentraffic-ops-proxy 的 config.json、opentraffic-ops 的 config.yaml） |
-| 远程服务管理 | 通过 PID 文件管理远程服务的启动、停止、重启，无需 root 权限 |
-| 部署记录追溯 | 完整记录每次远程部署的操作日志、执行结果和历史记录 |
+### Core Capabilities
 
-## 技术栈
+| Capability | Description |
+|-----------|-------------|
+| Docker Component Management | One-click install, start, stop, and uninstall common middleware (PostgreSQL, Redis) with custom ports, environment variables, volumes, and startup commands |
+| Real-time Monitoring | View real-time resource usage (CPU / memory / network / disk) of components, with live log refresh and auto-refresh support |
+| SSH Server Management | Centrally manage SSH connection configurations for multiple remote Linux servers, supporting both password and key authentication |
+| Remote Binary Deployment | Deploy `opentraffic-ops-proxy` and `opentraffic-ops` binaries to remote servers via SSH/SFTP with one click |
+| Remote Configuration Management | View and edit software configuration files on remote servers online (`config.json` for opentraffic-ops-proxy, `config.yaml` for opentraffic-ops) |
+| Remote Service Management | Start, stop, and restart services on remote servers via PID files, without requiring root privileges |
+| Deployment Audit Trail | Complete logging of every remote deployment operation, execution results, and historical records |
 
-### 后端
-- **语言**: Go 1.21+
-- **框架**: Gin
-- **数据库**: SQLite（零外部依赖）
-- **容器管理**: Docker SDK for Go
-- **SSH 客户端**: 基于 `golang.org/x/crypto/ssh`
-- **认证**: JWT
-- **静态文件托管**: `go:embed` + 自定义 SPA Fallback Handler
-- **加密存储**: AES-GCM 加密敏感信息（SSH 密码、私钥）
+## Tech Stack
 
-### 前端
-- **框架**: Vue 3 + TypeScript
-- **UI 组件**: Element Plus
-- **构建工具**: Vite
-- **状态管理**: Pinia
-- **图表**: ECharts
-- **路由模式**: `createWebHistory`（History 模式）
+### Backend
+- **Language**: Go 1.21+
+- **Framework**: Gin
+- **Database**: SQLite (zero external dependencies)
+- **Container Management**: Docker SDK for Go
+- **SSH Client**: Based on `golang.org/x/crypto/ssh`
+- **Authentication**: JWT
+- **Static File Hosting**: `go:embed` + custom SPA fallback handler
+- **Encryption**: AES-GCM for sensitive data (SSH passwords, private keys)
 
-## 功能模块
+### Frontend
+- **Framework**: Vue 3 + TypeScript
+- **UI Library**: Element Plus
+- **Build Tool**: Vite
+- **State Management**: Pinia
+- **Charts**: ECharts
+- **Routing**: `createWebHistory` (History mode)
 
-### 1. 监控大屏
-- 组件统计卡片（总数 / 运行中 / 已停止 / 错误）
-- 服务器统计卡片（总数 / 密码认证 / 密钥认证 / 已配置部署）
-- 组件类型分布饼图
-- 组件状态分布柱状图
-- 组件实时监控表格（CPU / 内存 / 网络 IO），支持启停实时刷新
+## Feature Modules
 
-### 2. 组件管理
-- 组件目录浏览，显示 Docker 连接状态
-- 一键安装组件（PostgreSQL、Redis）
-- 安装时自定义：组件名称、端口、环境变量、数据卷、启动命令参数
-- 启动 / 停止 / 重启 / 卸载已安装组件
-- 查看组件详情（资源监控、日志、配置信息）
-- 内置离线镜像，无需外网即可部署
+### 1. Dashboard
+- Component stat cards (total / running / stopped / error)
+- Server stat cards (total / password auth / key auth / configured for deployment)
+- Component type distribution pie chart
+- Component status distribution bar chart
+- Real-time component monitoring table (CPU / memory / network IO) with start/stop live refresh
 
-#### 支持的组件类型
+### 2. Component Management
+- Browse component catalog with Docker connection status
+- One-click install components (PostgreSQL, Redis)
+- Customize during installation: component name, port, environment variables, volumes, startup command arguments
+- Start / stop / restart / uninstall installed components
+- View component details (resource monitoring, logs, configuration)
+- Built-in offline images — no internet required for deployment
 
-| 组件 | 类型 | 默认镜像 | 说明 |
-|------|------|---------|------|
-| PostgreSQL | `postgresql` | `postgres:16-alpine` | 关系型数据库 |
-| Redis | `redis` | `redis:7-alpine` | 内存缓存 / 键值数据库 |
+#### Supported Component Types
 
-#### 组件详情页
-- **基本信息**：组件名称、类型、镜像、版本、状态、容器 ID、创建/更新时间
-- **配置信息**：JSON 格式的完整配置展示
-- **资源监控**：CPU 使用率、内存使用/上限、网络接收/发送、磁盘读取/写入
-- **日志查看**：支持最近 100/500/1000 行查看，支持自动刷新
+| Component | Type | Default Image | Description |
+|-----------|------|--------------|-------------|
+| PostgreSQL | `postgresql` | `postgres:16-alpine` | Relational database |
+| Redis | `redis` | `redis:7-alpine` | In-memory cache / key-value store |
 
-### 3. 服务器管理
-- 新增 / 编辑 / 删除远程服务器 SSH 配置
-- 支持两种认证方式：
-  - **密码认证**：用户名 + 密码
-  - **密钥认证**：SSH 私钥（支持带 Passphrase 的私钥）
-- SSH 连接测试
-- 服务器列表展示服务状态（proxy / monitor）
-- 展开行查看已部署服务详情
-- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务
+#### Component Detail Page
+- **Basic Info**: component name, type, image, version, status, container ID, create/update timestamps
+- **Configuration**: full configuration displayed in JSON format
+- **Resource Monitoring**: CPU usage, memory usage/limit, network rx/tx, disk read/write
+- **Log Viewer**: support for recent 100/500/1000 lines, with auto-refresh
 
-### 4. 远程部署
-- 选择目标服务器，部署内置二进制文件：
-  - `opentraffic-ops-proxy` — OpenTraffic Ops Proxy 采集代理程序
-  - `opentraffic-ops` — OpenTraffic Ops 监控平台服务
-- 可选同时部署配置文件
-- 支持加载默认配置模板
-- 防重复部署检测
-- 完整的部署记录和日志追溯
+### 3. Server Management
+- Add / edit / delete remote server SSH configurations
+- Two authentication methods supported:
+  - **Password Auth**: username + password
+  - **Key Auth**: SSH private key (supports keys with Passphrase)
+- SSH connection test
+- Server list displays service status (proxy / monitor)
+- Expandable rows to view deployed service details
+- Supported operations: start / stop / restart / configure / uninstall remote services
 
-### 5. 配置管理
-- 查看所有已安装组件的配置列表
-- 在线编辑组件配置（端口、环境变量、数据卷、启动命令）
-- 配置保存后需手动重启组件生效
+### 4. Remote Deployment
+- Select target servers to deploy built-in binaries:
+  - `opentraffic-ops-proxy` — OpenTraffic Ops Proxy data collection agent
+  - `opentraffic-ops` — OpenTraffic Ops monitoring platform service
+- Optionally deploy configuration files simultaneously
+- Support loading default configuration templates
+- Duplicate deployment detection
+- Complete deployment records and log traceability
 
-### 6. 使用指南
-- 平台简介与特性概览
-- 基础环境要求（Docker、浏览器、网络、SSH）
-- 组件管理使用说明（支持的组件、配置项、常见操作）
-- 服务器管理使用说明（配置项、操作、认证方式）
-- 远程部署流程说明
-- PostgreSQL / Redis 默认配置与参数说明
-- 常见问题 FAQ（手风琴式交互）
+### 5. Configuration Management
+- View configuration list of all installed components
+- Edit component configurations online (ports, environment variables, volumes, startup commands)
+- Manual restart required after configuration changes take effect
 
-## 单包自包含部署（无 Nginx）
+### 6. User Guide
+- Platform introduction and feature overview
+- Basic environment requirements (Docker, browser, network, SSH)
+- Component management usage instructions (supported components, configuration items, common operations)
+- Server management usage instructions (configuration items, operations, auth methods)
+- Remote deployment process instructions
+- PostgreSQL / Redis default configuration and parameter descriptions
+- Common FAQ (accordion-style interaction)
 
-本项目的核心设计目标之一是**消除对外部 Web 服务器（如 Nginx）的依赖**。传统 Vue `createWebHistory` 项目通常需要 Nginx 做静态文件服务和路由回退，而本项目通过 Go 原生的 `go:embed` 机制，将前端 `dist` 目录直接嵌入后端二进制中，由 Go 后端统一提供 HTTP 服务。
+## Single-Binary Self-Contained Deployment (No Nginx)
 
-### 实现原理
+A core design goal of this project is to **eliminate dependency on external web servers** (like Nginx). Traditional Vue `createWebHistory` projects typically require Nginx for static file serving and route fallback, while this project uses Go's native `go:embed` mechanism to embed the frontend `dist` directory directly into the backend binary, with the Go backend providing unified HTTP service.
 
-#### 1. 前端构建产物嵌入 Go 二进制
+### Implementation
 
-在 `backend/pkg/static/static.go` 中，使用 `//go:embed` 指令将 `frontend/dist` 目录编译进二进制：
+#### 1. Frontend Build Artifacts Embedded in Go Binary
+
+In `backend/pkg/static/static.go`, the `//go:embed` directive embeds the `frontend/dist` directory at compile time:
 
 ```go
 //go:embed all:../../../frontend/dist
 var dist embed.FS
 ```
 
-这意味着运行 `go build` 后，前端的所有 HTML、JS、CSS、图片等资源都已经包含在单个可执行文件内部，无需在服务器上保留 `frontend/dist` 文件夹。
+This means after running `go build`, all frontend HTML, JS, CSS, and image resources are contained within a single executable file — no need to keep a `frontend/dist` folder on the server.
 
-#### 2. SPA Fallback 逻辑
+#### 2. SPA Fallback Logic
 
-前端使用 Vue Router 的 `createWebHistory()`（History 模式），当用户直接访问 `/components`、`/configs` 等路由，或刷新页面时，浏览器会请求一个不存在的静态文件路径。如果后端直接返回 404，SPA 将无法正常工作。
+The frontend uses Vue Router's `createWebHistory()` (History mode). When users directly access routes like `/components`, `/configs`, or refresh the page, the browser requests a static file path that doesn't exist on disk. If the backend returns 404 directly, the SPA will not work.
 
-因此，我们实现了一个自定义的 `http.Handler`：
+Therefore, a custom `http.Handler` is implemented:
 
 ```go
 func Handler() http.Handler {
@@ -128,272 +130,272 @@ func Handler() http.Handler {
     fileServer := http.FileServer(http.FS(distFS))
 
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-        // 1. API 和 health 路由不应由静态文件处理器处理
+        // 1. API and health routes should not be handled by static file handler
         if strings.HasPrefix(r.URL.Path, "/api/") || r.URL.Path == "/health" {
             http.NotFound(w, r)
             return
         }
 
-        // 2. 尝试打开请求的文件
+        // 2. Try to open requested file
         f, err := distFS.Open(strings.TrimPrefix(r.URL.Path, "/"))
         if err != nil {
-            // 文件不存在 -> 回退到 index.html
+            // File not found -> fallback to index.html
             r.URL.Path = "/"
             fileServer.ServeHTTP(w, r)
             return
         }
         defer f.Close()
 
-        // 3. 如果路径是目录，也回退到 index.html
+        // 3. If path is a directory, also fallback to index.html
         if stat, _ := f.Stat(); stat.IsDir() {
             r.URL.Path = "/"
             fileServer.ServeHTTP(w, r)
             return
         }
 
-        // 4. 真实存在的静态文件，直接返回
+        // 4. Real static file exists, serve directly
         fileServer.ServeHTTP(w, r)
     })
 }
 ```
 
-在 `backend/cmd/server/main.go` 中，所有 `/api/*` 和 `/health` 路由注册完成后，通过 `NoRoute` 将此 Handler 设为兜底：
+In `backend/cmd/server/main.go`, after all `/api/*` and `/health` routes are registered, this Handler is set as the catch-all via `NoRoute`:
 
 ```go
 r.NoRoute(gin.WrapH(static.Handler()))
 ```
 
-Gin 的匹配优先级保证：显式注册的 API 路由优先被命中，未匹配到的路径才进入静态文件处理器。
+Gin's matching priority ensures: explicitly registered API routes are matched first, and only unmatched paths enter the static file handler.
 
-#### 3. 同域部署，天然无跨域
+#### 3. Same-Origin Deployment, No CORS Issues
 
-前端 API 基地址设置为 `/api`（`frontend/src/api/index.ts`）：
+The frontend API base URL is set to `/api` (`frontend/src/api/index.ts`):
 
 ```typescript
 baseURL: '/api'
 ```
 
-开发时 Vite 通过 `proxy` 将 `/api` 转发到 `localhost:8080`；生产环境中前后端共享同一个端口和域名，完全不存在跨域问题，也无需 CORS 特殊配置。
+During development, Vite proxies `/api` to `localhost:8080`; in production, frontend and backend share the same port and domain, so there are no cross-origin issues and no special CORS configuration is needed.
 
-### 关键优势
+### Key Advantages
 
-| 特性 | 传统 Nginx + 后端分离 | 本项目单包自包含 |
-|------|---------------------|----------------|
-| 部署文件 | 多个文件/目录 + Nginx 配置 | **单个二进制文件** |
-| 端口暴露 | 80/443 + 8080 | **仅一个端口** |
-| 路由刷新 | 需 Nginx `try_files` 配置 | **后端自动 fallback** |
-| 环境依赖 | 需安装 Nginx | **仅需 Docker** |
-| 迁移成本 | 需同步前端资源目录 | **复制一个文件即可** |
+| Feature | Traditional Nginx + Backend Separation | This Project (Single Binary) |
+|--------|--------------------------------------|------------------------------|
+| Deployment Files | Multiple files/directories + Nginx config | **Single binary file** |
+| Port Exposure | 80/443 + 8080 | **Single port only** |
+| Route Refresh | Requires Nginx `try_files` config | **Backend auto fallback** |
+| Environment Dependencies | Requires Nginx installation | **Docker only** |
+| Migration Cost | Must sync frontend resource directory | **Copy one file** |
 
-## 快速开始
+## Quick Start
 
-### 前置要求
+### Prerequisites
 
 - Go 1.21+
 - Node.js 18+
-- Docker & Docker Compose（本机运行时使用）
+- Docker & Docker Compose (for local runtime)
 - Git
 
-### 开发模式启动
+### Development Mode
 
-#### 1. 克隆项目
+#### 1. Clone Project
 
 ```bash
 git clone <repository-url>
 cd OpenTraffic-Ops-Initialization
 ```
 
-#### 2. 启动后端
+#### 2. Start Backend
 
 ```bash
 cd backend
 
-# 安装依赖
+# Install dependencies
 go mod download
 
-# 运行后端服务
+# Run backend service
 go run cmd/server/main.go
 ```
 
-后端服务将在 `http://localhost:8080` 启动。
+Backend service starts at `http://localhost:8080`.
 
-#### 3. 启动前端
+#### 3. Start Frontend
 
 ```bash
 cd frontend
 
-# 安装依赖
+# Install dependencies
 npm install
 
-# 启动开发服务器
+# Start dev server
 npm run dev
 ```
 
-前端服务将在 `http://localhost:5173` 启动，开发时通过 Vite Proxy 自动转发 `/api` 到 `http://localhost:8080`。
+Frontend dev server starts at `http://localhost:5173`, with Vite Proxy automatically forwarding `/api` to `http://localhost:8080`.
 
-#### 4. 访问系统
+#### 4. Access System
 
-打开浏览器访问 `http://localhost:5173`
+Open browser and visit `http://localhost:5173`
 
-默认登录账号：
-- 用户名: `admin`
-- 密码: `admin123`
+Default login credentials:
+- Username: `admin`
+- Password: `admin123`
 
-### 生产构建（单包自包含）
+### Production Build (Single Binary)
 
-#### Windows 本地构建
+#### Windows Local Build
 
-在项目根目录下执行 `build.bat`：
+Run `build.bat` in the project root:
 
 ```cmd
 build.bat
 ```
 
-构建完成后，`backend\opentraffic-ops-init.exe` 即为最终产物。
+After build completes, `backend\opentraffic-ops-init.exe` is the final artifact.
 
-#### Windows 交叉编译 Linux 部署包
+#### Windows Cross-Compile for Linux
 
-执行 `build-linux.bat` 生成 Linux AMD64 和 ARM64 二进制：
+Run `build-linux.bat` to generate Linux AMD64 and ARM64 binaries:
 
 ```cmd
 build-linux.bat
 ```
 
-输出文件为：
+Output files:
 - `backend\opentraffic-ops-init-linux-amd64`
 - `backend\opentraffic-ops-init-linux-arm64`
 
-上传至 Linux 服务器并运行：
+Upload to Linux server and run:
 
 ```bash
 chmod +x opentraffic-ops-init-linux-amd64
 ./opentraffic-ops-init-linux-amd64
 ```
 
-#### Linux / macOS / 手动构建
+#### Linux / macOS / Manual Build
 
 ```bash
-# 1. 构建前端
+# 1. Build frontend
 cd frontend
 npm install
 npm run build
 
-# 2. 将前端产物复制到后端的 embed 目录
+# 2. Copy frontend artifacts to backend embed directory
 cd ..
 mkdir -p backend/pkg/static/dist
 cp -r frontend/dist/* backend/pkg/static/dist/
 
-# 3. 构建后端单文件（前端 dist 已被嵌入二进制）
+# 3. Build backend single binary (frontend dist embedded)
 cd backend
 go build -o opentraffic-ops-init cmd/server/main.go
 ```
 
-> **注意**：`go:embed` 要求被嵌入的文件必须位于 Go 模块内部，且路径中不能包含 `..`。因此必须先把 `frontend/dist` 复制到 `backend/pkg/static/dist`，再执行 `go build`。
+> **Note**: `go:embed` requires embedded files to be within the Go module, and paths cannot contain `..`. Therefore, `frontend/dist` must first be copied to `backend/pkg/static/dist` before running `go build`.
 
-#### Windows 本地开发快速调试（无需每次复制 dist）
+#### Windows Local Development Quick Debug (No dist copy needed)
 
-开发阶段前端改动频繁，每次都要把 `dist` 复制进后端再编译非常麻烦。我们在 `backend/pkg/static/static.go` 中增加了环境变量开关：
+During development, frontend changes are frequent, and copying `dist` into the backend for every recompile is tedious. An environment variable switch is added in `backend/pkg/static/static.go`:
 
 ```cmd
-# 在 backend 目录下
+# In backend directory
 set RTM_STATIC_DIR=..\frontend\dist
 go run cmd\server\main.go
 ```
 
-设置 `RTM_STATIC_DIR` 后，Go 后端会直接从磁盘加载前端产物，不走 `go:embed`。这样你可以一边改前端、一边刷新浏览器测试，无需重新编译后端。生产构建时**不要**设置该变量，确保前端资源被完整嵌入二进制。
+After setting `RTM_STATIC_DIR`, the Go backend loads frontend assets directly from disk instead of `go:embed`. This allows you to modify frontend code and refresh the browser without recompiling the backend. **Do not** set this variable for production builds, to ensure frontend resources are fully embedded in the binary.
 
-无论通过哪种方式构建，最终产物都是**单个自包含二进制文件**。运行后访问 `http://localhost:8080` 即可看到完整平台，直接刷新如 `http://localhost:8080/components` 也不会 404。
+Regardless of the build method, the final artifact is always a **single self-contained binary file**. After running, visit `http://localhost:8080` to see the complete platform. Direct refresh of `http://localhost:8080/components` will not return 404.
 
-### Docker 部署
+### Docker Deployment
 
-#### 使用 Docker Compose（完整环境）
+#### Using Docker Compose (Full Environment)
 
 ```bash
-# 构建并启动所有服务
+# Build and start all services
 docker-compose up -d
 
-# 查看日志
+# View logs
 docker-compose logs -f
 
-# 停止服务
+# Stop services
 docker-compose down
 ```
 
-#### 单独部署后端二进制
+#### Deploy Backend Binary Alone
 
-如果你已经将前端嵌入二进制，也可以直接构建并运行后端镜像：
+If you have already embedded the frontend into the binary, you can build and run the backend image directly:
 
 ```bash
 cd backend
 
-# 构建镜像
+# Build image
 docker build -t opentraffic-ops-init .
 
-# 运行容器
+# Run container
 docker run -d \
   -p 8080:8080 \
   -v /var/run/docker.sock:/var/run/docker.sock \
-  -v rtm-data:/app/data \
+  -v opentraffic-ops-init-data:/app/data \
   --name opentraffic-ops-init \
   opentraffic-ops-init
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 opentraffic-ops-init/
-├── backend/                      # Go 后端
-│   ├── cmd/server/              # 入口文件
+├── backend/                      # Go backend
+│   ├── cmd/server/              # Entry files
 │   ├── internal/
-│   │   ├── controller/          # API 控制器
+│   │   ├── controller/          # API controllers
 │   │   │   ├── auth_controller.go
 │   │   │   ├── component_controller.go
 │   │   │   ├── deploy_controller.go
 │   │   │   ├── monitor_controller.go
 │   │   │   └── server_controller.go
-│   │   ├── service/             # 业务逻辑
-│   │   ├── repository/          # 数据访问
-│   │   ├── model/               # 数据模型
-│   │   └── middleware/          # 中间件（JWT、CORS、Recovery、ErrorHandler）
+│   │   ├── service/             # Business logic
+│   │   ├── repository/          # Data access
+│   │   ├── model/               # Data models
+│   │   └── middleware/          # Middleware (JWT, CORS, Recovery, ErrorHandler)
 │   ├── pkg/
-│   │   ├── docker/              # Docker 客户端封装
-│   │   ├── ssh/                 # SSH 客户端封装
-│   │   ├── config/              # 配置管理
-│   │   ├── crypto/              # 加密工具（AES-GCM）
-│   │   ├── static/              # 静态文件托管（go:embed）
-│   │   └── assets/              # 嵌入资源（默认配置文件、二进制文件）
-│   └── configs/                 # 配置文件
+│   │   ├── docker/              # Docker client wrapper
+│   │   ├── ssh/                 # SSH client wrapper
+│   │   ├── config/              # Configuration management
+│   │   ├── crypto/              # Encryption utilities (AES-GCM)
+│   │   ├── static/              # Static file hosting (go:embed)
+│   │   └── assets/              # Embedded resources (default configs, binaries)
+│   └── configs/                 # Configuration files
 │
-├── frontend/                     # Vue 前端
+├── frontend/                     # Vue frontend
 │   ├── src/
-│   │   ├── views/               # 页面组件
-│   │   │   ├── Dashboard.vue    # 监控大屏
-│   │   │   ├── Components.vue   # 组件管理
-│   │   │   ├── ComponentDetail.vue  # 组件详情
-│   │   │   ├── Servers.vue      # 服务器管理
-│   │   │   ├── Configs.vue      # 配置管理
-│   │   │   ├── Help.vue         # 使用指南
-│   │   │   ├── Login.vue        # 登录页
-│   │   │   └── Layout.vue       # 布局页
-│   │   ├── components/          # 通用组件
-│   │   ├── api/                 # API 调用封装
-│   │   ├── stores/              # Pinia 状态管理
-│   │   └── router/              # 路由配置（createWebHistory）
+│   │   ├── views/               # Page components
+│   │   │   ├── Dashboard.vue    # Monitoring dashboard
+│   │   │   ├── Components.vue   # Component management
+│   │   │   ├── ComponentDetail.vue  # Component details
+│   │   │   ├── Servers.vue      # Server management
+│   │   │   ├── Configs.vue      # Configuration management
+│   │   │   ├── Help.vue         # User guide
+│   │   │   ├── Login.vue        # Login page
+│   │   │   └── Layout.vue       # Layout page
+│   │   ├── components/          # Common components
+│   │   ├── api/                 # API call wrappers
+│   │   ├── stores/              # Pinia state management
+│   │   └── router/              # Router config (createWebHistory)
 │   └── package.json
 │
-├── components/                   # 组件模板（Docker Compose、配置模板）
+├── components/                   # Component templates (Docker Compose, config templates)
 │   ├── postgresql/
 │   └── redis/
 │
-├── docker-compose.yaml           # Docker 编排
-└── README.md                     # 本文档
+├── docker-compose.yaml           # Docker orchestration
+└── README.md                     # This document
 ```
 
-## API 文档
+## API Documentation
 
-### 认证接口
+### Auth Endpoints
 
-#### 登录
+#### Login
 ```http
 POST /api/auth/login
 Content-Type: application/json
@@ -404,146 +406,146 @@ Content-Type: application/json
 }
 ```
 
-#### 登出
+#### Logout
 ```http
 POST /api/auth/logout
 Authorization: Bearer <token>
 ```
 
-#### 获取用户信息
+#### Get User Profile
 ```http
 GET /api/users/profile
 Authorization: Bearer <token>
 ```
 
-### 组件管理接口
+### Component Management Endpoints
 
 ```http
-# 获取组件目录（含安装状态）
+# Get component catalog (with install status)
 GET /api/components/catalog
 
-# 获取组件列表
+# Get component list
 GET /api/components
 
-# 获取组件详情
+# Get component details
 GET /api/components/:id
 
-# 安装组件
+# Install component
 POST /api/components
 
-# 卸载组件
+# Uninstall component
 DELETE /api/components/:id
 
-# 启动/停止/重启组件
+# Start/stop/restart component
 POST /api/components/:id/start
 POST /api/components/:id/stop
 POST /api/components/:id/restart
 
-# 获取组件日志
+# Get component logs
 GET /api/components/:id/logs
 
-# 获取组件资源统计
+# Get component resource stats
 GET /api/components/:id/stats
 
-# 更新组件配置
+# Update component config
 PUT /api/components/:id/config
 ```
 
-### 监控接口
+### Monitoring Endpoints
 
 ```http
-# 获取系统总览
+# Get system overview
 GET /api/monitor/overview
 
-# 获取组件详情（含统计信息）
+# Get component details (with stats)
 GET /api/monitor/components
 
-# WebSocket 实时监控
+# WebSocket real-time monitoring
 GET /api/monitor/realtime
 ```
 
-### 服务器管理接口
+### Server Management Endpoints
 
 ```http
-# 获取服务器列表
+# Get server list
 GET /api/servers
 
-# 创建服务器
+# Create server
 POST /api/servers
 
-# 获取服务器详情
+# Get server details
 GET /api/servers/:id
 
-# 更新服务器
+# Update server
 PUT /api/servers/:id
 
-# 删除服务器
+# Delete server
 DELETE /api/servers/:id
 
-# 测试 SSH 连接
+# Test SSH connection
 POST /api/servers/:id/test
 
-# 获取 opentraffic-ops-proxy 配置
+# Get opentraffic-ops-proxy config
 GET /api/servers/:id/proxy-config
 PUT /api/servers/:id/proxy-config
 
-# 获取/更新指定软件配置
+# Get/update software config
 GET /api/servers/:id/configs/:software
 PUT /api/servers/:id/configs/:software
 
-# 获取默认软件配置（嵌入资源）
+# Get default software config (embedded resource)
 GET /api/servers/configs/:software/default
 
-# 获取服务运行状态
+# Get service running status
 GET /api/servers/:id/services/:software/status
 
-# 启动/停止/重启远程服务
+# Start/stop/restart remote service
 POST /api/servers/:id/services/:software/start
 POST /api/servers/:id/services/:software/stop
 POST /api/servers/:id/services/:software/restart
 ```
 
-### 部署接口
+### Deployment Endpoints
 
 ```http
-# 部署二进制文件到远程服务器
+# Deploy binary to remote server
 POST /api/deploy
 
-# 卸载远程服务
+# Undeploy remote service
 POST /api/deploy/undeploy
 
-# 获取部署记录列表
+# Get deployment records list
 GET /api/deploy/records?server_id=
 
-# 获取部署记录详情
+# Get deployment record details
 GET /api/deploy/records/:id
 ```
 
-## 配置说明
+## Configuration
 
-### 后端配置
+### Backend Configuration
 
-创建 `backend/.env` 文件：
+Create `backend/.env` file:
 
 ```env
-# 服务器配置
+# Server config
 SERVER_HOST=0.0.0.0
 SERVER_PORT=8080
 
-# 数据库配置
+# Database config
 DATA_DIR=./data
 
-# JWT 配置
+# JWT config
 JWT_SECRET=your-secret-key-change-in-production
 JWT_EXPIRE_HOURS=24
 
-# 加密密钥（32 字节，用于加密 SSH 密码和私钥）
+# Encryption key (32 bytes, for encrypting SSH passwords and private keys)
 ENCRYPTION_KEY=your-encryption-key-32-bytes-long
 ```
 
-### 前端配置
+### Frontend Configuration
 
-前端配置在 `frontend/vite.config.ts` 中：
+Frontend configuration is in `frontend/vite.config.ts`:
 
 ```typescript
 export default defineConfig({
@@ -559,94 +561,94 @@ export default defineConfig({
 })
 ```
 
-- `base` 默认为 `/`，生产环境下以根路径部署，无需修改。
-- `proxy` 仅在 `npm run dev` 开发模式下生效，生产构建后由 Go 后端直接托管。
+- `base` defaults to `/`, deployed at root path in production — no modification needed.
+- `proxy` only takes effect in `npm run dev` development mode; after production build, Go backend serves directly.
 
-## 生产部署
+## Production Deployment
 
-### 安全建议
+### Security Recommendations
 
-1. 修改默认管理员密码
-2. 更换 JWT Secret 和加密密钥
-3. 使用 HTTPS（可通过外部反向代理或负载均衡器终止 TLS）
-4. 配置防火墙规则
-5. 定期备份 SQLite 数据库
+1. Change the default admin password
+2. Replace JWT Secret and encryption key
+3. Use HTTPS (can terminate TLS via external reverse proxy or load balancer)
+4. Configure firewall rules
+5. Regularly back up the SQLite database
 
-### 性能优化
+### Performance Optimization
 
-1. 使用生产环境构建（`npm run build`）
-2. 后端已默认启用 Gzip（Gin 框架支持）
-3. 静态资源由 `go:embed` 提供，内存访问速度极快
-4. 如需更高性能，可在外部增加 CDN 或缓存层
+1. Use production build (`npm run build`)
+2. Backend has Gzip enabled by default (Gin framework)
+3. Static resources served by `go:embed` with extremely fast memory access
+4. For higher performance, external CDN or cache layer can be added
 
-### 备份策略
+### Backup Strategy
 
 ```bash
-# 备份 SQLite 数据库
-cp backend/data/rtm_init.db backup/rtm_init_$(date +%Y%m%d).db
+# Backup SQLite database
+cp backend/data/opentraffic-ops-init.db backup/opentraffic-ops-init_$(date +%Y%m%d).db
 
-# 备份 Docker volumes
+# Backup Docker volumes
 docker run --rm \
-  -v rtm-data:/data \
+  -v opentraffic-ops-init-data:/data \
   -v $(pwd)/backup:/backup \
-  alpine tar czf /backup/rtm-data_$(date +%Y%m%d).tar.gz /data
+  alpine tar czf /backup/opentraffic-ops-init-data_$(date +%Y%m%d).tar.gz /data
 ```
 
-## 故障排查
+## Troubleshooting
 
-### 常见问题
+### Common Issues
 
-1. **Docker 连接失败**
-   - 确保 Docker 服务正在运行
-   - 检查 `/var/run/docker.sock` 权限
+1. **Docker connection failed**
+   - Ensure Docker service is running
+   - Check `/var/run/docker.sock` permissions
 
-2. **端口冲突**
-   - 修改 `.env` 文件中的端口配置
-   - 确保端口未被占用
+2. **Port conflict**
+   - Modify port configuration in `.env` file
+   - Ensure port is not occupied
 
-3. **前端刷新 404**
-   - 确认 `go build` 时 `frontend/dist` 已存在
-   - 检查 `backend/pkg/static/static.go` 中的 embed 路径是否正确
+3. **Frontend refresh returns 404**
+   - Confirm `frontend/dist` exists during `go build`
+   - Check embed path in `backend/pkg/static/static.go`
 
-4. **跨域问题**
-   - 生产环境前后端同域，不应出现跨域
-   - 开发环境确保 Vite Proxy 配置正确且后端已启动
+4. **CORS issues**
+   - Production environment is same-origin, should not have CORS
+   - Development environment: ensure Vite Proxy config is correct and backend is running
 
-5. **SSH 连接测试失败**
-   - 检查目标服务器的 SSH 服务是否正常运行
-   - 确认主机地址、端口、用户名、密码/私钥是否正确
-   - 检查防火墙是否放行了 SSH 端口
+5. **SSH connection test failed**
+   - Check if target server SSH service is running
+   - Confirm host address, port, username, password/private key are correct
+   - Check if firewall allows SSH port
 
-6. **远程部署失败（权限不足）**
-   - 检查 SSH 用户对部署路径是否有读写权限
-   - 确认部署路径所在磁盘有足够空间
-   - 检查目标服务器的 SELinux 或 AppArmor 限制
+6. **Remote deployment failed (insufficient permissions)**
+   - Check if SSH user has read/write permissions for deployment path
+   - Confirm deployment path disk has sufficient space
+   - Check target server's SELinux or AppArmor restrictions
 
-7. **组件容器启动失败（Permission denied）**
-   - 使用绑定挂载时，确保宿主机目录的属主与容器默认用户 UID 一致
-   - PostgreSQL UID 为 70，Redis UID 为 999
-   - 推荐使用命名卷（如 `postgres-data:/var/lib/postgresql/data`），Docker 会自动处理权限
+7. **Component container start failed (Permission denied)**
+   - When using bind mounts, ensure host directory owner matches container default user UID
+   - PostgreSQL UID is 70, Redis UID is 999
+   - Recommend using named volumes (e.g., `postgres-data:/var/lib/postgresql/data`), Docker handles permissions automatically
 
-## 开发指南
+## Development Guide
 
-### 添加新的组件类型
+### Adding New Component Types
 
-1. 在 `components/` 下创建新的组件目录
-2. 添加 `config.yaml.template` 和 `docker-compose.yaml.template`
-3. 在后端 `internal/model/component.go` 中添加新的组件类型
-4. 在前端 `src/types/index.ts` 中更新 `ComponentType` 类型
+1. Create new component directory under `components/`
+2. Add `config.yaml.template` and `docker-compose.yaml.template`
+3. Add new component type in backend `internal/model/component.go`
+4. Update `ComponentType` type in frontend `src/types/index.ts`
 
-### 添加新的可部署二进制文件
+### Adding New Deployable Binaries
 
-1. 将二进制文件放入 `backend/pkg/assets/` 目录
-2. 在 `backend/pkg/assets/assets.go` 中添加 `//go:embed` 指令
-3. 更新前端部署对话框中的选项列表
-4. 在 `backend/pkg/assets/images/` 下添加对应的默认配置文件
+1. Place binary file in `backend/pkg/assets/` directory
+2. Add `//go:embed` directive in `backend/pkg/assets/assets.go`
+3. Update option list in frontend deployment dialog
+4. Add corresponding default config file under `backend/pkg/assets/images/`
 
-## 贡献指南
+## Contributing
 
-欢迎提交 Issue 和 Pull Request！
+Issues and Pull Requests are welcome!
 
-## 许可证
+## License
 
-MIT License
+[MIT License](../LICENSE)

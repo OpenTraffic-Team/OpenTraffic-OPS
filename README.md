@@ -1,5 +1,7 @@
 # OpenTraffic Ops
 
+[中文](README_CN.md)
+
 A full-stack edge computing operations platform composed of two integrated subsystems: a **deployment panel** for infrastructure provisioning and a **monitoring platform** for edge host management, alerting, and remote operations.
 
 ---
@@ -234,7 +236,7 @@ opentraffic-ops/
 │   ├── frontend/                    # Vue 3 + TypeScript SPA
 │   ├── components/                  # Docker Compose templates
 │   ├── docker-compose.yaml
-│   └── README.md                    # (Chinese, detailed)
+│   └── README.md                    # (detailed)
 │
 ├── OpenTraffic-Ops/                 # Monitoring & Operations Platform
 │   ├── backend/                     # Go backend (Gin, GORM, PostgreSQL, Redis)
@@ -242,7 +244,7 @@ opentraffic-ops/
 │   ├── proxy/                       # Edge proxy (Linux only, separate Go module)
 │   ├── sql/                         # PostgreSQL DDL
 │   ├── docs/                        # Design & deployment guides (Chinese)
-│   └── README.md                    # (Chinese, detailed)
+│   └── README.md                    # (detailed)
 │
 ├── README.md                        # This file
 ├── .gitignore                       # Root-level combined ignore rules
@@ -253,8 +255,8 @@ opentraffic-ops/
 
 ## Documentation
 
-- [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README.md) — Deployment panel details (Chinese)
-- [OpenTraffic-Ops README](./OpenTraffic-Ops/README.md) — Monitoring platform details (Chinese)
+- [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README.md) — Deployment panel details
+- [OpenTraffic-Ops README](./OpenTraffic-Ops/README.md) — Monitoring platform details
 - [Proxy README](./OpenTraffic-Ops/proxy/README.md) — Edge proxy deployment guide
 
 ---
