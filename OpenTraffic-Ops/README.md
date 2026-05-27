@@ -69,14 +69,14 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **User Management** — User CRUD, password policy, login failure lockout
 - **Personal Center** — User info maintenance, password change, avatar upload
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the System Management page here.
+![alt text](images/image-1.png)
 
 ### Host Management
 - **Host Information** — Edge node host registration, CRUD, and status display (auto-enrolled on first proxy registration)
 - **Host Health** — Historical host health data collection and query (auto daily rotation, 7-day retention)
 - **Host Operations** — Remote operations entry point (terminal, file, process control)
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Host Management page here.
+![alt text](images/image.png)
 
 ### Monitoring & Alerting
 - **Alarm Channels** — Supports email, DingTalk, WeCom, and in-app notification channels, with multiple channels configurable
@@ -90,27 +90,32 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
   - `alarmCheck` (30s) — Alarm detection
   - `cleanHostHealth` (daily at 03:30) — Clean health data older than 7 days
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Monitoring & Alerting page here.
+![alt text](images/image-2.png)
+![alt text](images/image-3.png)
+![alt text](images/image-4.png)
 
 ### Agent Dialogue
 - **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
 - **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
 - **Session Management** — Session creation, paginated list, message history, rename, delete
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Agent Dialogue page here.
+![alt text](images/image-5.png)
+![alt text](images/image-6.png)
 
 ### Remote Operations
 - **Remote Terminal** — Browser-based xterm terminal, routed through platform WebSocket Hub directly to Proxy PTY (color and resize support)
 - **Remote File** — File browse, read, edit, upload, download, delete, and directory creation on proxy hosts (10MB single file limit, path traversal protection)
 - **Process Control** — Start / stop / restart process commands sent from platform to Proxy
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Remote Operations page here.
+![alt text](images/image-8.png)
+![alt text](images/image-9.png)
+![alt text](images/image-10.png)
 
 ### System Logs
 - **Operation Logs** — Automatically records protected interface operations via `OperLog` middleware
 - **Login Logs** — Login success / failure records
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the System Logs page here.
+![alt text](images/image-11.png)
 
 ### Edge Proxy Features
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
@@ -120,8 +125,6 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **WebSocket Long Connection** — Auto-reconnect (exponential backoff), heartbeat keepalive, safe goroutine shutdown
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
-
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Edge Proxy features here.
 
 ### Proxy Protocol Interfaces (Public, No Authentication)
 

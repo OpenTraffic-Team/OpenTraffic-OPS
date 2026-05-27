@@ -73,7 +73,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Component status distribution bar chart
 - Real-time component monitoring table (CPU / memory / network IO) with start/stop live refresh
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Dashboard page here.
+![alt text](images/image.png)
 
 ### Component Management
 - Browse component catalog with Docker connection status
@@ -83,7 +83,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - View component details (resource monitoring, logs, configuration)
 - Built-in offline images — no internet required for deployment
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Component Management page here.
+![alt text](images/image-2.png)
 
 #### Supported Component Types
 
@@ -100,7 +100,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Expandable rows to view deployed service details
 - Supported operations: start / stop / restart / configure / uninstall remote services
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Server Management page here.
+![alt text](images/image-1.png)
 
 ### Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
@@ -109,14 +109,14 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Duplicate deployment detection
 - Complete deployment records and log traceability
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Remote Deployment page here.
+![alt text](images/image-3.png)
 
 ### Configuration Management
 - View configuration list of all installed components
 - Edit component configurations online (ports, environment variables, volumes, startup commands)
 - Manual restart required after configuration changes take effect
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the Configuration Management page here.
+![alt text](images/image-4.png)
 
 ### User Guide
 - Platform introduction and feature overview
@@ -126,7 +126,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - PostgreSQL / Redis default configuration and parameter descriptions
 - Common FAQ (accordion-style interaction)
 
-> 🖼️ **Screenshot placeholder**: Add a screenshot of the User Guide page here.
+![alt text](images/image-5.png)
 
 ---
 
