@@ -7,6 +7,12 @@
 </p>
 
 <p align="center">
+  <img src="https://img.shields.io/badge/HuggingFace-%F0%9F%A4%97-FFD21E" alt="HuggingFace">
+  <img src="https://img.shields.io/badge/X-000000?logo=x&logoColor=white" alt="X">
+  <img src="https://img.shields.io/badge/%E5%B0%8F%E7%BA%A2%E4%B9%A6-FF2442" alt="小红书">
+</p>
+
+<p align="center">
   <a href="README.md">English</a>
 </p>
 
