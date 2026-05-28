@@ -18,13 +18,20 @@
   <a href="README_CN.md">中文</a>
 </p>
 
+<p align="center">
+  <img src="images/OpenTraffic.png" alt="OpenTraffic Architecture" width="800">
+</p>
+
+<p align="center">
+  <a href="https://github.com/OpenTraffic-Team/OpenTraffic-OPS">🌟 GitHub: OpenTraffic-Team/OpenTraffic-OPS</a>
+</p>
+
 A full-stack edge computing operations platform composed of two integrated subsystems: a **deployment panel** for infrastructure provisioning and a **monitoring platform** for edge host management, alerting, and remote operations.
 
 ---
 
 ## 📑 Table of Contents
 
-- [🏗️ Architecture Overview](#architecture-overview)
 - [🔧 Subsystems](#subsystems)
   - [1. OpenTraffic-Ops-Initialization — Deployment Panel](#1-opentraffic-ops-initialization--deployment-panel)
   - [2. OpenTraffic-Ops — Monitoring & Operations Platform](#2-opentraffic-ops--monitoring--operations-platform)
@@ -39,42 +46,6 @@ A full-stack edge computing operations platform composed of two integrated subsy
 - [📚 Documentation](#documentation)
 - [🔒 Security Features](#security-features)
 - [📄 License](#license)
-
----
-
-## Architecture Overview
-
-```
-                    +-------------------------------+
-                    |     OpenTraffic Ops           |
-                    |  +-------------------------+  |
-                    |  | OpenTraffic-Ops-Init    |  |
-                    |  | (Deployment Panel)      |  |
-                    |  | - Docker management     |--|---> Deploys OpenTraffic-Ops
-                    |  | - SSH remote deploy     |  |    and proxy binaries
-                    |  | - Component lifecycle   |  |    to remote Linux servers
-                    |  +-------------------------+  |
-                    |  +-------------------------+  |
-                    |  | OpenTraffic-Ops         |  |
-                    |  | (Monitoring & Ops)      |  |
-                    |  | - Host monitoring       |<--|---- Receives metrics from
-                    |  | - Alerting engine       |  |    edge proxies
-                    |  | - Remote terminal       |  |
-                    |  | - Agent dialogue        |  |
-                    |  +-------------------------+  |
-                    +-------------------------------+
-                                         ^
-                                         | WebSocket / HTTP
-                                         |
-                    +--------------------+------------------+
-                    |     proxy (Edge Agent)               |
-                    |  - System metrics collection         |
-                    |  - Process monitoring                |
-                    |  - Remote terminal PTY               |
-                    |  - Remote file operations            |
-                    +--------------------------------------+
-                    Deployed on each monitored edge host
-```
 
 ---
 

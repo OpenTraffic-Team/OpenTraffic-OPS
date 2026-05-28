@@ -18,13 +18,20 @@
   <a href="README.md">English</a>
 </p>
 
+<p align="center">
+  <img src="images/OpenTraffic_CN.png" alt="OpenTraffic 架构图" width="800">
+</p>
+
+<p align="center">
+  <a href="https://github.com/OpenTraffic-Team/OpenTraffic-OPS">🌟 GitHub: OpenTraffic-Team/OpenTraffic-OPS</a>
+</p>
+
 一套全栈边缘计算运维平台，由两个紧密集成的子系统组成：用于基础设施供给的**部署面板**，以及用于边缘主机管理、告警和远程运维的**监控平台**。
 
 ---
 
 ## 📑 目录
 
-- [🏗️ 架构概览](#架构概览)
 - [🔧 子系统](#子系统)
   - [1. OpenTraffic-Ops-Initialization — 部署面板](#1-opentraffic-ops-initialization--部署面板)
   - [2. OpenTraffic-Ops — 监控与运维平台](#2-opentraffic-ops--监控与运维平台)
@@ -39,42 +46,6 @@
 - [📚 文档](#文档)
 - [🔒 安全特性](#安全特性)
 - [📄 许可证](#许可证)
-
----
-
-## 架构概览
-
-```
-                    +-------------------------------+
-                    |     OpenTraffic Ops           |
-                    |  +-------------------------+  |
-                    |  | OpenTraffic-Ops-Init    |  |
-                    |  | (部署面板)               |  |
-                    |  | - Docker 管理           |--|---> 部署 OpenTraffic-Ops
-                    |  | - SSH 远程部署          |  |    和 Proxy 二进制文件
-                    |  | - 组件生命周期管理       |  |    到远程 Linux 服务器
-                    |  +-------------------------+  |
-                    |  +-------------------------+  |
-                    |  | OpenTraffic-Ops         |  |
-                    |  | (监控与运维平台)         |  |
-                    |  | - 主机监控              |<--|---- 接收来自边缘 Proxy
-                    |  | - 告警引擎              |  |    的指标数据
-                    |  | - 远程终端              |  |
-                    |  | - Agent 对话            |  |
-                    |  +-------------------------+  |
-                    +-------------------------------+
-                                         ^
-                                         | WebSocket / HTTP
-                                         |
-                    +--------------------+------------------+
-                    |     proxy (边缘代理)                   |
-                    |  - 系统指标采集                        |
-                    |  - 进程监控                            |
-                    |  - 远程终端 PTY                        |
-                    |  - 远程文件操作                        |
-                    +--------------------------------------+
-                    部署在每个被监控的边缘主机上
-```
 
 ---
 
