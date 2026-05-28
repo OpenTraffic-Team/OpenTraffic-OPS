@@ -49,7 +49,7 @@ A full-stack edge computing operations platform composed of two integrated subsy
 
 ---
 
-## Subsystems
+## 🔧 Subsystems
 
 ### 1. OpenTraffic-Ops-Initialization — Deployment Panel
 
@@ -135,7 +135,7 @@ Deployed on each monitored edge host. Responsible for system metrics collection 
 
 ---
 
-## Relationship Between Subsystems
+## 🔗 Relationship Between Subsystems
 
 ```
 +-----------------------------+      deploys      +-------------------------+
@@ -166,9 +166,9 @@ Deployed on each monitored edge host. Responsible for system metrics collection 
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Go 1.25+ (proxy build requires Go 1.26+)
 - Node.js 18+
@@ -176,7 +176,7 @@ Deployed on each monitored edge host. Responsible for system metrics collection 
 - PostgreSQL 15+ (for `OpenTraffic-Ops`)
 - Redis 7+ (two instances recommended: platform + edge)
 
-### Start the Deployment Panel
+### 🖥️ Start the Deployment Panel
 
 ```bash
 cd OpenTraffic-Ops-Initialization/backend
@@ -185,7 +185,7 @@ go run cmd/server/main.go
 # Service runs on http://localhost:8080
 ```
 
-### Start the Monitoring Platform
+### 📊 Start the Monitoring Platform
 
 ```bash
 # 1. Create PostgreSQL database
@@ -213,7 +213,7 @@ npm run dev
 
 Default credentials for both systems: `admin` / `admin123`
 
-### Build Production Binaries (Windows host cross-compiling to Linux)
+### 📦 Build Production Binaries (Windows host cross-compiling to Linux)
 
 ```bash
 # Monitoring platform (backend + embedded frontend)
@@ -234,7 +234,7 @@ build-opentraffic-ops-initialization.bat
 
 ---
 
-## Project Structure
+## 📁 Project Structure
 
 ```
 opentraffic-ops/
@@ -260,7 +260,7 @@ opentraffic-ops/
 
 ---
 
-## Documentation
+## 📚 Documentation
 
 - [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README.md) — Deployment panel details
 - [OpenTraffic-Ops README](./OpenTraffic-Ops/README.md) — Monitoring platform details
@@ -268,7 +268,7 @@ opentraffic-ops/
 
 ---
 
-## Security Features
+## 🔒 Security Features
 
 - JWT token authentication with auto-refresh
 - RSA password encryption in transit
@@ -282,6 +282,6 @@ opentraffic-ops/
 
 ---
 
-## License
+## 📄 License
 
 [Apache License 2.0](./LICENSE)

@@ -45,11 +45,11 @@
 
 ---
 
-## Project Introduction
+## 📖 Project Introduction
 
 OpenTraffic Ops Init Deployment Panel is a **single-binary, self-contained** comprehensive operations platform that integrates two core capabilities: **Docker container management** and **SSH remote server deployment**. The backend is powered by a single Go HTTP service, and the frontend is embedded into the binary via `go:embed` — **no additional Nginx or reverse proxy configuration required**. Simply run one binary to launch the complete service.
 
-### Core Capabilities
+### 🎯 Core Capabilities
 
 | Capability | Description |
 |-----------|-------------|
@@ -61,13 +61,13 @@ OpenTraffic Ops Init Deployment Panel is a **single-binary, self-contained** com
 | Remote Service Management | Start, stop, and restart services on remote servers via PID files, without requiring root privileges |
 | Deployment Audit Trail | Complete logging of every remote deployment operation, execution results, and historical records |
 
-### Single-Binary Self-Contained Deployment
+### 📦 Single-Binary Self-Contained Deployment
 
 A core design goal is **eliminating dependency on external web servers** (like Nginx). The frontend `dist` directory is embedded directly into the Go binary via `go:embed`, with a custom SPA fallback handler so routes like `/components` work on direct access or refresh. The final artifact is always a **single self-contained binary file** — just copy and run.
 
 ---
 
-## Tech Stack
+## 🔧 Tech Stack
 
 ### Backend
 
@@ -95,9 +95,9 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ---
 
-## Features
+## ✨ Features
 
-### Dashboard
+### 📊 Dashboard
 - Component stat cards (total / running / stopped / error)
 - Server stat cards (total / password auth / key auth / configured for deployment)
 - Component type distribution pie chart
@@ -106,7 +106,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ![Dashboard](images/image.png)
 
-### Component Management
+### 🧩 Component Management
 - Browse component catalog with Docker connection status
 - One-click install components (PostgreSQL, Redis)
 - Customize during installation: component name, port, environment variables, volumes, startup command arguments
@@ -123,7 +123,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 | PostgreSQL | `postgresql` | `postgres:16-alpine` | Relational database |
 | Redis | `redis` | `redis:7-alpine` | In-memory cache / key-value store |
 
-### Server Management
+### 🖧 Server Management
 - Add / edit / delete remote server SSH configurations
 - Two authentication methods supported: password auth and key auth (supports Passphrase)
 - SSH connection test
@@ -133,7 +133,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ![Server Management](images/image-1.png)
 
-### Remote Deployment
+### 📦 Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
 - Optionally deploy configuration files simultaneously
 - Support loading default configuration templates
@@ -142,14 +142,14 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ![Remote Deployment](images/image-3.png)
 
-### Configuration Management
+### ⚙️ Configuration Management
 - View configuration list of all installed components
 - Edit component configurations online (ports, environment variables, volumes, startup commands)
 - Manual restart required after configuration changes take effect
 
 ![Configuration Management](images/image-4.png)
 
-### User Guide
+### 📖 User Guide
 - Platform introduction and feature overview
 - Basic environment requirements (Docker, browser, network, SSH)
 - Component and server management usage instructions
@@ -161,16 +161,16 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Go 1.21+
 - Node.js 18+
 - Docker & Docker Compose (for local runtime)
 - Git
 
-### Development Mode
+### 💻 Development Mode
 
 #### 1. Clone Project
 
@@ -221,9 +221,9 @@ go run cmd\server\main.go
 
 ---
 
-## Server Deployment
+## 🖥️ Server Deployment
 
-### Production Build (Single Binary)
+### 📦 Production Build (Single Binary)
 
 #### Windows Cross-Compile for Linux
 
@@ -244,7 +244,7 @@ chmod +x opentraffic-ops-init-linux-amd64
 ./opentraffic-ops-init-linux-amd64
 ```
 
-### Configuration
+### ⚙️ Configuration
 
 Create `backend/.env` file:
 
@@ -264,7 +264,7 @@ JWT_EXPIRE_HOURS=24
 ENCRYPTION_KEY=your-encryption-key-32-bytes-long
 ```
 
-### Security Recommendations
+### 🔒 Security Recommendations
 
 1. Change the default admin password
 2. Replace JWT Secret and encryption key
@@ -272,7 +272,7 @@ ENCRYPTION_KEY=your-encryption-key-32-bytes-long
 4. Configure firewall rules
 5. Regularly back up the SQLite database
 
-### Backup Strategy
+### 💾 Backup Strategy
 
 ```bash
 # Backup SQLite database
@@ -287,7 +287,7 @@ docker run --rm \
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 ### Docker connection failed
 - Ensure Docker service is running
@@ -322,7 +322,7 @@ docker run --rm \
 
 ---
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 OpenTraffic Ops Init is built with the following open-source projects:
 

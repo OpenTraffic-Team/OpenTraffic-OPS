@@ -37,7 +37,7 @@
 
 ---
 
-## Project Introduction
+## 📖 Project Introduction
 
 OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Linux servers to collect system metrics and report to the platform server, with WebSocket remote control support (terminal / file management).
 
@@ -73,7 +73,7 @@ The Proxy periodically executes the following tasks:
 
 ---
 
-## Tech Stack
+## 🔧 Tech Stack
 
 | Technology | Version | Description |
 |-----------|---------|-------------|
@@ -86,7 +86,7 @@ The Proxy periodically executes the following tasks:
 
 ---
 
-## Features
+## ✨ Features
 
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
 - **System Metric Collection** — Reports CPU / memory / disk / network / load every 3 seconds
@@ -95,7 +95,7 @@ The Proxy periodically executes the following tasks:
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
 
-### Collected Metrics
+### 📊 Collected Metrics
 
 - **CPU**: Overall usage (%)
 - **Memory**: Usage (%), Used MB
@@ -104,7 +104,7 @@ The Proxy periodically executes the following tasks:
 - **Load**: 1/5/15 minute average load
 - **Processes**: Running status, CPU usage, Memory usage MB
 
-### Platform Interaction APIs
+### 📡 Platform Interaction APIs
 
 #### HTTP APIs (No Authentication)
 
@@ -126,15 +126,15 @@ After the WebSocket connection is established, the platform can send:
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Go 1.22+ (project uses Go 1.26.2)
 - Git
 - Windows PowerShell (for running the one-click packaging script)
 
-### Verify Cross-Compilation Environment
+### 🔬 Verify Cross-Compilation Environment
 
 ```powershell
 # Check Go version
@@ -147,7 +147,7 @@ $env:GOOS = "linux"; $env:GOARCH = "amd64"; $env:CGO_ENABLED = "0"; go build -o 
 
 If there is no error output, the cross-compilation environment is working. **Note: this binary cannot run on Windows** and must be uploaded to a Linux server for execution.
 
-### Manual Cross-Compilation (Alternative)
+### 🔨 Manual Cross-Compilation (Alternative)
 
 ```powershell
 cd proxy
@@ -165,7 +165,7 @@ $env:CGO_ENABLED = "0"
 go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-arm64 .
 ```
 
-### Build Parameter Reference
+### ⚙️ Build Parameter Reference
 
 | Parameter | Description |
 |------|------|
@@ -175,9 +175,9 @@ go build -ldflags "-s -w" -o opentraffic-ops-proxy-linux-arm64 .
 
 ---
 
-## Server Deployment
+## 🖥️ Server Deployment
 
-### Production Packaging (Windows One-Click Script)
+### 📦 Production Packaging (Windows One-Click Script)
 
 On the Windows development machine, use the provided PowerShell script for one-click packaging:
 
@@ -193,7 +193,7 @@ The script will automatically compile the following targets and output to the `d
 | `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
 | `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
 
-### Deploy to Linux Server
+### 🚀 Deploy to Linux Server
 
 #### 1. Upload Binary and Config
 
@@ -213,7 +213,7 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 
 On first run, a default config file will be automatically created at `~/.opentraffic-ops-proxy/config.json`.
 
-### Configuration
+### ⚙️ Configuration
 
 ```json
 {
@@ -254,7 +254,7 @@ On first run, a default config file will be automatically created at `~/.opentra
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 ### Why can't I run the compiled binary on Windows?
 
@@ -283,7 +283,7 @@ If you start Proxy without specifying `-c config.json`, it will attempt to creat
 
 ---
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 OpenTraffic Ops Proxy is built with the following open-source projects:
 

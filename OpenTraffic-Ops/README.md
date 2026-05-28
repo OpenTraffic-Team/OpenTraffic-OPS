@@ -46,7 +46,7 @@
 
 ---
 
-## Project Introduction
+## 📖 Project Introduction
 
 OpenTraffic Ops is a full-stack monitoring and operations management platform for edge computing scenarios. It consists of two independent deliverables: **monitoring platform service** (backend with embedded frontend via `go:embed`, deployed as a single binary) and **edge proxy**, supporting host management, health metric collection, threshold alerting, remote operations (terminal / file / process), and Agent dialogue (control agent / perception agent).
 
@@ -54,7 +54,7 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 
 ---
 
-## Tech Stack
+## 🔧 Tech Stack
 
 ### Backend (`backend/`, Go module `opentraffic-ops-backend`)
 
@@ -95,22 +95,22 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 
 ---
 
-## Features
+## ✨ Features
 
-### System Management
+### 👤 System Management
 - **User Management** — User CRUD, password policy, login failure lockout
 - **Personal Center** — User info maintenance, password change, avatar upload
 
 ![User Management](images/image-1.png)
 
-### Host Management
+### 🖥️ Host Management
 - **Host Information** — Edge node host registration, CRUD, and status display (auto-enrolled on first proxy registration)
 - **Host Health** — Historical host health data collection and query (auto daily rotation, 7-day retention)
 - **Host Operations** — Remote operations entry point (terminal, file, process control)
 
 ![Host Management](images/image.png)
 
-### Monitoring & Alerting
+### 🔔 Monitoring & Alerting
 - **Alarm Channels** — Supports email, DingTalk, WeCom, and in-app notification channels, with multiple channels configurable
 - **Alarm Rules** — Multi-dimensional rule orchestration:
   - Metric-based: CPU / memory / disk / network / load
@@ -126,7 +126,7 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 ![Alert Channels](images/image-3.png)
 ![Alert Records](images/image-4.png)
 
-### Agent Dialogue
+### 🤖 Agent Dialogue
 - **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
 - **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
 - **Session Management** — Session creation, paginated list, message history, rename, delete
@@ -134,7 +134,7 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 ![Agent Dialogue](images/image-5.png)
 ![Agent Session](images/image-6.png)
 
-### Remote Operations
+### 🔧 Remote Operations
 - **Remote Terminal** — Browser-based xterm terminal, routed through platform WebSocket Hub directly to Proxy PTY (color and resize support)
 - **Remote File** — File browse, read, edit, upload, download, delete, and directory creation on proxy hosts (10MB single file limit, path traversal protection)
 - **Process Control** — Start / stop / restart process commands sent from platform to Proxy
@@ -143,13 +143,13 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 ![Remote File](images/image-9.png)
 ![Process Control](images/image-10.png)
 
-### System Logs
+### 📝 System Logs
 - **Operation Logs** — Automatically records protected interface operations via `OperLog` middleware
 - **Login Logs** — Login success / failure records
 
 ![System Logs](images/image-11.png)
 
-### Edge Proxy Features
+### 📡 Edge Proxy Features
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
 - **System Metric Collection** — Reports CPU / memory / disk / network / load every 3 seconds
 - **Process Monitoring** — Collects configured process running status, CPU usage, memory usage
@@ -158,7 +158,7 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **Remote Terminal** — PTY-based persistent shell sessions (5-minute timeout auto-close)
 - **Remote File Management** — Complete file operations with path security validation
 
-### Proxy Protocol Interfaces (Public, No Authentication)
+### 🔌 Proxy Protocol Interfaces (Public, No Authentication)
 
 | Method | Path | Description |
 |--------|------|-------------|
@@ -170,16 +170,16 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 
 ---
 
-## Quick Start
+## 🚀 Quick Start
 
-### Prerequisites
+### 📋 Prerequisites
 
 - Go 1.25+ (Proxy build additionally requires Go 1.26+)
 - Node.js 18+
 - PostgreSQL 15+
 - Redis 7+ (recommend preparing **two instances / two dbs**: platform and edge separated)
 
-### Development Mode
+### 💻 Development Mode
 
 #### 1. Clone Project
 
@@ -254,9 +254,9 @@ go run cmd\server\main.go
 
 ---
 
-## Server Deployment
+## 🖥️ Server Deployment
 
-### Production Build (Single Binary)
+### 📦 Production Build (Single Binary)
 
 #### Windows Cross-Compile for Linux
 
@@ -294,7 +294,7 @@ Output files:
 
 > Proxy only supports Linux runtime; Windows / macOS are build hosts only.
 
-### Configuration
+### ⚙️ Configuration
 
 The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
 
@@ -355,7 +355,7 @@ agent:
 > Platform and edge Redis roles must be configured separately (can be different dbs on the same instance, or two separate instances).
 > Agent configs are for interfacing with external Agent services; corresponding features are unavailable when empty.
 
-### Logging
+### 📝 Logging
 
 Logs are output via Zap, default writing to `logs/` directory, with size / day-based rotation:
 
@@ -379,7 +379,7 @@ log:
 
 ---
 
-## FAQ
+## ❓ FAQ
 
 ### Database connection failed / migration error
 - Verify PostgreSQL is running and accessible
@@ -413,7 +413,7 @@ log:
 
 ---
 
-## Acknowledgments
+## 🙏 Acknowledgments
 
 OpenTraffic Ops is built with the following open-source projects:
 

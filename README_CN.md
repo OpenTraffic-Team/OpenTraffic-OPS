@@ -49,7 +49,7 @@
 
 ---
 
-## 子系统
+## 🔧 子系统
 
 ### 1. OpenTraffic-Ops-Initialization — 部署面板
 
@@ -166,9 +166,9 @@
 
 ---
 
-## 快速开始
+## 🚀 快速开始
 
-### 前置要求
+### 📋 前置要求
 
 - Go 1.25+（Proxy 构建需要 Go 1.26+）
 - Node.js 18+
@@ -176,7 +176,7 @@
 - PostgreSQL 15+（用于 `OpenTraffic-Ops`）
 - Redis 7+（推荐两个实例：平台和边缘分离）
 
-### 启动部署面板
+### 🖥️ 启动部署面板
 
 ```bash
 cd OpenTraffic-Ops-Initialization/backend
@@ -185,7 +185,7 @@ go run cmd/server/main.go
 # 服务运行在 http://localhost:8080
 ```
 
-### 启动监控平台
+### 📊 启动监控平台
 
 ```bash
 # 1. 创建 PostgreSQL 数据库
@@ -213,7 +213,7 @@ npm run dev
 
 两个系统的默认凭据：`admin` / `admin123`
 
-### 构建生产二进制文件（Windows 主机交叉编译到 Linux）
+### 📦 构建生产二进制文件（Windows 主机交叉编译到 Linux）
 
 ```bash
 # 监控平台（后端 + 内嵌前端）
@@ -234,7 +234,7 @@ build-opentraffic-ops-initialization.bat
 
 ---
 
-## 项目结构
+## 📁 项目结构
 
 ```
 opentraffic-ops/
@@ -260,7 +260,7 @@ opentraffic-ops/
 
 ---
 
-## 文档
+## 📚 文档
 
 - [OpenTraffic-Ops-Initialization README](./OpenTraffic-Ops-Initialization/README_CN.md) — 部署面板详情
 - [OpenTraffic-Ops README](./OpenTraffic-Ops/README_CN.md) — 监控平台详情
@@ -268,7 +268,7 @@ opentraffic-ops/
 
 ---
 
-## 安全特性
+## 🔒 安全特性
 
 - JWT Token 认证与自动续签
 - RSA 密码加密传输
@@ -282,6 +282,6 @@ opentraffic-ops/
 
 ---
 
-## 许可证
+## 📄 许可证
 
 [MIT License](./LICENSE)
