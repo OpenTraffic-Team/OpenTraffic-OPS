@@ -1,16 +1,33 @@
 # OpenTraffic Ops Proxy
 
-[中文](README_CN.md)
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white" alt="Go 1.26+">
+  <img src="https://img.shields.io/badge/Linux-Only-FCC624?logo=linux&logoColor=black" alt="Linux Only">
+</p>
 
-## Table of Contents
+<p align="center">
+  <a href="README_CN.md">中文</a>
+</p>
 
-- [Project Introduction](#project-introduction)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Server Deployment](#server-deployment)
-- [FAQ](#faq)
-- [Acknowledgments](#acknowledgments)
+## 📑 Table of Contents
+
+- [📖 Project Introduction](#project-introduction)
+- [🔧 Tech Stack](#tech-stack)
+- [✨ Features](#features)
+  - [📊 Collected Metrics](#collected-metrics)
+  - [📡 Platform Interaction APIs](#platform-interaction-apis)
+- [🚀 Quick Start](#quick-start)
+  - [📋 Prerequisites](#prerequisites)
+  - [🔬 Verify Cross-Compilation Environment](#verify-cross-compilation-environment)
+  - [🔨 Manual Cross-Compilation](#manual-cross-compilation-alternative)
+  - [⚙️ Build Parameter Reference](#build-parameter-reference)
+- [🖥️ Server Deployment](#server-deployment)
+  - [📦 Production Packaging](#production-packaging-windows-one-click-script)
+  - [🚀 Deploy to Linux Server](#deploy-to-linux-server)
+  - [⚙️ Configuration](#configuration)
+- [❓ FAQ](#faq)
+- [🙏 Acknowledgments](#acknowledgments)
 
 ---
 
@@ -19,16 +36,18 @@
 OpenTraffic Ops — Edge Proxy. **Linux only** (x86_64 / ARM64), deployed on Linux servers to collect system metrics and report to the platform server, with WebSocket remote control support (terminal / file management).
 
 ```
-┌────────────────────┐     HTTP POST      ┌──────────────────┐
-│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops │
-│   (Linux Server)              │  ◀──────────────  │  (Server)                 │
-└────────────────────┘     Return Metrics   └──────────────────────┘
-         │
-         │  WebSocket (Long Connection)
-         ▼
-┌──────────────────────────────┐
-│  Remote Terminal / File Mgmt / Shell │
-└──────────────────────────────┘
++--------------------+     HTTP POST      +------------------+
+|   OpenTraffic Ops  |  --------------->  |  OpenTraffic Ops |
+|   Proxy            |  <---------------  |  (Server)        |
+|   (Linux Server)   |   Return Metrics   |                  |
++--------------------+                    +------------------+
+         |
+         |  WebSocket (Long Connection)
+         v
++------------------------------+
+|  Remote Terminal / File Mgmt |
+|  / Shell                     |
++------------------------------+
 ```
 
 The Proxy periodically executes the following tasks:
@@ -267,4 +286,4 @@ OpenTraffic Ops Proxy is built with the following open-source projects:
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) — WebSocket client implementation
 - [creack/pty](https://github.com/creack/pty) — PTY for remote terminal
 
-[MIT License](../LICENSE)
+[Apache License 2.0](../../LICENSE)

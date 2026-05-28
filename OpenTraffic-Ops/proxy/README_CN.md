@@ -1,16 +1,33 @@
-# OpenTraffic Ops Proxy
+# OpenTraffic Ops 边缘代理
 
-[English](README.md)
+<p align="center">
+  <a href="../../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.26+-00ADD8?logo=go&logoColor=white" alt="Go 1.26+">
+  <img src="https://img.shields.io/badge/Linux-Only-FCC624?logo=linux&logoColor=black" alt="Linux Only">
+</p>
 
-## 目录
+<p align="center">
+  <a href="README.md">English</a>
+</p>
 
-- [项目简介](#项目简介)
-- [技术栈](#技术栈)
-- [功能描述](#功能描述)
-- [快速开始](#快速开始)
-- [服务器部署](#服务器部署)
-- [常见问题](#常见问题)
-- [致谢](#致谢)
+## 📑 目录
+
+- [📖 项目简介](#项目简介)
+- [🔧 技术栈](#技术栈)
+- [✨ 功能描述](#功能描述)
+  - [📊 采集指标](#采集指标)
+  - [📡 与平台交互的接口](#与平台交互的接口)
+- [🚀 快速开始](#快速开始)
+  - [📋 前置要求](#前置要求)
+  - [🔬 验证交叉编译环境](#验证交叉编译环境)
+  - [🔨 手动交叉编译](#手动交叉编译备用)
+  - [⚙️ 编译参数说明](#编译参数说明)
+- [🖥️ 服务器部署](#服务器部署)
+  - [📦 生产打包](#生产打包windows-一键脚本)
+  - [🚀 部署到 Linux 服务器](#部署到-linux-服务器)
+  - [⚙️ 配置文件](#配置文件)
+- [❓ 常见问题](#常见问题)
+- [🙏 致谢](#致谢)
 
 ---
 
@@ -19,16 +36,17 @@
 OpenTraffic Ops —— 边缘端 Proxy。**仅支持 Linux**（x86_64 / ARM64），部署在 Linux 服务器上，负责采集系统指标并上报到平台服务端，同时支持 WebSocket 远程控制（终端 / 文件管理）。
 
 ```
-┌────────────────────┐     HTTP POST      ┌──────────────────┐
-│   OpenTraffic Ops Proxy       │  ──────────────▶  │  OpenTraffic Ops │
-│   (Linux 服务器)              │  ◄──────────────  │  (服务端)                 │
-└────────────────────┘     返回心跳/指标          └──────────────────────┘
-         │
-         │  WebSocket（长连接）
-         ▼
-┌──────────────────────────────┐
-│  远程终端 / 文件管理 / Shell  │
-└──────────────────────────────┘
++--------------------+     HTTP POST      +------------------+
+|   OpenTraffic Ops  |  --------------->  |  OpenTraffic Ops |
+|   Proxy            |  <---------------  |  (服务端)        |
+|   (Linux 服务器)   |   返回心跳/指标    |                  |
++--------------------+                    +------------------+
+         |
+         |  WebSocket（长连接）
+         v
++------------------------------+
+|  远程终端 / 文件管理 / Shell |
++------------------------------+
 ```
 
 Proxy 定时执行以下任务：
@@ -267,4 +285,4 @@ OpenTraffic Ops Proxy 基于以下开源项目构建：
 - [Gorilla WebSocket](https://github.com/gorilla/websocket) —— WebSocket 客户端实现
 - [creack/pty](https://github.com/creack/pty) —— 远程终端 PTY
 
-[MIT License](../LICENSE)
+[Apache License 2.0](../../LICENSE)

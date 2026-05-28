@@ -1,16 +1,41 @@
 # OpenTraffic Ops 部署面板
 
-[English](README.md)
+<p align="center">
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white" alt="Go 1.21+">
+  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white" alt="Docker">
+</p>
 
-## 目录
+<p align="center">
+  <a href="README.md">English</a>
+</p>
 
-- [项目简介](#项目简介)
-- [技术栈](#技术栈)
-- [功能描述](#功能描述)
-- [快速开始](#快速开始)
-- [服务器部署](#服务器部署)
-- [常见问题](#常见问题)
-- [致谢](#致谢)
+## 📑 目录
+
+- [📖 项目简介](#项目简介)
+  - [核心能力](#核心能力)
+  - [单二进制自包含部署](#单二进制自包含部署)
+- [🔧 技术栈](#技术栈)
+  - [后端](#后端)
+  - [前端](#前端)
+- [✨ 功能描述](#功能描述)
+  - [📊 监控大屏](#监控大屏)
+  - [🧩 组件管理](#组件管理)
+  - [🖧 服务器管理](#服务器管理)
+  - [📦 远程部署](#远程部署)
+  - [⚙️ 配置管理](#配置管理)
+  - [📖 使用指南](#使用指南)
+- [🚀 快速开始](#快速开始)
+  - [📋 前置要求](#前置要求)
+  - [💻 开发模式启动](#开发模式启动)
+- [🖥️ 服务器部署](#服务器部署)
+  - [📦 生产构建](#生产构建单包自包含)
+  - [⚙️ 配置说明](#配置说明)
+  - [🔒 安全建议](#安全建议)
+  - [💾 备份策略](#备份策略)
+- [❓ 常见问题](#常见问题)
+- [🙏 致谢](#致谢)
 
 ---
 
@@ -73,7 +98,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 组件状态分布柱状图
 - 组件实时监控表格（CPU / 内存 / 网络 IO），支持启停实时刷新
 
-![alt text](images/image.png)
+![监控大屏](images/image.png)
 
 ### 组件管理
 - 组件目录浏览，显示 Docker 连接状态
@@ -83,7 +108,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 查看组件详情（资源监控、日志、配置信息）
 - 内置离线镜像，无需外网即可部署
 
-![alt text](images/image-2.png)
+![组件管理](images/image-2.png)
 
 #### 支持的组件类型
 
@@ -100,7 +125,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 展开行查看已部署服务详情
 - 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务
 
-![alt text](images/image-1.png)
+![服务器管理](images/image-1.png)
 
 ### 远程部署
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
@@ -109,14 +134,14 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 防重复部署检测
 - 完整的部署记录和日志追溯
 
-![alt text](images/image-3.png)
+![远程部署](images/image-3.png)
 
 ### 配置管理
 - 查看所有已安装组件的配置列表
 - 在线编辑组件配置（端口、环境变量、数据卷、启动命令）
 - 配置保存后需手动重启组件生效
 
-![alt text](images/image-4.png)
+![配置管理](images/image-4.png)
 
 ### 使用指南
 - 平台简介与特性概览
@@ -126,7 +151,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - PostgreSQL / Redis 默认配置与参数说明
 - 常见问题 FAQ（手风琴式交互）
 
-![alt text](images/image-5.png)
+![使用指南](images/image-5.png)
 
 ---
 
@@ -301,4 +326,4 @@ OpenTraffic Ops Init 基于以下开源项目构建：
 - [Docker SDK for Go](https://github.com/docker/docker-ce) —— 容器管理
 - [ECharts](https://echarts.apache.org/) —— 数据可视化
 
-[MIT License](../LICENSE)
+[Apache License 2.0](../LICENSE)

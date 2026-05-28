@@ -1,16 +1,41 @@
 # OpenTraffic Ops Init Deployment Panel
 
-[中文](README_CN.md)
+<p align="center">
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.21+-00ADD8?logo=go&logoColor=white" alt="Go 1.21+">
+  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Docker-Supported-2496ED?logo=docker&logoColor=white" alt="Docker">
+</p>
 
-## Table of Contents
+<p align="center">
+  <a href="README_CN.md">中文</a>
+</p>
 
-- [Project Introduction](#project-introduction)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Server Deployment](#server-deployment)
-- [FAQ](#faq)
-- [Acknowledgments](#acknowledgments)
+## 📑 Table of Contents
+
+- [📖 Project Introduction](#project-introduction)
+  - [Core Capabilities](#core-capabilities)
+  - [Single-Binary Self-Contained Deployment](#single-binary-self-contained-deployment)
+- [🔧 Tech Stack](#tech-stack)
+  - [Backend](#backend)
+  - [Frontend](#frontend)
+- [✨ Features](#features)
+  - [📊 Dashboard](#dashboard)
+  - [🧩 Component Management](#component-management)
+  - [🖧 Server Management](#server-management)
+  - [📦 Remote Deployment](#remote-deployment)
+  - [⚙️ Configuration Management](#configuration-management)
+  - [📖 User Guide](#user-guide)
+- [🚀 Quick Start](#quick-start)
+  - [📋 Prerequisites](#prerequisites)
+  - [💻 Development Mode](#development-mode)
+- [🖥️ Server Deployment](#server-deployment)
+  - [📦 Production Build](#production-build-single-binary)
+  - [⚙️ Configuration](#configuration)
+  - [🔒 Security Recommendations](#security-recommendations)
+  - [💾 Backup Strategy](#backup-strategy)
+- [❓ FAQ](#faq)
+- [🙏 Acknowledgments](#acknowledgments)
 
 ---
 
@@ -73,7 +98,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Component status distribution bar chart
 - Real-time component monitoring table (CPU / memory / network IO) with start/stop live refresh
 
-![alt text](images/image.png)
+![Dashboard](images/image.png)
 
 ### Component Management
 - Browse component catalog with Docker connection status
@@ -83,7 +108,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - View component details (resource monitoring, logs, configuration)
 - Built-in offline images — no internet required for deployment
 
-![alt text](images/image-2.png)
+![Component Management](images/image-2.png)
 
 #### Supported Component Types
 
@@ -100,7 +125,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Expandable rows to view deployed service details
 - Supported operations: start / stop / restart / configure / uninstall remote services
 
-![alt text](images/image-1.png)
+![Server Management](images/image-1.png)
 
 ### Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
@@ -109,14 +134,14 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Duplicate deployment detection
 - Complete deployment records and log traceability
 
-![alt text](images/image-3.png)
+![Remote Deployment](images/image-3.png)
 
 ### Configuration Management
 - View configuration list of all installed components
 - Edit component configurations online (ports, environment variables, volumes, startup commands)
 - Manual restart required after configuration changes take effect
 
-![alt text](images/image-4.png)
+![Configuration Management](images/image-4.png)
 
 ### User Guide
 - Platform introduction and feature overview
@@ -126,7 +151,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - PostgreSQL / Redis default configuration and parameter descriptions
 - Common FAQ (accordion-style interaction)
 
-![alt text](images/image-5.png)
+![User Guide](images/image-5.png)
 
 ---
 
@@ -301,4 +326,4 @@ OpenTraffic Ops Init is built with the following open-source projects:
 - [Docker SDK for Go](https://github.com/docker/docker-ce) — Container management
 - [ECharts](https://echarts.apache.org/) — Data visualization
 
-[MIT License](../LICENSE)
+[Apache License 2.0](../LICENSE)

@@ -1,16 +1,42 @@
 # OpenTraffic Ops Monitoring & Operations Platform
 
-[中文](README_CN.md)
+<p align="center">
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go 1.25+">
+  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Postgres-15+-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15+">
+  <img src="https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white" alt="Redis 7+">
+</p>
 
-## Table of Contents
+<p align="center">
+  <a href="README_CN.md">中文</a>
+</p>
 
-- [Project Introduction](#project-introduction)
-- [Tech Stack](#tech-stack)
-- [Features](#features)
-- [Quick Start](#quick-start)
-- [Server Deployment](#server-deployment)
-- [FAQ](#faq)
-- [Acknowledgments](#acknowledgments)
+## 📑 Table of Contents
+
+- [📖 Project Introduction](#project-introduction)
+- [🔧 Tech Stack](#tech-stack)
+  - [Backend](#backend-backend-go-module-opentraffic-ops-backend)
+  - [Frontend](#frontend-frontend-vue3-spa)
+  - [Edge Proxy](#edge-proxy-proxy-go-module-opentraffic-ops-proxy-independent-deliverable)
+- [✨ Features](#features)
+  - [👤 System Management](#system-management)
+  - [🖥️ Host Management](#host-management)
+  - [🔔 Monitoring & Alerting](#monitoring--alerting)
+  - [🤖 Agent Dialogue](#agent-dialogue)
+  - [🔧 Remote Operations](#remote-operations)
+  - [📝 System Logs](#system-logs)
+  - [📡 Edge Proxy Features](#edge-proxy-features)
+  - [🔌 Proxy Protocol Interfaces](#proxy-protocol-interfaces-public-no-authentication)
+- [🚀 Quick Start](#quick-start)
+  - [📋 Prerequisites](#prerequisites)
+  - [💻 Development Mode](#development-mode)
+- [🖥️ Server Deployment](#server-deployment)
+  - [📦 Production Build](#production-build-single-binary)
+  - [⚙️ Configuration](#configuration)
+  - [📝 Logging](#logging)
+- [❓ FAQ](#faq)
+- [🙏 Acknowledgments](#acknowledgments)
 
 ---
 
@@ -69,14 +95,14 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
 - **User Management** — User CRUD, password policy, login failure lockout
 - **Personal Center** — User info maintenance, password change, avatar upload
 
-![alt text](images/image-1.png)
+![User Management](images/image-1.png)
 
 ### Host Management
 - **Host Information** — Edge node host registration, CRUD, and status display (auto-enrolled on first proxy registration)
 - **Host Health** — Historical host health data collection and query (auto daily rotation, 7-day retention)
 - **Host Operations** — Remote operations entry point (terminal, file, process control)
 
-![alt text](images/image.png)
+![Host Management](images/image.png)
 
 ### Monitoring & Alerting
 - **Alarm Channels** — Supports email, DingTalk, WeCom, and in-app notification channels, with multiple channels configurable
@@ -90,32 +116,32 @@ OpenTraffic Ops is a full-stack monitoring and operations management platform fo
   - `alarmCheck` (30s) — Alarm detection
   - `cleanHostHealth` (daily at 03:30) — Clean health data older than 7 days
 
-![alt text](images/image-2.png)
-![alt text](images/image-3.png)
-![alt text](images/image-4.png)
+![Alert Rules](images/image-2.png)
+![Alert Channels](images/image-3.png)
+![Alert Records](images/image-4.png)
 
 ### Agent Dialogue
 - **Control Agent Dialogue** — Interact with the control Agent through dialogue, executing process start/stop, parameter distribution, and other operations
 - **Perception Agent Dialogue** — Interact with the perception Agent through dialogue, obtaining host online status and basic information
 - **Session Management** — Session creation, paginated list, message history, rename, delete
 
-![alt text](images/image-5.png)
-![alt text](images/image-6.png)
+![Agent Dialogue](images/image-5.png)
+![Agent Session](images/image-6.png)
 
 ### Remote Operations
 - **Remote Terminal** — Browser-based xterm terminal, routed through platform WebSocket Hub directly to Proxy PTY (color and resize support)
 - **Remote File** — File browse, read, edit, upload, download, delete, and directory creation on proxy hosts (10MB single file limit, path traversal protection)
 - **Process Control** — Start / stop / restart process commands sent from platform to Proxy
 
-![alt text](images/image-8.png)
-![alt text](images/image-9.png)
-![alt text](images/image-10.png)
+![Remote Terminal](images/image-8.png)
+![Remote File](images/image-9.png)
+![Process Control](images/image-10.png)
 
 ### System Logs
 - **Operation Logs** — Automatically records protected interface operations via `OperLog` middleware
 - **Login Logs** — Login success / failure records
 
-![alt text](images/image-11.png)
+![System Logs](images/image-11.png)
 
 ### Edge Proxy Features
 - **System Info Collection** — Reports OS type/version, CPU arch/cores/model, memory, disk, MAC address on registration
@@ -394,4 +420,4 @@ OpenTraffic Ops is built with the following open-source projects:
 - [Zap](https://github.com/uber-go/zap) — Logging
 - [xterm.js](https://xtermjs.org/) — Browser terminal
 
-[MIT License](../LICENSE)
+[Apache License 2.0](../LICENSE)

@@ -1,42 +1,72 @@
 # OpenTraffic Ops
 
-[English](README.md)
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go 1.25+">
+  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Postgres-15+-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15+">
+  <img src="https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white" alt="Redis 7+">
+</p>
+
+<p align="center">
+  <a href="README.md">English</a>
+</p>
 
 一套全栈边缘计算运维平台，由两个紧密集成的子系统组成：用于基础设施供给的**部署面板**，以及用于边缘主机管理、告警和远程运维的**监控平台**。
+
+---
+
+## 📑 目录
+
+- [🏗️ 架构概览](#架构概览)
+- [🔧 子系统](#子系统)
+  - [1. OpenTraffic-Ops-Initialization — 部署面板](#1-opentraffic-ops-initialization--部署面板)
+  - [2. OpenTraffic-Ops — 监控与运维平台](#2-opentraffic-ops--监控与运维平台)
+  - [3. proxy — 边缘代理](#3-proxy--边缘代理)
+- [🔗 子系统之间的关系](#子系统之间的关系)
+- [🚀 快速开始](#快速开始)
+  - [📋 前置要求](#前置要求)
+  - [🖥️ 启动部署面板](#启动部署面板)
+  - [📊 启动监控平台](#启动监控平台)
+  - [📦 构建生产二进制文件](#构建生产二进制文件windows-主机交叉编译到-linux)
+- [📁 项目结构](#项目结构)
+- [📚 文档](#文档)
+- [🔒 安全特性](#安全特性)
+- [📄 许可证](#许可证)
 
 ---
 
 ## 架构概览
 
 ```
-                    ┌─────────────────────────────────┐
-                    │      OpenTraffic Ops            │
-                    │  ┌─────────────────────────┐    │
-                    │  │  OpenTraffic-Ops-Init   │    │
-                    │  │  (部署面板)              │    │
-                    │  │  - Docker 管理          │────┼──► 部署 OpenTraffic-Ops
-                    │  │  - SSH 远程部署          │    │    和 Proxy 二进制文件
-                    │  │  - 组件生命周期管理       │    │    到远程 Linux 服务器
-                    │  └─────────────────────────┘    │
-                    │  ┌─────────────────────────┐    │
-                    │  │  OpenTraffic-Ops        │    │
-                    │  │  (监控与运维平台)         │    │
-                    │  │  - 主机监控             │◄───┼──── 接收来自边缘 Proxy
-                    │  │  - 告警引擎             │    │    的指标数据
-                    │  │  - 远程终端             │    │
-                    │  │  - Agent 对话           │    │
-                    │  └─────────────────────────┘    │
-                    └─────────────────────────────────┘
-                                         ▲
-                                         │ WebSocket / HTTP
-                                         │
-                    ┌────────────────────┴─────────────┐
-                    │      proxy (边缘代理)             │
-                    │  - 系统指标采集                   │
-                    │  - 进程监控                       │
-                    │  - 远程终端 PTY                   │
-                    │  - 远程文件操作                   │
-                    └──────────────────────────────────┘
+                    +-------------------------------+
+                    |     OpenTraffic Ops           |
+                    |  +-------------------------+  |
+                    |  | OpenTraffic-Ops-Init    |  |
+                    |  | (部署面板)               |  |
+                    |  | - Docker 管理           |--|---> 部署 OpenTraffic-Ops
+                    |  | - SSH 远程部署          |  |    和 Proxy 二进制文件
+                    |  | - 组件生命周期管理       |  |    到远程 Linux 服务器
+                    |  +-------------------------+  |
+                    |  +-------------------------+  |
+                    |  | OpenTraffic-Ops         |  |
+                    |  | (监控与运维平台)         |  |
+                    |  | - 主机监控              |<--|---- 接收来自边缘 Proxy
+                    |  | - 告警引擎              |  |    的指标数据
+                    |  | - 远程终端              |  |
+                    |  | - Agent 对话            |  |
+                    |  +-------------------------+  |
+                    +-------------------------------+
+                                         ^
+                                         | WebSocket / HTTP
+                                         |
+                    +--------------------+------------------+
+                    |     proxy (边缘代理)                   |
+                    |  - 系统指标采集                        |
+                    |  - 进程监控                            |
+                    |  - 远程终端 PTY                        |
+                    |  - 远程文件操作                        |
+                    +--------------------------------------+
                     部署在每个被监控的边缘主机上
 ```
 
@@ -49,7 +79,7 @@
 一个单二进制、自包含的部署仪表盘，无需外部 Web 服务器（Nginx）或数据库（PostgreSQL）。
 
 | 能力 | 说明 |
-|-----------|-------------|
+|------|------|
 | Docker 管理 | 一键安装/启动/停止/卸载中间件（PostgreSQL、Redis），支持自定义端口、环境变量、数据卷 |
 | 实时监控 | 容器实时资源统计（CPU / 内存 / 网络 / 磁盘） |
 | SSH 服务器管理 | 集中管理多台远程 Linux 服务器的 SSH 连接配置（密码或密钥认证） |
@@ -71,7 +101,7 @@
 
 **关键设计：** 前端通过 `go:embed` 嵌入 Go 二进制中。后端在同一端口上同时提供 API 和 SPA 静态文件服务，并带有自定义 SPA 回退逻辑 —— 零 Nginx 依赖。
 
-[详情 →](./OpenTraffic-Ops-Initialization/README_CN.md)
+[详情 &rarr;](./OpenTraffic-Ops-Initialization/README_CN.md)
 
 ---
 
@@ -80,7 +110,7 @@
 面向边缘计算场景的全栈监控运维平台。包含两个交付件：**监控平台服务**（后端通过 `go:embed` 内嵌前端，单二进制部署）和**边缘代理（Proxy）**。
 
 | 能力 | 说明 |
-|-----------|-------------|
+|------|------|
 | 主机管理 | 边缘节点注册、增删改查和状态展示（Proxy 首次注册时自动入库） |
 | 健康指标 | 主机历史健康数据，自动按日轮转（保留 7 天） |
 | 告警引擎 | 多渠道通知（邮件、钉钉、企业微信、站内信），基于阈值的 CPU / 内存 / 磁盘 / 网络 / 负载 规则 |
@@ -105,7 +135,7 @@
 
 **关键设计：** 后端通过 `go:embed` 提供 SPA 服务，为单个二进制文件。边缘代理（`proxy/`）是一个独立的 Go 模块，通过 HTTP/WebSocket 与平台通信 —— 独立部署在每个被监控主机上。
 
-[详情 →](./OpenTraffic-Ops/README_CN.md)
+[详情 &rarr;](./OpenTraffic-Ops/README_CN.md)
 
 ---
 
@@ -124,31 +154,31 @@
 
 **平台支持：** 仅 Linux x86_64 (amd64) 和 Linux ARM64 (aarch64)。Windows 和 macOS 仅用于交叉编译。
 
-[详情 →](./OpenTraffic-Ops/proxy/README_CN.md)
+[详情 &rarr;](./OpenTraffic-Ops/proxy/README_CN.md)
 
 ---
 
 ## 子系统之间的关系
 
 ```
-┌─────────────────────────────┐      部署       ┌──────────────────────────┐
-│ OpenTraffic-Ops-Init        │ ──────────────►│ OpenTraffic-Ops          │
-│ (本机)                       │  SSH/SFTP      │ (远程 Linux 服务器)       │
-│                             │                │                          │
-│ - Docker 管理               │      部署       │ - 主机监控               │
-│ - SSH 配置                  │ ──────────────►│ - 告警                   │
-│ - 二进制部署                 │                │ - 远程运维               │
-└─────────────────────────────┘                └────────────┬─────────────┘
-                                                            │
-                                                            │ HTTP / WebSocket
-                                                            │
-                                                   ┌────────▼──────────────┐
-                                                   │ proxy                 │
-                                                   │ (每个边缘主机)          │
-                                                   │ - 指标采集            │
-                                                   │ - 远程终端            │
-                                                   │ - 文件操作            │
-                                                   └───────────────────────┘
++-----------------------------+      部署      +-------------------------+
+| OpenTraffic-Ops-Init        | ------------> | OpenTraffic-Ops         |
+| (本机)                       |  SSH/SFTP      | (远程 Linux 服务器)      |
+|                             |                |                         |
+| - Docker 管理               |      部署      | - 主机监控              |
+| - SSH 配置                  | ------------> | - 告警                  |
+| - 二进制部署                |                | - 远程运维              |
++-----------------------------+                +-------------+-----------+
+                                                             |
+                                                             | HTTP / WebSocket
+                                                             |
+                                                  +----------v----------+
+                                                  | proxy               |
+                                                  | (每个边缘主机)       |
+                                                  | - 指标采集          |
+                                                  | - 远程终端          |
+                                                  | - 文件操作          |
+                                                  +---------------------+
 ```
 
 1. **`OpenTraffic-Ops-Initialization`** 是你的控制平面 —— 在本地机器或堡垒主机上运行。它管理 Docker 容器（PostgreSQL、Redis）并将监控栈部署到远程服务器。
@@ -248,7 +278,7 @@ opentraffic-ops/
 │
 ├── README.md                        # 本文件
 ├── .gitignore                       # 根目录合并的忽略规则
-└── LICENSE                          # MIT 许可证
+└── LICENSE                          # Apache 许可证
 ```
 
 ---

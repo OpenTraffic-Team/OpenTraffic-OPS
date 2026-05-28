@@ -1,42 +1,72 @@
 # OpenTraffic Ops
 
-[中文](README_CN.md)
+<p align="center">
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go 1.25+">
+  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
+  <img src="https://img.shields.io/badge/Postgres-15+-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15+">
+  <img src="https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white" alt="Redis 7+">
+</p>
+
+<p align="center">
+  <a href="README_CN.md">中文</a>
+</p>
 
 A full-stack edge computing operations platform composed of two integrated subsystems: a **deployment panel** for infrastructure provisioning and a **monitoring platform** for edge host management, alerting, and remote operations.
+
+---
+
+## 📑 Table of Contents
+
+- [🏗️ Architecture Overview](#architecture-overview)
+- [🔧 Subsystems](#subsystems)
+  - [1. OpenTraffic-Ops-Initialization — Deployment Panel](#1-opentraffic-ops-initialization--deployment-panel)
+  - [2. OpenTraffic-Ops — Monitoring & Operations Platform](#2-opentraffic-ops--monitoring--operations-platform)
+  - [3. proxy — Edge Agent](#3-proxy--edge-agent)
+- [🔗 Relationship Between Subsystems](#relationship-between-subsystems)
+- [🚀 Quick Start](#quick-start)
+  - [📋 Prerequisites](#prerequisites)
+  - [🖥️ Start the Deployment Panel](#start-the-deployment-panel)
+  - [📊 Start the Monitoring Platform](#start-the-monitoring-platform)
+  - [📦 Build Production Binaries](#build-production-binaries-windows-host-cross-compiling-to-linux)
+- [📁 Project Structure](#project-structure)
+- [📚 Documentation](#documentation)
+- [🔒 Security Features](#security-features)
+- [📄 License](#license)
 
 ---
 
 ## Architecture Overview
 
 ```
-                    ┌─────────────────────────────────┐
-                    │      OpenTraffic Ops            │
-                    │  ┌─────────────────────────┐    │
-                    │  │  OpenTraffic-Ops-Init   │    │
-                    │  │  (Deployment Panel)     │    │
-                    │  │  - Docker management    │    │
-                    │  │  - SSH remote deploy    │────┼──► Deploys OpenTraffic-Ops
-                    │  │  - Component lifecycle  │    │    and proxy binaries
-                    │  └─────────────────────────┘    │    to remote Linux servers
-                    │  ┌─────────────────────────┐    │
-                    │  │  OpenTraffic-Ops        │    │
-                    │  │  (Monitoring & Ops)     │    │
-                    │  │  - Host monitoring      │◄───┼──── Receives metrics from
-                    │  │  - Alerting engine      │    │    edge proxies
-                    │  │  - Remote terminal      │    │
-                    │  │  - Agent dialogue       │    │
-                    │  └─────────────────────────┘    │
-                    └─────────────────────────────────┘
-                                         ▲
-                                         │ WebSocket / HTTP
-                                         │
-                    ┌────────────────────┴─────────────┐
-                    │      proxy (Edge Agent)          │
-                    │  - System metrics collection     │
-                    │  - Process monitoring            │
-                    │  - Remote terminal PTY           │
-                    │  - Remote file operations        │
-                    └──────────────────────────────────┘
+                    +-------------------------------+
+                    |     OpenTraffic Ops           |
+                    |  +-------------------------+  |
+                    |  | OpenTraffic-Ops-Init    |  |
+                    |  | (Deployment Panel)      |  |
+                    |  | - Docker management     |--|---> Deploys OpenTraffic-Ops
+                    |  | - SSH remote deploy     |  |    and proxy binaries
+                    |  | - Component lifecycle   |  |    to remote Linux servers
+                    |  +-------------------------+  |
+                    |  +-------------------------+  |
+                    |  | OpenTraffic-Ops         |  |
+                    |  | (Monitoring & Ops)      |  |
+                    |  | - Host monitoring       |<--|---- Receives metrics from
+                    |  | - Alerting engine       |  |    edge proxies
+                    |  | - Remote terminal       |  |
+                    |  | - Agent dialogue        |  |
+                    |  +-------------------------+  |
+                    +-------------------------------+
+                                         ^
+                                         | WebSocket / HTTP
+                                         |
+                    +--------------------+------------------+
+                    |     proxy (Edge Agent)               |
+                    |  - System metrics collection         |
+                    |  - Process monitoring                |
+                    |  - Remote terminal PTY               |
+                    |  - Remote file operations            |
+                    +--------------------------------------+
                     Deployed on each monitored edge host
 ```
 
@@ -71,7 +101,7 @@ A single-binary, self-contained deployment dashboard that requires no external w
 
 **Key Design:** Frontend is embedded into the Go binary via `go:embed`. The backend serves both API and SPA static files on a single port with custom SPA fallback logic — zero Nginx dependency.
 
-[Details →](./OpenTraffic-Ops-Initialization/README.md)
+[Details &rarr;](./OpenTraffic-Ops-Initialization/README.md)
 
 ---
 
@@ -105,7 +135,7 @@ A full-stack monitoring and operations platform for edge computing scenarios. Co
 
 **Key Design:** The backend serves the SPA via `go:embed` as a single binary. The edge proxy (`proxy/`) is a separate Go module that communicates with the platform via HTTP/WebSocket — deployed independently on each monitored host.
 
-[Details →](./OpenTraffic-Ops/README.md)
+[Details &rarr;](./OpenTraffic-Ops/README.md)
 
 ---
 
@@ -124,31 +154,31 @@ Deployed on each monitored edge host. Responsible for system metrics collection 
 
 **Platform Support:** Linux x86_64 (amd64) and Linux ARM64 (aarch64) only. Windows and macOS can only be used for cross-compilation.
 
-[Details →](./OpenTraffic-Ops/proxy/README.md)
+[Details &rarr;](./OpenTraffic-Ops/proxy/README.md)
 
 ---
 
 ## Relationship Between Subsystems
 
 ```
-┌─────────────────────────────┐      deploys      ┌──────────────────────────┐
-│ OpenTraffic-Ops-Init        │ ─────────────────►│ OpenTraffic-Ops          │
-│ (this machine)              │  SSH/SFTP         │ (remote Linux server)    │
-│                             │                   │                          │
-│ - Docker mgmt               │      deploys      │ - Host monitoring        │
-│ - SSH configs               │ ─────────────────►│ - Alerting               │
-│ - Binary deploy             │                   │ - Remote ops             │
-└─────────────────────────────┘                   └────────────┬─────────────┘
-                                                               │
-                                                               │ HTTP / WebSocket
-                                                               │
-                                                      ┌────────▼──────────────┐
-                                                      │ proxy                 │
-                                                      │ (on each edge host)   │
-                                                      │ - Metrics collection  │
-                                                      │ - Remote terminal     │
-                                                      │ - File operations     │
-                                                      └───────────────────────┘
++-----------------------------+      deploys      +-------------------------+
+| OpenTraffic-Ops-Init        | ----------------> | OpenTraffic-Ops         |
+| (this machine)              |  SSH/SFTP         | (remote Linux server)   |
+|                             |                   |                         |
+| - Docker mgmt               |      deploys      | - Host monitoring       |
+| - SSH configs               | ----------------> | - Alerting              |
+| - Binary deploy             |                   | - Remote ops            |
++-----------------------------+                   +-------------+-----------+
+                                                                |
+                                                                | HTTP / WebSocket
+                                                                |
+                                                     +----------v----------+
+                                                     | proxy               |
+                                                     | (on each edge host) |
+                                                     | - Metrics collection|
+                                                     | - Remote terminal   |
+                                                     | - File operations   |
+                                                     +---------------------+
 ```
 
 1. **`OpenTraffic-Ops-Initialization`** is your control plane — run it on your local machine or a bastion host. It manages Docker containers (PostgreSQL, Redis) and deploys the monitoring stack to remote servers.
@@ -248,7 +278,7 @@ opentraffic-ops/
 │
 ├── README.md                        # This file
 ├── .gitignore                       # Root-level combined ignore rules
-└── LICENSE                          # MIT License
+└── LICENSE                          # Apache License 2.0
 ```
 
 ---
@@ -277,4 +307,4 @@ opentraffic-ops/
 
 ## License
 
-[MIT License](./LICENSE)
+[Apache License 2.0](./LICENSE)
