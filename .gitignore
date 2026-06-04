@@ -60,3 +60,7 @@ OpenTraffic-Ops-Initialization/backend/pkg/assets/images/opentraffic-ops*
 *.temp
 tmp/
 temp/
+
+.agents/
+.claude/
+skills-lock.json
