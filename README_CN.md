@@ -23,6 +23,10 @@
 </p>
 
 <p align="center">
+  <video src="OpenTraffic-Ops-Animation_CN.mp4" controls width="800"></video>
+</p>
+
+<p align="center">
   <a href="https://github.com/OpenTraffic-Team/OpenTraffic-OPS">🌟 GitHub: OpenTraffic-Team/OpenTraffic-OPS</a>
 </p>
 
