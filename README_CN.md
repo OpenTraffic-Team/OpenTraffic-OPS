@@ -23,7 +23,9 @@
 </p>
 
 <p align="center">
-  <video src="OpenTraffic-Ops-Animation_CN.mp4" controls width="800"></video>
+  <a href="images/OpenTraffic-Ops-Animation_CN.mp4">
+    <img src="images/OpenTraffic-Ops-Animation_CN.gif" alt="OpenTraffic Ops 中文宣传动画" width="800">
+  </a>
 </p>
 
 <p align="center">

@@ -23,7 +23,9 @@
 </p>
 
 <p align="center">
-  <video src="OpenTraffic-Ops-Animation.mp4" controls width="800"></video>
+  <a href="images/OpenTraffic-Ops-Animation.mp4">
+    <img src="images/OpenTraffic-Ops-Animation.gif" alt="OpenTraffic Ops promotional animation" width="800">
+  </a>
 </p>
 
 <p align="center">
