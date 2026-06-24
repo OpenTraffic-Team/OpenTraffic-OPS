@@ -328,9 +328,9 @@
       <a class="nav-link" href="https://opentraffic-team.github.io/" target="_blank" rel="noreferrer" data-zh="控制系统" data-en="Control">控制系统</a>
     </div>
     <div class="lang-switch">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      <button class="lang-btn lang-active" data-lang="en" onclick="setLang('en')">English</button>
       <span class="lang-sep">|</span>
-      <button class="lang-btn lang-active" data-lang="zh" onclick="setLang('zh')">中文</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中文</button>
     </div>
   </div>
 </nav>
@@ -732,7 +732,7 @@
     });
     localStorage.setItem('ot-lang', lang);
   }
-  setLang(localStorage.getItem('ot-lang') || 'zh');
+  setLang(localStorage.getItem('ot-lang') || 'en');
 </script>
 </body>
 </html>
