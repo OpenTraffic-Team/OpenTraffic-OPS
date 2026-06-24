@@ -1,1 +1,739 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenTraffic | 运维平台 OPS</title>
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --bg2: #0e1512;
+      --card: #131a17;
+      --card2: #182019;
+      --border: rgba(255,255,255,0.07);
+      --teal: #12bfa3;
+      --teal2: #0de8c2;
+      --green: #2ecc71;
+      --orange: #f39c12;
+      --blue: #3498db;
+      --purple: #9b59b6;
+      --red: #e74c3c;
+      --ink: #e8f5f0;
+      --muted: #7a9990;
+      --subtle: #4a6860;
+      --font: "HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+      --mono: "JetBrains Mono","SFMono-Regular",ui-monospace,monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body { background: var(--bg); color: var(--ink); font-family: var(--font); min-height: 100vh; overflow-x: hidden; }
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 60px;
+      background: rgba(10,15,13,0.88);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      height: 100%; padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand { display: flex; align-items: center; gap: 10px; font-weight: 800; font-size: 17px; letter-spacing: -0.02em; }
+    .brand-logo {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, #0d2e22, #1a5c44);
+      border: 1px solid rgba(18,191,163,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; color: var(--teal); font-family: var(--mono);
+    }
+    .nav-links { display: flex; align-items: center; gap: 6px; }
+    .nav-link { font-size: 14px; color: var(--muted); padding: 6px 12px; border-radius: 6px; transition: color 140ms; }
+    .nav-link:hover { color: var(--ink); }
+    .nav-back {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; font-weight: 700;
+      color: var(--muted); padding: 6px 12px;
+      border: 1px solid var(--border); border-radius: 8px;
+      transition: color 140ms, border-color 140ms;
+    }
+    .nav-back:hover { color: var(--teal); border-color: rgba(18,191,163,0.3); }
+    .lang-switch { display: flex; align-items: center; gap: 2px; padding-left: 14px; border-left: 1px solid var(--border); }
+    .lang-btn { padding: 5px 8px; border-radius: 5px; cursor: pointer; color: var(--muted); background: none; border: none; font-size: 13px; font-weight: 700; font-family: var(--font); transition: color 140ms; }
+    .lang-btn:hover { color: var(--ink); }
+    .lang-btn.lang-active { color: var(--teal); }
+    .lang-sep { color: var(--subtle); font-size: 13px; user-select: none; }
+
+    /* SECTIONS */
+    section { padding: 96px 28px; }
+    .section-inner { max-width: 1200px; margin: 0 auto; }
+    .section-label {
+      display: inline-flex; align-items: center; gap: 8px;
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 16px;
+    }
+    .section-label::before { content: ""; width: 16px; height: 1px; background: var(--teal); }
+    .section-h2 { font-size: clamp(28px, 4vw, 46px); font-weight: 900; letter-spacing: -0.04em; line-height: 1.1; margin-bottom: 16px; }
+    .section-desc { color: var(--muted); font-size: 15px; line-height: 1.85; max-width: 640px; margin-bottom: 52px; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh; display: flex; align-items: center;
+      padding: 120px 28px 80px;
+      position: relative; overflow: hidden;
+    }
+    .hero::before {
+      content: ""; position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 60% 50% at 30% 50%, rgba(18,191,163,0.1), transparent),
+        radial-gradient(ellipse 40% 60% at 75% 30%, rgba(52,152,219,0.06), transparent);
+      pointer-events: none;
+    }
+    .hero-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: grid; grid-template-columns: 1fr 1fr;
+      gap: 60px; align-items: center;
+      position: relative; z-index: 1; width: 100%;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 22px;
+    }
+    .eyebrow::before { content: ""; width: 20px; height: 1px; background: var(--teal); }
+    h1 { font-size: clamp(36px, 5vw, 64px); font-weight: 900; line-height: 1.06; letter-spacing: -0.04em; margin-bottom: 20px; }
+    .teal { color: var(--teal); }
+    .hero-desc { color: var(--muted); font-size: 16px; line-height: 1.85; margin-bottom: 36px; max-width: 480px; }
+    .hero-btns { display: flex; gap: 12px; flex-wrap: wrap; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px;
+      background: var(--teal); color: #051510;
+      font-size: 14px; font-weight: 700;
+      transition: opacity 150ms, transform 150ms;
+    }
+    .btn-primary:hover { opacity: 0.88; transform: translateY(-1px); }
+    .btn-ghost {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 12px 24px; border-radius: 8px;
+      background: transparent; color: var(--muted);
+      border: 1px solid var(--border); font-size: 14px; font-weight: 700;
+      transition: color 150ms, border-color 150ms;
+    }
+    .btn-ghost:hover { color: var(--ink); border-color: rgba(255,255,255,0.2); }
+
+    /* TERMINAL */
+    .terminal { background: var(--card2); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+    .terminal-bar {
+      display: flex; align-items: center; gap: 8px;
+      padding: 12px 16px; border-bottom: 1px solid var(--border);
+      background: rgba(0,0,0,0.2);
+    }
+    .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .dot-red { background: #ff5f56; } .dot-yellow { background: #ffbd2e; } .dot-green { background: #27c93f; }
+    .terminal-title { font-family: var(--mono); font-size: 12px; color: var(--subtle); margin-left: 6px; }
+    .terminal-body { padding: 20px; font-family: var(--mono); font-size: 13px; }
+    .t-line { margin-bottom: 7px; color: var(--muted); }
+    .t-prompt { color: var(--teal); margin-right: 6px; }
+    .t-cmd { color: var(--ink); }
+    .t-output { padding-left: 16px; color: var(--subtle); }
+    .t-ok { color: #27c93f; } .t-warn { color: var(--orange); } .t-info { color: var(--blue); } .t-err { color: var(--red); }
+    .t-cursor { display: inline-block; width: 8px; height: 14px; background: var(--teal); vertical-align: -2px; animation: blink 1s step-end infinite; }
+    @keyframes blink { 50% { opacity: 0; } }
+
+    /* BADGE CHIPS */
+    .badge-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 28px; }
+    .badge {
+      display: inline-flex; align-items: center; gap: 6px;
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em; padding: 4px 10px; border-radius: 6px;
+      border: 1px solid;
+    }
+    .badge-go    { background: rgba(0,173,216,0.1); border-color: rgba(0,173,216,0.25); color: #55cfed; }
+    .badge-vue   { background: rgba(79,192,141,0.1); border-color: rgba(79,192,141,0.25); color: #7fdbb0; }
+    .badge-pg    { background: rgba(65,105,225,0.1); border-color: rgba(65,105,225,0.25); color: #88aaff; }
+    .badge-redis { background: rgba(220,56,45,0.1);  border-color: rgba(220,56,45,0.25);  color: #f08080; }
+    .badge-docker{ background: rgba(36,150,237,0.1); border-color: rgba(36,150,237,0.25); color: #7bbff5; }
+
+    /* SUBSYSTEM CARDS */
+    .subsys-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-bottom: 0; }
+    .subsys-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 20px; padding: 32px 28px;
+      display: flex; flex-direction: column; gap: 16px;
+      transition: border-color 250ms, background 250ms;
+    }
+    .subsys-card:hover { background: var(--card2); border-color: rgba(18,191,163,0.2); }
+    .subsys-icon {
+      width: 48px; height: 48px; border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 22px;
+    }
+    .icon-blue   { background: rgba(52,152,219,0.12); border: 1px solid rgba(52,152,219,0.2); }
+    .icon-teal   { background: rgba(18,191,163,0.12); border: 1px solid rgba(18,191,163,0.2); }
+    .icon-purple { background: rgba(155,89,182,0.12); border: 1px solid rgba(155,89,182,0.2); }
+    .subsys-tag {
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 4px; display: inline-block; margin-bottom: 6px;
+    }
+    .tag-blue   { background: rgba(52,152,219,0.12); color: #74beff; }
+    .tag-teal   { background: rgba(18,191,163,0.12); color: var(--teal2); }
+    .tag-purple { background: rgba(155,89,182,0.12); color: #c49be0; }
+    .tag-orange { background: rgba(243,156,18,0.12);  color: #f8c26a; }
+    .tag-green  { background: rgba(46,204,113,0.12);  color: #6ee09e; }
+    .tag-red    { background: rgba(231,76,60,0.12);   color: #f4967f; }
+    .subsys-card h3 { font-size: 22px; font-weight: 900; letter-spacing: -0.04em; margin-bottom: 6px; }
+    .subsys-card .sub-desc { color: var(--muted); font-size: 14px; line-height: 1.8; }
+    .cap-list { list-style: none; display: flex; flex-direction: column; gap: 7px; }
+    .cap-list li { display: flex; align-items: flex-start; gap: 10px; font-size: 13px; color: var(--muted); }
+    .cap-list li::before { content: ""; width: 5px; height: 5px; border-radius: 50%; background: var(--teal); flex-shrink: 0; margin-top: 6px; }
+
+    /* CAPABILITY TABLE */
+    .cap-table { width: 100%; border-collapse: collapse; }
+    .cap-table th {
+      text-align: left; padding: 12px 16px;
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: var(--muted); border-bottom: 1px solid var(--border);
+    }
+    .cap-table td { padding: 14px 16px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    .cap-table tr:last-child td { border-bottom: none; }
+    .cap-table tr:hover td { background: rgba(255,255,255,0.02); }
+    .cap-table td:first-child { color: var(--ink); font-weight: 600; white-space: nowrap; }
+    .cap-table td:last-child { color: var(--muted); line-height: 1.75; }
+    .table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+
+    /* ARCH DIAGRAM */
+    .arch-card {
+      background: var(--card2); border: 1px solid var(--border);
+      border-radius: 16px; padding: 32px; font-family: var(--mono); font-size: 13px;
+    }
+    .arch-row { display: flex; gap: 16px; align-items: stretch; justify-content: center; flex-wrap: wrap; }
+    .arch-node {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 22px; min-width: 180px;
+      display: flex; flex-direction: column; gap: 6px; text-align: center;
+    }
+    .arch-node-title { font-size: 13px; font-weight: 800; color: var(--ink); }
+    .arch-node-sub { font-size: 11px; color: var(--subtle); }
+    .arch-node-items { font-size: 11px; color: var(--muted); text-align: left; margin-top: 8px; display: flex; flex-direction: column; gap: 3px; }
+    .arch-node-items span::before { content: "· "; color: var(--teal); }
+    .arch-node.highlight-teal { border-color: rgba(18,191,163,0.3); }
+    .arch-node.highlight-blue { border-color: rgba(52,152,219,0.3); }
+    .arch-node.highlight-purple { border-color: rgba(155,89,182,0.3); }
+    .arch-arrow {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: var(--subtle); font-size: 12px; gap: 4px; padding: 0 8px;
+    }
+    .arch-arrow-line { width: 1px; height: 30px; background: var(--border); }
+    .arch-arrow-label { font-size: 10px; color: var(--subtle); white-space: nowrap; }
+
+    /* FEATURE GRID */
+    .feat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+    .feat-card {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 16px; padding: 26px 22px;
+      transition: border-color 250ms, background 250ms;
+    }
+    .feat-card:hover { background: var(--card2); border-color: rgba(18,191,163,0.2); }
+    .feat-card h3 { font-size: 16px; font-weight: 800; letter-spacing: -0.03em; margin-bottom: 10px; }
+    .feat-card p { font-size: 13px; color: var(--muted); line-height: 1.8; }
+
+    /* SPLIT */
+    .split-section { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; }
+    .split-section.reverse { direction: rtl; }
+    .split-section.reverse > * { direction: ltr; }
+
+    /* TECH STACK */
+    .tech-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px; }
+    .tech-card { background: var(--card); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+    .tech-card h4 { font-size: 14px; font-weight: 800; margin-bottom: 12px; color: var(--ink); }
+    .tech-tags { display: flex; flex-wrap: wrap; gap: 8px; }
+    .tech-tag {
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      padding: 4px 10px; border-radius: 5px; border: 1px solid var(--border);
+      color: var(--muted);
+    }
+
+    /* SECURITY */
+    .security-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .sec-item {
+      background: var(--card); border: 1px solid var(--border);
+      border-radius: 12px; padding: 18px 20px;
+      display: flex; align-items: flex-start; gap: 12px;
+    }
+    .sec-icon { font-size: 18px; flex-shrink: 0; margin-top: 2px; }
+    .sec-item h4 { font-size: 14px; font-weight: 800; margin-bottom: 4px; }
+    .sec-item p { font-size: 12px; color: var(--muted); line-height: 1.7; }
+
+    /* CTA */
+    .cta-section {
+      background: linear-gradient(135deg, #0e1512, #111d18, #0d1e18);
+      border: 1px solid var(--border); border-radius: 24px;
+      padding: 64px 56px; text-align: center; position: relative; overflow: hidden;
+    }
+    .cta-section::before {
+      content: ""; position: absolute; inset: 0;
+      background: radial-gradient(ellipse 60% 80% at 50% 0%, rgba(18,191,163,0.1), transparent);
+      pointer-events: none;
+    }
+    .cta-section > * { position: relative; z-index: 1; }
+    .cta-section h2 { font-size: clamp(26px, 3.5vw, 42px); font-weight: 900; letter-spacing: -0.04em; margin-bottom: 14px; }
+    .cta-section p { color: var(--muted); font-size: 15px; line-height: 1.85; max-width: 520px; margin: 0 auto 36px; }
+    .cta-btns { display: flex; gap: 14px; justify-content: center; flex-wrap: wrap; }
+
+    /* FOOTER */
+    .footer { padding: 28px 28px; border-top: 1px solid var(--border); color: var(--subtle); font-size: 13px; }
+    .footer-inner { max-width: 1200px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+    .footer-brand { display: flex; align-items: center; gap: 10px; color: var(--muted); font-weight: 700; }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { transition: color 150ms; }
+    .footer-links a:hover { color: var(--teal); }
+
+    @media (max-width: 960px) {
+      .hero-inner { grid-template-columns: 1fr; }
+      .terminal-right { display: none; }
+      .subsys-grid { grid-template-columns: 1fr; }
+      .feat-grid { grid-template-columns: repeat(2, 1fr); }
+      .split-section { grid-template-columns: 1fr; }
+      .split-section.reverse { direction: ltr; }
+      .security-grid { grid-template-columns: repeat(2, 1fr); }
+      .tech-grid { grid-template-columns: 1fr; }
+    }
+    @media (max-width: 600px) {
+      .feat-grid { grid-template-columns: 1fr; }
+      .security-grid { grid-template-columns: 1fr; }
+      section { padding: 64px 20px; }
+      .cta-section { padding: 44px 28px; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="home.html">
+      <div class="brand-logo">OT</div>
+      OpenTraffic
+    </a>
+    <div class="nav-links">
+      <a class="nav-back" href="home.html" data-zh="← 返回平台入口" data-en="← Platform Home">← 返回平台入口</a>
+      <a class="nav-link" href="opentraffic_fusion.html" data-zh="感知系统" data-en="Perception">感知系统</a>
+      <a class="nav-link" href="opentraffic_control.html" data-zh="控制系统" data-en="Control">控制系统</a>
+    </div>
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      <span class="lang-sep">|</span>
+      <button class="lang-btn lang-active" data-lang="zh" onclick="setLang('zh')">中文</button>
+    </div>
+  </div>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-inner">
+    <div>
+      <div class="eyebrow" data-zh="OpenTraffic · 运维平台" data-en="OpenTraffic · OPS Platform">OpenTraffic · 运维平台</div>
+      <h1 data-zh="边缘计算<br><span class='teal'>运维管理</span>平台" data-en="Edge Computing<br><span class='teal'>OPS Management</span>">边缘计算<br><span class="teal">运维管理</span>平台</h1>
+      <p class="hero-desc" data-zh="一套全栈边缘计算运维平台，由部署面板与监控平台两个紧密集成的子系统组成。单二进制自包含部署，无需 Nginx，覆盖从基础设施供给到边缘主机管理、告警和远程运维的完整链路。" data-en="A full-stack edge computing OPS platform consisting of two tightly integrated subsystems: a deployment panel and a monitoring platform. Single-binary self-contained deployment, no Nginx required, covering the full chain from infrastructure provisioning to edge host management, alerting, and remote operations.">一套全栈边缘计算运维平台，由部署面板与监控平台两个紧密集成的子系统组成。单二进制自包含部署，无需 Nginx，覆盖从基础设施供给到边缘主机管理、告警和远程运维的完整链路。</p>
+      <div class="badge-row">
+        <span class="badge badge-go">Go 1.25+</span>
+        <span class="badge badge-vue">Vue 3</span>
+        <span class="badge badge-pg">PostgreSQL 15+</span>
+        <span class="badge badge-redis">Redis 7+</span>
+        <span class="badge badge-docker">Docker</span>
+      </div>
+      <div class="hero-btns">
+        <a class="btn-primary" href="https://github.com/OpenTraffic-Team/OpenTraffic-OPS" target="_blank" rel="noreferrer" data-zh="GitHub 仓库" data-en="GitHub Repository">GitHub 仓库</a>
+        <a class="btn-ghost" href="home.html" data-zh="← 平台入口" data-en="← Platform Home">← 平台入口</a>
+      </div>
+    </div>
+    <div class="terminal-right">
+      <div class="terminal">
+        <div class="terminal-bar">
+          <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+          <span class="terminal-title">opentraffic-ops — deploy</span>
+        </div>
+        <div class="terminal-body">
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">./opentraffic-ops-init-linux-amd64</span></div>
+          <div class="t-line t-output t-info">[ INFO ] Starting OPS Initialization Panel...</div>
+          <div class="t-line t-output t-ok">[ OK   ] SQLite database initialized</div>
+          <div class="t-line t-output t-ok">[ OK   ] Static files embedded (no Nginx needed)</div>
+          <div class="t-line t-output t-ok">[ OK   ] Server listening on :8080</div>
+          <div class="t-line t-output" style="color:var(--subtle);">─────────────────────────────────</div>
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">./opentraffic-ops-linux-amd64</span></div>
+          <div class="t-line t-output t-info">[ INFO ] Loading config.yaml...</div>
+          <div class="t-line t-output t-ok">[ OK   ] PostgreSQL connected</div>
+          <div class="t-line t-output t-ok">[ OK   ] Redis connected</div>
+          <div class="t-line t-output t-ok">[ OK   ] Scheduler started (alarmCheck/30s)</div>
+          <div class="t-line t-output t-ok">[ OK   ] Platform listening on :18084</div>
+          <div class="t-line t-output" style="color:var(--subtle);">─────────────────────────────────</div>
+          <div class="t-line t-output t-info">[ INFO ] Edge proxy registered: node-001</div>
+          <div class="t-line t-output t-ok">[ OK   ] Metrics stream: active (3s interval)</div>
+          <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> </span><span class="t-cursor"></span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SUBSYSTEMS -->
+<section style="background: var(--bg2);">
+  <div class="section-inner">
+    <div class="section-label" data-zh="子系统概览" data-en="Subsystem Overview">子系统概览</div>
+    <h2 class="section-h2" data-zh="两大子系统<span class='teal'>紧密集成</span>" data-en="Two Subsystems <span class='teal'>Tightly Integrated</span>">两大子系统<span class="teal">紧密集成</span></h2>
+    <p class="section-desc" data-zh="部署面板负责本地基础设施供给与远程二进制部署，监控平台运行在中心节点提供 Web 运维界面，边缘代理部署在每台被监控主机上采集指标。" data-en="The deployment panel handles local infrastructure provisioning and remote binary deployment; the monitoring platform runs on the central node providing a Web operations interface; the edge proxy runs on each monitored host to collect metrics.">部署面板负责本地基础设施供给与远程二进制部署，监控平台运行在中心节点提供 Web 运维界面，边缘代理部署在每台被监控主机上采集指标。</p>
+    <div class="subsys-grid">
+      <!-- Subsystem 1 -->
+      <div class="subsys-card">
+        <div class="subsys-icon icon-blue">🖥️</div>
+        <div>
+          <div class="subsys-tag tag-blue" data-zh="子系统 1" data-en="Subsystem 1">子系统 1</div>
+          <h3 data-zh="OpenTraffic-Ops-Initialization" data-en="OpenTraffic-Ops-Initialization">OpenTraffic-Ops-Initialization</h3>
+          <p class="sub-desc" data-zh="部署面板。单二进制自包含，无需 Nginx 或外部数据库，在本地机器或堡垒主机上运行，管理 Docker 容器并将监控栈部署到远程服务器。" data-en="Deployment panel. Single-binary self-contained, no Nginx or external database needed. Runs on the local machine or bastion host, manages Docker containers, and deploys the monitoring stack to remote servers.">部署面板。单二进制自包含，无需 Nginx 或外部数据库，在本地机器或堡垒主机上运行，管理 Docker 容器并将监控栈部署到远程服务器。</p>
+        </div>
+        <ul class="cap-list">
+          <li data-zh="Docker 一键安装 / 管理 PostgreSQL、Redis" data-en="One-click Docker install/manage PostgreSQL, Redis">Docker 一键安装 / 管理 PostgreSQL、Redis</li>
+          <li data-zh="SSH 服务器统一管理（密码 / 密钥认证）" data-en="Unified SSH server management (password / key auth)">SSH 服务器统一管理（密码 / 密钥认证）</li>
+          <li data-zh="远程 SSH/SFTP 二进制部署，支持防重复检测" data-en="Remote SSH/SFTP binary deployment with duplicate detection">远程 SSH/SFTP 二进制部署，支持防重复检测</li>
+          <li data-zh="在线编辑远程配置文件，一键启停服务" data-en="Online remote config editing, one-click service control">在线编辑远程配置文件，一键启停服务</li>
+          <li data-zh="完整部署审计日志，追溯每次操作结果" data-en="Full deployment audit log, traceable results">完整部署审计日志，追溯每次操作结果</li>
+        </ul>
+      </div>
+      <!-- Subsystem 2 -->
+      <div class="subsys-card">
+        <div class="subsys-icon icon-teal">📊</div>
+        <div>
+          <div class="subsys-tag tag-teal" data-zh="子系统 2" data-en="Subsystem 2">子系统 2</div>
+          <h3 data-zh="OpenTraffic-Ops" data-en="OpenTraffic-Ops">OpenTraffic-Ops</h3>
+          <p class="sub-desc" data-zh="监控与运维平台。面向边缘计算场景，单二进制内嵌前端，部署在中心节点，通过 HTTP/WebSocket 与每台边缘主机上的 Proxy 通信。" data-en="Monitoring and OPS platform. Designed for edge computing scenarios, single binary with embedded frontend, deployed on the central node, communicating with Proxy on each edge host via HTTP/WebSocket.">监控与运维平台。面向边缘计算场景，单二进制内嵌前端，部署在中心节点，通过 HTTP/WebSocket 与每台边缘主机上的 Proxy 通信。</p>
+        </div>
+        <ul class="cap-list">
+          <li data-zh="边缘主机注册与健康指标（7 天历史自动轮转）" data-en="Edge host registration and health metrics (7-day auto-rotation)">边缘主机注册与健康指标（7 天历史自动轮转）</li>
+          <li data-zh="多渠道告警：邮件、钉钉、企业微信、站内信" data-en="Multi-channel alerts: email, DingTalk, WeCom, in-app">多渠道告警：邮件、钉钉、企业微信、站内信</li>
+          <li data-zh="浏览器内 xterm 终端（WebSocket + PTY）" data-en="In-browser xterm terminal (WebSocket + PTY)">浏览器内 xterm 终端（WebSocket + PTY）</li>
+          <li data-zh="远程文件管理：浏览 / 读取 / 编辑 / 上传 / 下载" data-en="Remote file management: browse/read/edit/upload/download">远程文件管理：浏览 / 读取 / 编辑 / 上传 / 下载</li>
+          <li data-zh="Agent 对话：控制 Agent 与感知 Agent 双通道" data-en="Agent chat: control agent and perception agent dual channel">Agent 对话：控制 Agent 与感知 Agent 双通道</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ARCHITECTURE -->
+<section>
+  <div class="section-inner">
+    <div class="section-label" data-zh="系统架构" data-en="System Architecture">系统架构</div>
+    <h2 class="section-h2" data-zh="三层<span class='teal'>协同架构</span>" data-en="Three-Layer <span class='teal'>Cooperative Architecture</span>">三层<span class="teal">协同架构</span></h2>
+    <p class="section-desc" data-zh="部署面板运行在本地控制平面，监控平台部署在中心节点，边缘代理运行在每台被监控主机，三者通过 SSH/SFTP 与 HTTP/WebSocket 协同工作。" data-en="The deployment panel runs on the local control plane, the monitoring platform is deployed on the central node, and the edge proxy runs on each monitored host — the three work together via SSH/SFTP and HTTP/WebSocket.">部署面板运行在本地控制平面，监控平台部署在中心节点，边缘代理运行在每台被监控主机，三者通过 SSH/SFTP 与 HTTP/WebSocket 协同工作。</p>
+    <div class="arch-card">
+      <div style="display:flex; gap:0; align-items:stretch; justify-content:center; flex-wrap:wrap;">
+        <div class="arch-node highlight-blue" style="flex:1; min-width:200px; max-width:280px;">
+          <div style="font-size:20px; margin-bottom:6px;">🖥️</div>
+          <div class="arch-node-title" data-zh="部署面板" data-en="Deployment Panel">部署面板</div>
+          <div class="arch-node-sub">OpenTraffic-Ops-Initialization</div>
+          <div class="arch-node-sub" style="margin-top:2px;" data-zh="本地机器 · :8080" data-en="Local machine · :8080">本地机器 · :8080</div>
+          <div class="arch-node-items">
+            <span data-zh="Docker 管理" data-en="Docker management">Docker 管理</span>
+            <span data-zh="SSH 配置中心" data-en="SSH config center">SSH 配置中心</span>
+            <span data-zh="二进制部署" data-en="Binary deployment">二进制部署</span>
+            <span data-zh="SQLite（内嵌）" data-en="SQLite (embedded)">SQLite（内嵌）</span>
+          </div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div style="color:var(--teal); font-size:16px;">→</div>
+          <div class="arch-arrow-label">SSH/SFTP</div>
+          <div class="arch-arrow-line"></div>
+        </div>
+        <div class="arch-node highlight-teal" style="flex:1; min-width:200px; max-width:280px;">
+          <div style="font-size:20px; margin-bottom:6px;">📊</div>
+          <div class="arch-node-title" data-zh="监控平台" data-en="Monitoring Platform">监控平台</div>
+          <div class="arch-node-sub">OpenTraffic-Ops</div>
+          <div class="arch-node-sub" style="margin-top:2px;" data-zh="中心节点 · :18084" data-en="Central node · :18084">中心节点 · :18084</div>
+          <div class="arch-node-items">
+            <span data-zh="主机管理 / 告警" data-en="Host mgmt / Alerts">主机管理 / 告警</span>
+            <span data-zh="xterm 终端" data-en="xterm terminal">xterm 终端</span>
+            <span data-zh="Agent 对话" data-en="Agent chat">Agent 对话</span>
+            <span>PostgreSQL + Redis</span>
+          </div>
+        </div>
+        <div class="arch-arrow">
+          <div class="arch-arrow-line"></div>
+          <div style="color:var(--teal); font-size:16px;">⇄</div>
+          <div class="arch-arrow-label">HTTP/WebSocket</div>
+          <div class="arch-arrow-line"></div>
+        </div>
+        <div class="arch-node highlight-purple" style="flex:1; min-width:200px; max-width:280px;">
+          <div style="font-size:20px; margin-bottom:6px;">🔌</div>
+          <div class="arch-node-title" data-zh="边缘代理" data-en="Edge Proxy">边缘代理</div>
+          <div class="arch-node-sub">opentraffic-ops-proxy</div>
+          <div class="arch-node-sub" style="margin-top:2px;" data-zh="每台边缘主机（Linux）" data-en="Each edge host (Linux)">每台边缘主机（Linux）</div>
+          <div class="arch-node-items">
+            <span data-zh="3s 指标上报" data-en="3s metrics report">3s 指标上报</span>
+            <span data-zh="PTY 远程终端" data-en="PTY remote terminal">PTY 远程终端</span>
+            <span data-zh="文件操作" data-en="File operations">文件操作</span>
+            <span>amd64 / arm64</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- INIT CAPABILITIES -->
+<section style="background: var(--bg2);">
+  <div class="section-inner">
+    <div class="section-label" data-zh="部署面板能力" data-en="Deployment Panel Capabilities">部署面板能力</div>
+    <h2 class="section-h2" data-zh="OpenTraffic-Ops-Initialization<br><span class='teal'>核心功能</span>" data-en="OpenTraffic-Ops-Initialization<br><span class='teal'>Core Features</span>">OpenTraffic-Ops-Initialization<br><span class="teal">核心功能</span></h2>
+    <p class="section-desc" data-zh="无需外部 Web 服务器，前端通过 go:embed 嵌入二进制，单文件即完整服务。" data-en="No external web server needed — the frontend is embedded in the binary via go:embed, one file is the complete service.">无需外部 Web 服务器，前端通过 go:embed 嵌入二进制，单文件即完整服务。</p>
+    <div class="table-wrap">
+      <table class="cap-table">
+        <thead>
+          <tr>
+            <th data-zh="能力模块" data-en="Module">能力模块</th>
+            <th data-zh="功能说明" data-en="Description">功能说明</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td data-zh="📊 监控大屏" data-en="📊 Dashboard">📊 监控大屏</td>
+            <td data-zh="组件统计卡片（总数/运行中/已停止/错误）、服务器统计、组件类型饼图、状态分布柱状图、实时监控表格（CPU/内存/网络 IO）" data-en="Component stat cards (total/running/stopped/error), server stats, component type pie chart, status distribution bar chart, real-time monitoring table (CPU/memory/network IO)">组件统计卡片（总数/运行中/已停止/错误）、服务器统计、组件类型饼图、状态分布柱状图、实时监控表格（CPU/内存/网络 IO）</td>
+          </tr>
+          <tr>
+            <td data-zh="🧩 组件管理" data-en="🧩 Component Mgmt">🧩 组件管理</td>
+            <td data-zh="一键安装 PostgreSQL / Redis，自定义端口、环境变量、数据卷；启动/停止/重启/卸载；内置离线镜像，无需外网" data-en="One-click install PostgreSQL/Redis, custom ports/env vars/volumes; start/stop/restart/uninstall; built-in offline images, no internet required">一键安装 PostgreSQL / Redis，自定义端口、环境变量、数据卷；启动/停止/重启/卸载；内置离线镜像，无需外网</td>
+          </tr>
+          <tr>
+            <td data-zh="🖧 服务器管理" data-en="🖧 Server Mgmt">🖧 服务器管理</td>
+            <td data-zh="集中管理多台远程 Linux 服务器 SSH 配置，密码/密钥双认证，SSH 连接测试，展示 proxy/monitor 运行状态" data-en="Centrally manage SSH configs for multiple remote Linux servers, password/key dual auth, SSH connection test, show proxy/monitor runtime status">集中管理多台远程 Linux 服务器 SSH 配置，密码/密钥双认证，SSH 连接测试，展示 proxy/monitor 运行状态</td>
+          </tr>
+          <tr>
+            <td data-zh="📦 远程部署" data-en="📦 Remote Deploy">📦 远程部署</td>
+            <td data-zh="SSH/SFTP 一键部署 opentraffic-ops 和 proxy 二进制，可同步部署配置文件，防重复部署检测，完整部署记录与日志" data-en="One-click SSH/SFTP deploy opentraffic-ops and proxy binaries, optional config file sync, duplicate deploy detection, full deployment records and logs">SSH/SFTP 一键部署 opentraffic-ops 和 proxy 二进制，可同步部署配置文件，防重复部署检测，完整部署记录与日志</td>
+          </tr>
+          <tr>
+            <td data-zh="⚙️ 配置管理" data-en="⚙️ Config Mgmt">⚙️ 配置管理</td>
+            <td data-zh="在线查看和编辑远程服务器上的 config.json / config.yaml，通过 PID 文件远程启停服务，无需 root 权限" data-en="Online view and edit remote config.json/config.yaml, remote start/stop services via PID file, no root required">在线查看和编辑远程服务器上的 config.json / config.yaml，通过 PID 文件远程启停服务，无需 root 权限</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<!-- OPS CAPABILITIES -->
+<section>
+  <div class="section-inner">
+    <div class="section-label" data-zh="监控平台能力" data-en="Monitoring Platform Capabilities">监控平台能力</div>
+    <h2 class="section-h2" data-zh="OpenTraffic-Ops<span class='teal'>六大功能</span>" data-en="OpenTraffic-Ops <span class='teal'>Six Core Features</span>">OpenTraffic-Ops<span class="teal">六大功能</span></h2>
+    <p class="section-desc" data-zh="内置调度器（alarmCheck 30s、dealOffline 60s、cleanHostHealth 每日 03:30），全量覆盖边缘计算场景的运维需求。" data-en="Built-in schedulers (alarmCheck 30s, dealOffline 60s, cleanHostHealth daily at 03:30), comprehensively covering OPS needs in edge computing scenarios.">内置调度器（alarmCheck 30s、dealOffline 60s、cleanHostHealth 每日 03:30），全量覆盖边缘计算场景的运维需求。</p>
+    <div class="feat-grid">
+      <div class="feat-card">
+        <div class="subsys-tag tag-teal" style="margin-bottom:12px;" data-zh="主机管理" data-en="Host Mgmt">主机管理</div>
+        <h3 data-zh="边缘节点管理" data-en="Edge Node Management">边缘节点管理</h3>
+        <p data-zh="边缘节点注册（Proxy 首次连接自动入库）、增删改查、状态展示。保留 7 天健康历史数据，按日自动轮转清理，运维操作统一入口。" data-en="Edge node registration (auto-insert on first proxy connection), CRUD, status display. Retains 7 days of health history with daily auto-rotation cleanup and unified OPS operation entry.">边缘节点注册（Proxy 首次连接自动入库）、增删改查、状态展示。保留 7 天健康历史数据，按日自动轮转清理，运维操作统一入口。</p>
+      </div>
+      <div class="feat-card">
+        <div class="subsys-tag tag-orange" style="margin-bottom:12px;" data-zh="告警引擎" data-en="Alert Engine">告警引擎</div>
+        <h3 data-zh="多渠道告警通知" data-en="Multi-Channel Alert Notification">多渠道告警通知</h3>
+        <p data-zh="支持邮件、钉钉、企业微信、站内信四种通知渠道。基于阈值的 CPU / 内存 / 磁盘 / 网络 / 负载 / 主机离线 / Agent 离线规则，告警记录与通知日志完整存储。" data-en="Supports email, DingTalk, WeCom, and in-app notification channels. Threshold-based rules for CPU/memory/disk/network/load/host offline/agent offline, with complete alert records and notification logs.">支持邮件、钉钉、企业微信、站内信四种通知渠道。基于阈值的 CPU / 内存 / 磁盘 / 网络 / 负载 / 主机离线 / Agent 离线规则，告警记录与通知日志完整存储。</p>
+      </div>
+      <div class="feat-card">
+        <div class="subsys-tag tag-blue" style="margin-bottom:12px;" data-zh="远程终端" data-en="Remote Terminal">远程终端</div>
+        <h3 data-zh="浏览器内 xterm 终端" data-en="In-Browser xterm Terminal">浏览器内 xterm 终端</h3>
+        <p data-zh="基于 xterm.js + WebSocket Hub 连接到 Proxy PTY，支持颜色渲染和窗口 Resize，持久 PTY Shell 5 分钟超时，无需额外 SSH 客户端。" data-en="xterm.js + WebSocket Hub connected to Proxy PTY, supporting color rendering and window resize, persistent PTY Shell with 5-minute timeout, no separate SSH client needed.">基于 xterm.js + WebSocket Hub 连接到 Proxy PTY，支持颜色渲染和窗口 Resize，持久 PTY Shell 5 分钟超时，无需额外 SSH 客户端。</p>
+      </div>
+      <div class="feat-card">
+        <div class="subsys-tag tag-green" style="margin-bottom:12px;" data-zh="文件管理" data-en="File Mgmt">文件管理</div>
+        <h3 data-zh="远程文件操作" data-en="Remote File Operations">远程文件操作</h3>
+        <p data-zh="在 Proxy 主机上浏览、读取、编辑、上传、下载、删除文件，单文件 10MB 限制，内置目录遍历防护，安全路径校验。" data-en="Browse, read, edit, upload, download, and delete files on Proxy hosts, 10MB per file limit, built-in directory traversal protection, secure path validation.">在 Proxy 主机上浏览、读取、编辑、上传、下载、删除文件，单文件 10MB 限制，内置目录遍历防护，安全路径校验。</p>
+      </div>
+      <div class="feat-card">
+        <div class="subsys-tag tag-purple" style="margin-bottom:12px;" data-zh="Agent 对话" data-en="Agent Chat">Agent 对话</div>
+        <h3 data-zh="控制 & 感知 Agent 对话" data-en="Control & Perception Agent Chat">控制 & 感知 Agent 对话</h3>
+        <p data-zh="与控制 Agent 和感知 Agent 进行对话式交互，用于运维协助和主机状态查询，支持会话管理，可在平台内直接调度 AI 能力。" data-en="Conversational interaction with control and perception agents for OPS assistance and host status queries, with session management, enabling direct AI capability scheduling within the platform.">与控制 Agent 和感知 Agent 进行对话式交互，用于运维协助和主机状态查询，支持会话管理，可在平台内直接调度 AI 能力。</p>
+      </div>
+      <div class="feat-card">
+        <div class="subsys-tag tag-red" style="margin-bottom:12px;" data-zh="进程控制" data-en="Process Control">进程控制</div>
+        <h3 data-zh="远程进程管理" data-en="Remote Process Management">远程进程管理</h3>
+        <p data-zh="通过平台命令在边缘主机上启动、停止、重启进程，进程监控（运行状态、CPU%、内存使用量），PID 文件管理，无需 root 权限。" data-en="Start, stop, restart processes on edge hosts via platform commands, process monitoring (running status, CPU%, memory usage), PID file management, no root required.">通过平台命令在边缘主机上启动、停止、重启进程，进程监控（运行状态、CPU%、内存使用量），PID 文件管理，无需 root 权限。</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- TECH STACK + PROXY -->
+<section style="background: var(--bg2);">
+  <div class="section-inner">
+    <div class="section-label" data-zh="技术栈" data-en="Tech Stack">技术栈</div>
+    <h2 class="section-h2" data-zh="全栈<span class='teal'>技术选型</span>" data-en="Full-Stack <span class='teal'>Technology Choices</span>">全栈<span class="teal">技术选型</span></h2>
+    <p class="section-desc" data-zh="后端统一采用 Go 单二进制交付，前端通过 go:embed 嵌入；边缘代理仅面向 Linux amd64 / arm64，Windows/macOS 仅用于交叉编译。" data-en="Backend uses Go single-binary delivery uniformly, frontend embedded via go:embed; the edge proxy targets Linux amd64/arm64 only, with Windows/macOS used for cross-compilation.">后端统一采用 Go 单二进制交付，前端通过 go:embed 嵌入；边缘代理仅面向 Linux amd64 / arm64，Windows/macOS 仅用于交叉编译。</p>
+    <div class="tech-grid">
+      <div class="tech-card">
+        <h4 data-zh="部署面板 — 后端" data-en="Deployment Panel — Backend">部署面板 — 后端</h4>
+        <div class="tech-tags">
+          <span class="tech-tag">Go 1.21+</span>
+          <span class="tech-tag">Gin</span>
+          <span class="tech-tag">SQLite</span>
+          <span class="tech-tag">Docker SDK</span>
+          <span class="tech-tag">crypto/ssh</span>
+          <span class="tech-tag">JWT</span>
+          <span class="tech-tag">AES-GCM</span>
+          <span class="tech-tag">go:embed</span>
+        </div>
+      </div>
+      <div class="tech-card">
+        <h4 data-zh="部署面板 — 前端" data-en="Deployment Panel — Frontend">部署面板 — 前端</h4>
+        <div class="tech-tags">
+          <span class="tech-tag">Vue 3</span>
+          <span class="tech-tag">TypeScript</span>
+          <span class="tech-tag">Vite</span>
+          <span class="tech-tag">Element Plus</span>
+          <span class="tech-tag">Pinia</span>
+          <span class="tech-tag">ECharts</span>
+        </div>
+      </div>
+      <div class="tech-card">
+        <h4 data-zh="监控平台 — 后端" data-en="Monitoring Platform — Backend">监控平台 — 后端</h4>
+        <div class="tech-tags">
+          <span class="tech-tag">Go 1.25+</span>
+          <span class="tech-tag">Gin</span>
+          <span class="tech-tag">GORM</span>
+          <span class="tech-tag">PostgreSQL</span>
+          <span class="tech-tag">Redis</span>
+          <span class="tech-tag">JWT v5</span>
+          <span class="tech-tag">Gorilla WS</span>
+          <span class="tech-tag">Zap</span>
+          <span class="tech-tag">Viper</span>
+        </div>
+      </div>
+      <div class="tech-card">
+        <h4 data-zh="监控平台 — 前端 & 边缘代理" data-en="Platform Frontend & Edge Proxy">监控平台 — 前端 & 边缘代理</h4>
+        <div class="tech-tags">
+          <span class="tech-tag">Vue 3 + Vite</span>
+          <span class="tech-tag">Element Plus</span>
+          <span class="tech-tag">xterm.js</span>
+          <span class="tech-tag">ECharts</span>
+          <span class="tech-tag">Go 1.26+</span>
+          <span class="tech-tag">gopsutil</span>
+          <span class="tech-tag">creack/pty</span>
+          <span class="tech-tag">Linux only</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- SECURITY -->
+<section>
+  <div class="section-inner">
+    <div class="section-label" data-zh="安全特性" data-en="Security Features">安全特性</div>
+    <h2 class="section-h2" data-zh="内置<span class='teal'>安全防护</span>" data-en="Built-In <span class='teal'>Security</span>">内置<span class="teal">安全防护</span></h2>
+    <p class="section-desc" data-zh="从认证授权到数据传输，覆盖 OWASP 关键安全场景，SSH 凭据采用 AES-GCM 加密存储。" data-en="From authentication to data transmission, covering key OWASP security scenarios, with SSH credentials stored using AES-GCM encryption.">从认证授权到数据传输，覆盖 OWASP 关键安全场景，SSH 凭据采用 AES-GCM 加密存储。</p>
+    <div class="security-grid">
+      <div class="sec-item">
+        <div class="sec-icon">🔐</div>
+        <div>
+          <h4 data-zh="JWT 认证 & 自动续签" data-en="JWT Auth & Auto-Renewal">JWT 认证 & 自动续签</h4>
+          <p data-zh="Token 认证机制，支持自动续签，防止未授权访问。" data-en="Token-based auth with auto-renewal to prevent unauthorized access.">Token 认证机制，支持自动续签，防止未授权访问。</p>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">🔒</div>
+        <div>
+          <h4 data-zh="RSA 密码加密传输" data-en="RSA Password Encryption">RSA 密码加密传输</h4>
+          <p data-zh="用户密码在传输层采用 RSA 加密，防止明文截获。" data-en="User passwords are RSA-encrypted in transit to prevent plaintext interception.">用户密码在传输层采用 RSA 加密，防止明文截获。</p>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">🛡️</div>
+        <div>
+          <h4 data-zh="AES-GCM 凭据加密" data-en="AES-GCM Credential Encryption">AES-GCM 凭据加密</h4>
+          <p data-zh="SSH 密码和私钥在数据库中以 AES-GCM 加密存储。" data-en="SSH passwords and private keys are stored in the database with AES-GCM encryption.">SSH 密码和私钥在数据库中以 AES-GCM 加密存储。</p>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">🚫</div>
+        <div>
+          <h4 data-zh="XSS 过滤 & 重放防护" data-en="XSS Filter & Replay Protection">XSS 过滤 & 重放防护</h4>
+          <p data-zh="XSS 过滤中间件 + 重放攻击防护，防止常见 Web 攻击。" data-en="XSS filter middleware plus replay attack protection against common web attacks.">XSS 过滤中间件 + 重放攻击防护，防止常见 Web 攻击。</p>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">🔑</div>
+        <div>
+          <h4 data-zh="登录失败锁定" data-en="Login Failure Lockout">登录失败锁定</h4>
+          <p data-zh="连续登录失败后自动锁定账号，防止暴力破解。" data-en="Automatic account lockout after consecutive login failures to prevent brute-force attacks.">连续登录失败后自动锁定账号，防止暴力破解。</p>
+        </div>
+      </div>
+      <div class="sec-item">
+        <div class="sec-icon">📁</div>
+        <div>
+          <h4 data-zh="路径遍历防护" data-en="Path Traversal Protection">路径遍历防护</h4>
+          <p data-zh="远程文件操作内置目录遍历防护和安全路径校验，防止越权访问。" data-en="Remote file operations have built-in directory traversal protection and secure path validation to prevent unauthorized access.">远程文件操作内置目录遍历防护和安全路径校验，防止越权访问。</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section style="padding: 80px 28px;">
+  <div class="section-inner">
+    <div class="cta-section">
+      <div class="section-label" style="justify-content:center; margin-bottom:16px;" data-zh="开始使用" data-en="Get Started">开始使用</div>
+      <h2 data-zh="部署你的<span class='teal'>边缘运维</span>平台" data-en="Deploy Your <span class='teal'>Edge OPS</span> Platform">部署你的<span class="teal">边缘运维</span>平台</h2>
+      <p data-zh="单二进制，复制即运行。访问 GitHub 获取最新版本，或查看感知 / 控制系统了解 OpenTraffic 的完整能力。" data-en="Single binary, copy and run. Visit GitHub for the latest release, or check the Perception / Control systems to understand OpenTraffic's full capabilities.">单二进制，复制即运行。访问 GitHub 获取最新版本，或查看感知 / 控制系统了解 OpenTraffic 的完整能力。</p>
+      <div class="cta-btns">
+        <a class="btn-primary" href="https://github.com/OpenTraffic-Team/OpenTraffic-OPS" target="_blank" rel="noreferrer" data-zh="查看 GitHub" data-en="View on GitHub">查看 GitHub</a>
+        <a class="btn-ghost" href="opentraffic_fusion.html" data-zh="感知系统" data-en="Perception System">感知系统</a>
+        <a class="btn-ghost" href="opentraffic_control.html" data-zh="控制系统" data-en="Control System">控制系统</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="brand-logo">OT</div>
+      OpenTraffic
+      <span style="color:var(--subtle);font-weight:400;" data-zh="· 运维平台 OPS" data-en="· OPS Platform">· 运维平台 OPS</span>
+    </div>
+    <div class="footer-links">
+      <a href="home.html" data-zh="平台入口" data-en="Platform Home">平台入口</a>
+      <a href="opentraffic_fusion.html" data-zh="感知系统" data-en="Perception">感知系统</a>
+      <a href="opentraffic_control.html" data-zh="控制系统" data-en="Control">控制系统</a>
+      <a href="https://github.com/OpenTraffic-Team/" target="_blank" rel="noreferrer">GitHub</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const PAGE_TITLES = {
+    zh: 'OpenTraffic | 运维平台 OPS',
+    en: 'OpenTraffic | OPS Platform'
+  };
+  function setLang(lang) {
+    document.title = PAGE_TITLES[lang];
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-zh]').forEach(el => {
+      el.innerHTML = el.getAttribute('data-' + lang);
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('lang-active', btn.dataset.lang === lang);
+    });
+    localStorage.setItem('ot-lang', lang);
+  }
+  setLang(localStorage.getItem('ot-lang') || 'zh');
+</script>
+</body>
+</html>
 
