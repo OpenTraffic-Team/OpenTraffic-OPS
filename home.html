@@ -1,1 +1,377 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenTraffic | 平台入口</title>
+  <style>
+    :root {
+      --bg: #0a0f0d;
+      --bg2: #0e1512;
+      --card: #131a17;
+      --card2: #182019;
+      --border: rgba(255,255,255,0.07);
+      --teal: #12bfa3;
+      --teal2: #142925;
+      --green: #2ecc71;
+      --ink: #e8f5f0;
+      --muted: #7a9990;
+      --subtle: #4a6860;
+      --font: "HarmonyOS Sans SC","PingFang SC","Microsoft YaHei",sans-serif;
+      --mono: "JetBrains Mono","SFMono-Regular",ui-monospace,monospace;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      background: var(--bg);
+      color: var(--ink);
+      font-family: var(--font);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    a { color: inherit; text-decoration: none; }
+
+    /* NAV */
+    .nav {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+      height: 60px;
+      background: rgba(10,15,13,0.88);
+      border-bottom: 1px solid var(--border);
+      backdrop-filter: blur(20px);
+    }
+    .nav-inner {
+      max-width: 1200px; margin: 0 auto;
+      height: 100%; padding: 0 28px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 800; font-size: 17px; letter-spacing: -0.02em;
+    }
+    .brand-logo {
+      width: 34px; height: 34px; border-radius: 8px;
+      background: linear-gradient(135deg, #0d2e22, #1a5c44);
+      border: 1px solid rgba(18,191,163,0.3);
+      display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 900; color: var(--teal);
+      font-family: var(--mono);
+    }
+    .lang-switch {
+      display: flex; align-items: center; gap: 2px;
+    }
+    .lang-btn {
+      padding: 5px 8px; border-radius: 5px; cursor: pointer;
+      color: var(--muted); background: none; border: none;
+      font-size: 13px; font-weight: 700; font-family: var(--font);
+      transition: color 140ms;
+    }
+    .lang-btn:hover { color: var(--ink); }
+    .lang-btn.lang-active { color: var(--teal); }
+    .lang-sep { color: var(--subtle); font-size: 13px; user-select: none; }
+
+    /* HERO */
+    .hero {
+      min-height: 100vh;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      padding: 100px 28px 60px;
+      position: relative; overflow: hidden;
+      text-align: center;
+    }
+    .hero::before {
+      content: "";
+      position: absolute; inset: 0;
+      background:
+        radial-gradient(ellipse 70% 60% at 50% 30%, rgba(18,191,163,0.09), transparent),
+        radial-gradient(ellipse 40% 40% at 20% 70%, rgba(18,191,163,0.05), transparent),
+        radial-gradient(ellipse 40% 40% at 80% 70%, rgba(46,204,113,0.05), transparent);
+      pointer-events: none;
+    }
+    .hero-inner { position: relative; z-index: 1; width: 100%; max-width: 1100px; }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 10px;
+      font-family: var(--mono); font-size: 11px; font-weight: 700;
+      letter-spacing: 0.16em; text-transform: uppercase;
+      color: var(--teal); margin-bottom: 22px;
+    }
+    .eyebrow::before, .eyebrow::after {
+      content: ""; width: 28px; height: 1px; background: var(--teal);
+    }
+    h1 {
+      font-size: clamp(40px, 5.5vw, 72px);
+      font-weight: 900; line-height: 1.06;
+      letter-spacing: -0.04em;
+      margin-bottom: 16px;
+    }
+    .teal { color: var(--teal); }
+    .hero-desc {
+      color: var(--muted); font-size: 16px; line-height: 1.85;
+      max-width: 580px; margin: 0 auto 48px;
+    }
+
+    /* ENTRY CARDS */
+    .entry-cards {
+      display: grid; grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px; margin-bottom: 48px;
+    }
+    .entry-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 20px; padding: 36px 32px 32px;
+      text-align: left;
+      transition: border-color 250ms, background 250ms, transform 250ms;
+      display: flex; flex-direction: column; gap: 20px;
+    }
+    .entry-card:hover {
+      transform: translateY(-4px);
+    }
+    .entry-card.perception:hover { border-color: rgba(46,204,113,0.3); }
+    .entry-card.control:hover   { border-color: rgba(18,191,163,0.3); }
+    .entry-card.ops:hover       { border-color: rgba(52,152,219,0.3); }
+
+    .card-icon {
+      width: 52px; height: 52px; border-radius: 14px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 24px; flex-shrink: 0;
+    }
+    .card-icon.green-icon {
+      background: rgba(46,204,113,0.12);
+      border: 1px solid rgba(46,204,113,0.2);
+    }
+    .card-icon.teal-icon {
+      background: rgba(18,191,163,0.12);
+      border: 1px solid rgba(18,191,163,0.2);
+    }
+    .card-icon.blue-icon {
+      background: rgba(52,152,219,0.12);
+      border: 1px solid rgba(52,152,219,0.2);
+    }
+    .card-tag {
+      display: inline-block;
+      font-family: var(--mono); font-size: 10px; font-weight: 700;
+      letter-spacing: 0.12em; text-transform: uppercase;
+      padding: 3px 9px; border-radius: 4px; margin-bottom: 10px;
+    }
+    .card-tag.green { background: rgba(46,204,113,0.12); color: #2ecc71; }
+    .card-tag.teal  { background: rgba(18,191,163,0.12); color: var(--teal2); }
+    .card-tag.blue  { background: rgba(52,152,219,0.12); color: #74beff; }
+    .entry-card h2 {
+      font-size: 26px; font-weight: 900;
+      letter-spacing: -0.04em; line-height: 1.1;
+      margin-bottom: 8px;
+    }
+    .entry-card .card-desc {
+      color: var(--muted); font-size: 14px; line-height: 1.8;
+      margin-bottom: 4px;
+    }
+    .capability-list {
+      list-style: none; display: flex; flex-direction: column; gap: 8px;
+    }
+    .capability-list li {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 13px; color: var(--muted);
+    }
+    .capability-list li::before {
+      content: ""; width: 5px; height: 5px; border-radius: 50%;
+      background: var(--subtle); flex-shrink: 0;
+    }
+    .entry-card.perception .capability-list li::before { background: #2ecc71; }
+    .entry-card.control   .capability-list li::before { background: var(--teal); }
+    .entry-card.ops       .capability-list li::before { background: #3498db; }
+    .card-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 11px 22px; border-radius: 8px;
+      font-size: 14px; font-weight: 700;
+      width: fit-content; margin-top: auto;
+      transition: opacity 150ms, transform 150ms;
+    }
+    .card-btn:hover { opacity: 0.88; transform: translateX(3px); }
+    .card-btn.green { background: #2ecc71; color: #051a0c; }
+    .card-btn.teal  { background: var(--teal); color: #051510; }
+    .card-btn.blue  { background: #3498db; color: #05101a; }
+    .card-btn svg { width: 16px; height: 16px; }
+
+    /* STATS */
+    .stats-row {
+      display: flex; align-items: center; justify-content: center;
+      gap: 0; flex-wrap: wrap;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      background: var(--card);
+      overflow: hidden;
+      margin-bottom: 0;
+    }
+    .stat {
+      flex: 1; min-width: 160px;
+      padding: 20px 28px; text-align: center;
+      border-right: 1px solid var(--border);
+    }
+    .stat:last-child { border-right: none; }
+    .stat-val {
+      display: block; font-size: 28px; font-weight: 900;
+      letter-spacing: -0.05em; color: var(--ink);
+      margin-bottom: 4px;
+    }
+    .stat-label {
+      font-size: 12px; color: var(--muted); font-weight: 600;
+    }
+
+    /* FOOTER */
+    .footer {
+      padding: 28px 28px;
+      border-top: 1px solid var(--border);
+      color: var(--subtle); font-size: 13px;
+    }
+    .footer-inner {
+      max-width: 1200px; margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+      flex-wrap: wrap; gap: 12px;
+    }
+    .footer-brand {
+      display: flex; align-items: center; gap: 10px;
+      color: var(--muted); font-weight: 700;
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a { transition: color 150ms; }
+    .footer-links a:hover { color: var(--teal); }
+
+    @media (max-width: 900px) {
+      .entry-cards { grid-template-columns: 1fr; }
+      .stats-row { flex-direction: column; }
+      .stat { border-right: none; border-bottom: 1px solid var(--border); }
+      .stat:last-child { border-bottom: none; }
+    }
+  </style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a class="brand" href="home.html">
+      <div class="brand-logo">OT</div>
+      OpenTraffic
+    </a>
+    <div class="lang-switch">
+      <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      <span class="lang-sep">|</span>
+      <button class="lang-btn lang-active" data-lang="zh" onclick="setLang('zh')">中文</button>
+    </div>
+  </div>
+</nav>
+
+<main class="hero">
+  <div class="hero-inner">
+    <div class="eyebrow" data-zh="OpenTraffic Platform" data-en="OpenTraffic Platform">OpenTraffic Platform</div>
+    <h1 data-zh="交通<span class='teal'>控制与感知</span><br>融合平台" data-en="Traffic <span class='teal'>Control &amp; Perception</span><br>Fusion Platform">交通<span class="teal">控制与感知</span><br>融合平台</h1>
+    <p class="hero-desc" data-zh="OpenTraffic 将交通信号控制组与视频感知组的成果统一汇聚，面向对外展示、项目汇报和系统对接提供清晰的入口。" data-en="OpenTraffic brings together the outputs of the traffic signal control team and video perception team, providing a clear entry point for external showcases, project presentations, and system integration.">OpenTraffic 将交通信号控制组与视频感知组的成果统一汇聚，面向对外展示、项目汇报和系统对接提供清晰的入口。</p>
+
+    <div class="entry-cards">
+      <!-- Perception Card -->
+      <div class="entry-card perception">
+        <div>
+          <div class="card-icon green-icon">🎬</div>
+        </div>
+        <div>
+          <div class="card-tag green" data-zh="感知系统" data-en="Perception">感知系统</div>
+          <h2 data-zh="视频感知结果展示" data-en="Video Perception Showcase">视频感知结果展示</h2>
+          <p class="card-desc" data-zh="基于真实道路视频，展示 4 个 TSC 核心感知任务的结构化输出结果，支持视频预览与 JSON 对接。" data-en="Based on real road footage, showcases structured outputs from 4 core TSC perception tasks, supporting video preview and JSON integration.">基于真实道路视频，展示 4 个 TSC 核心感知任务的结构化输出结果，支持视频预览与 JSON 对接。</p>
+        </div>
+        <ul class="capability-list">
+          <li data-zh="车辆检测 · 多目标跟踪" data-en="Vehicle Detection · Multi-Object Tracking">车辆检测 · 多目标跟踪</li>
+          <li data-zh="世界坐标映射 · 速度估计" data-en="World Coordinate Mapping · Speed Estimation">世界坐标映射 · 速度估计</li>
+          <li data-zh="结构化 JSON 输出，可直接对接控制系统" data-en="Structured JSON output, ready for control system integration">结构化 JSON 输出，可直接对接控制系统</li>
+        </ul>
+        <a class="card-btn green" href="opentraffic_fusion.html" data-zh="进入感知系统 →" data-en="Enter Perception →">进入感知系统 →</a>
+      </div>
+
+      <!-- Control Card -->
+      <div class="entry-card control">
+        <div>
+          <div class="card-icon teal-icon">🚦</div>
+        </div>
+        <div>
+          <div class="card-tag teal" data-zh="控制系统" data-en="Control">控制系统</div>
+          <h2 data-zh="交通信号控制展示" data-en="Traffic Signal Control Showcase">交通信号控制展示</h2>
+          <p class="card-desc" data-zh="展示交通信号控制组的核心算法与决策结果，涵盖相位优化、配时方案和路口协同控制策略。" data-en="Showcases core algorithms and decision results from the traffic signal control team, including phase optimization, timing plans, and intersection coordination strategies.">展示交通信号控制组的核心算法与决策结果，涵盖相位优化、配时方案和路口协同控制策略。</p>
+        </div>
+        <ul class="capability-list">
+          <li data-zh="信号相位优化与配时方案" data-en="Signal phase optimization and timing plans">信号相位优化与配时方案</li>
+          <li data-zh="路口协同控制策略" data-en="Intersection coordination control strategies">路口协同控制策略</li>
+          <li data-zh="与感知结果联动的自适应控制" data-en="Adaptive control linked to perception results">与感知结果联动的自适应控制</li>
+        </ul>
+        <a class="card-btn teal" href="opentraffic_control.html" data-zh="进入控制系统 →" data-en="Enter Control →">进入控制系统 →</a>
+      </div>
+
+      <!-- OPS Card -->
+      <div class="entry-card ops">
+        <div>
+          <div class="card-icon blue-icon">🖥️</div>
+        </div>
+        <div>
+          <div class="card-tag blue" data-zh="运维平台" data-en="OPS">运维平台</div>
+          <h2 data-zh="边缘计算运维管理" data-en="Edge Computing OPS">边缘计算运维管理</h2>
+          <p class="card-desc" data-zh="全栈边缘运维平台，覆盖基础设施部署、主机监控、多渠道告警与浏览器内远程运维，单二进制自包含交付。" data-en="Full-stack edge OPS platform covering infrastructure deployment, host monitoring, multi-channel alerting, and in-browser remote operations, delivered as a self-contained single binary.">全栈边缘运维平台，覆盖基础设施部署、主机监控、多渠道告警与浏览器内远程运维，单二进制自包含交付。</p>
+        </div>
+        <ul class="capability-list">
+          <li data-zh="Docker 一键部署 & SSH 远程服务器管理" data-en="One-click Docker deploy & SSH remote server management">Docker 一键部署 & SSH 远程服务器管理</li>
+          <li data-zh="边缘主机监控 & 多渠道告警通知" data-en="Edge host monitoring & multi-channel alert notifications">边缘主机监控 & 多渠道告警通知</li>
+          <li data-zh="xterm 远程终端 & Agent 对话运维" data-en="xterm remote terminal & Agent chat OPS">xterm 远程终端 & Agent 对话运维</li>
+        </ul>
+        <a class="card-btn blue" href="opentraffic_ops.html" data-zh="进入运维平台 →" data-en="Enter OPS Platform →">进入运维平台 →</a>
+      </div>
+    </div>
+
+    <div class="stats-row">
+      <div class="stat">
+        <span class="stat-val">1</span>
+        <span class="stat-label" data-zh="统一对外入口" data-en="Unified external entry">统一对外入口</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val">3</span>
+        <span class="stat-label" data-zh="子系统展示页" data-en="Subsystem pages">子系统展示页</span>
+      </div>
+      <div class="stat">
+        <span class="stat-val teal">Team</span>
+        <span class="stat-label" data-zh="共同接口与仓库" data-en="Shared interface &amp; repos">共同接口与仓库</span>
+      </div>
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <div class="footer-brand">
+      <div class="brand-logo">OT</div>
+      OpenTraffic
+      <span style="color:var(--subtle);font-weight:400;" data-zh="· 控制与感知融合平台" data-en="· Control &amp; Perception Fusion">· 控制与感知融合平台</span>
+    </div>
+    <div class="footer-links">
+      <a href="https://opentraffic-team.github.io/" target="_blank" rel="noreferrer" data-zh="官网" data-en="Official Site">官网</a>
+      <a href="https://github.com/OpenTraffic-Team/" target="_blank" rel="noreferrer">GitHub</a>
+      <a href="opentraffic_fusion.html" data-zh="感知系统" data-en="Perception">感知系统</a>
+      <a href="opentraffic_control.html" data-zh="控制系统" data-en="Control">控制系统</a>
+      <a href="opentraffic_ops.html" data-zh="运维平台" data-en="OPS">运维平台</a>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const PAGE_TITLES = {
+    zh: 'OpenTraffic | 平台入口',
+    en: 'OpenTraffic | Platform Home'
+  };
+  function setLang(lang) {
+    document.title = PAGE_TITLES[lang];
+    document.documentElement.lang = lang === 'zh' ? 'zh-CN' : 'en';
+    document.querySelectorAll('[data-zh]').forEach(el => {
+      el.innerHTML = el.getAttribute('data-' + lang);
+    });
+    document.querySelectorAll('.lang-btn').forEach(btn => {
+      btn.classList.toggle('lang-active', btn.dataset.lang === lang);
+    });
+    localStorage.setItem('ot-lang', lang);
+  }
+  setLang(localStorage.getItem('ot-lang') || 'zh');
+</script>
+</body>
+</html>
 
