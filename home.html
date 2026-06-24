@@ -12,7 +12,7 @@
       --card2: #182019;
       --border: rgba(255,255,255,0.07);
       --teal: #12bfa3;
-      --teal2: #142925;
+      --teal2: #0de8c2;
       --green: #2ecc71;
       --ink: #e8f5f0;
       --muted: #7a9990;
@@ -251,9 +251,9 @@
       OpenTraffic
     </a>
     <div class="lang-switch">
-      <button class="lang-btn" data-lang="en" onclick="setLang('en')">English</button>
+      <button class="lang-btn lang-active" data-lang="en" onclick="setLang('en')">English</button>
       <span class="lang-sep">|</span>
-      <button class="lang-btn lang-active" data-lang="zh" onclick="setLang('zh')">中文</button>
+      <button class="lang-btn" data-lang="zh" onclick="setLang('zh')">中文</button>
     </div>
   </div>
 </nav>
@@ -280,7 +280,7 @@
           <li data-zh="世界坐标映射 · 速度估计" data-en="World Coordinate Mapping · Speed Estimation">世界坐标映射 · 速度估计</li>
           <li data-zh="结构化 JSON 输出，可直接对接控制系统" data-en="Structured JSON output, ready for control system integration">结构化 JSON 输出，可直接对接控制系统</li>
         </ul>
-        <a class="card-btn green" href="opentraffic_fusion.html" data-zh="进入感知系统 →" data-en="Enter Perception →">进入感知系统 →</a>
+        <a class="card-btn green" href="https://opentraffic-team.github.io/OpenTraffic-Team-fusion-site/" target="_blank" rel="noreferrer" data-zh="进入感知系统 →" data-en="Enter Perception →">进入感知系统 →</a>
       </div>
 
       <!-- Control Card -->
@@ -298,7 +298,7 @@
           <li data-zh="路口协同控制策略" data-en="Intersection coordination control strategies">路口协同控制策略</li>
           <li data-zh="与感知结果联动的自适应控制" data-en="Adaptive control linked to perception results">与感知结果联动的自适应控制</li>
         </ul>
-        <a class="card-btn teal" href="opentraffic_control.html" data-zh="进入控制系统 →" data-en="Enter Control →">进入控制系统 →</a>
+        <a class="card-btn teal" href="https://opentraffic-team.github.io/" target="_blank" rel="noreferrer" data-zh="进入控制系统 →" data-en="Enter Control →">进入控制系统 →</a>
       </div>
 
       <!-- OPS Card -->
@@ -316,7 +316,7 @@
           <li data-zh="边缘主机监控 & 多渠道告警通知" data-en="Edge host monitoring & multi-channel alert notifications">边缘主机监控 & 多渠道告警通知</li>
           <li data-zh="xterm 远程终端 & Agent 对话运维" data-en="xterm remote terminal & Agent chat OPS">xterm 远程终端 & Agent 对话运维</li>
         </ul>
-        <a class="card-btn blue" href="opentraffic_ops.html" data-zh="进入运维平台 →" data-en="Enter OPS Platform →">进入运维平台 →</a>
+        <a class="card-btn blue" href="https://opentraffic-team.github.io/OpenTraffic-OPS/opentraffic_ops.html" target="_blank" rel="noreferrer" data-zh="进入运维平台 →" data-en="Enter OPS Platform →">进入运维平台 →</a>
       </div>
     </div>
 
@@ -347,9 +347,9 @@
     <div class="footer-links">
       <a href="https://opentraffic-team.github.io/" target="_blank" rel="noreferrer" data-zh="官网" data-en="Official Site">官网</a>
       <a href="https://github.com/OpenTraffic-Team/" target="_blank" rel="noreferrer">GitHub</a>
-      <a href="opentraffic_fusion.html" data-zh="感知系统" data-en="Perception">感知系统</a>
-      <a href="opentraffic_control.html" data-zh="控制系统" data-en="Control">控制系统</a>
-      <a href="opentraffic_ops.html" data-zh="运维平台" data-en="OPS">运维平台</a>
+      <a href="https://opentraffic-team.github.io/OpenTraffic-Team-fusion-site/" target="_blank" rel="noreferrer" data-zh="感知系统" data-en="Perception">感知系统</a>
+      <a href="https://opentraffic-team.github.io/" target="_blank" rel="noreferrer" data-zh="控制系统" data-en="Control">控制系统</a>
+      <a href="https://opentraffic-team.github.io/OpenTraffic-OPS/opentraffic_ops.html" target="_blank" rel="noreferrer" data-zh="运维平台" data-en="OPS">运维平台</a>
     </div>
   </div>
 </footer>
@@ -370,8 +370,7 @@
     });
     localStorage.setItem('ot-lang', lang);
   }
-  setLang(localStorage.getItem('ot-lang') || 'zh');
+  setLang(localStorage.getItem('ot-lang') || 'en');
 </script>
 </body>
 </html>
-
