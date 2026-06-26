@@ -355,28 +355,36 @@
       </div>
     </div>
     <div class="terminal-right">
-      <div class="gif-showcase" style="margin-bottom:16px; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:var(--card2);">
+      <div style="border-radius:16px; overflow:hidden; border:1px solid rgba(18,191,163,0.2); box-shadow:0 32px 64px rgba(0,0,0,0.4);">
         <img id="ops-gif" src="images/OpenTraffic-Ops-Animation.gif" alt="OPS Demo" style="width:100%; display:block;" />
       </div>
-      <div class="terminal">
-        <div class="terminal-bar">
-          <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
-          <span class="terminal-title">opentraffic-ops — deploy</span>
-        </div>
-        <div class="terminal-body">
+    </div>
+  </div>
+</section>
+
+<!-- TERMINAL STRIP -->
+<section style="padding: 0 28px 60px; margin-top: -20px;">
+  <div style="max-width:1200px; margin:0 auto;">
+    <div class="terminal">
+      <div class="terminal-bar">
+        <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
+        <span class="terminal-title">opentraffic-ops — deploy</span>
+      </div>
+      <div class="terminal-body" style="display:grid; grid-template-columns:1fr 1fr; gap:0 40px;">
+        <div>
           <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">./opentraffic-ops-init-linux-amd64</span></div>
           <div class="t-line t-output t-info">[ INFO ] Starting OPS Initialization Panel...</div>
           <div class="t-line t-output t-ok">[ OK   ] SQLite database initialized</div>
           <div class="t-line t-output t-ok">[ OK   ] Static files embedded (no Nginx needed)</div>
           <div class="t-line t-output t-ok">[ OK   ] Server listening on :8080</div>
-          <div class="t-line t-output" style="color:var(--subtle);">─────────────────────────────────</div>
+        </div>
+        <div>
           <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd">./opentraffic-ops-linux-amd64</span></div>
           <div class="t-line t-output t-info">[ INFO ] Loading config.yaml...</div>
           <div class="t-line t-output t-ok">[ OK   ] PostgreSQL connected</div>
           <div class="t-line t-output t-ok">[ OK   ] Redis connected</div>
           <div class="t-line t-output t-ok">[ OK   ] Scheduler started (alarmCheck/30s)</div>
           <div class="t-line t-output t-ok">[ OK   ] Platform listening on :18084</div>
-          <div class="t-line t-output" style="color:var(--subtle);">─────────────────────────────────</div>
           <div class="t-line t-output t-info">[ INFO ] Edge proxy registered: node-001</div>
           <div class="t-line t-output t-ok">[ OK   ] Metrics stream: active (3s interval)</div>
           <div class="t-line"><span class="t-prompt">$</span><span class="t-cmd"> </span><span class="t-cursor"></span></div>
