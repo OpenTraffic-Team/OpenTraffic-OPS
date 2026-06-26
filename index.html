@@ -355,6 +355,9 @@
       </div>
     </div>
     <div class="terminal-right">
+      <div class="gif-showcase" style="margin-bottom:16px; border-radius:16px; overflow:hidden; border:1px solid var(--border); background:var(--card2);">
+        <img id="ops-gif" src="images/OpenTraffic-Ops-Animation.gif" alt="OPS Demo" style="width:100%; display:block;" />
+      </div>
       <div class="terminal">
         <div class="terminal-bar">
           <span class="dot dot-red"></span><span class="dot dot-yellow"></span><span class="dot dot-green"></span>
@@ -730,6 +733,10 @@
     document.querySelectorAll('.lang-btn').forEach(btn => {
       btn.classList.toggle('lang-active', btn.dataset.lang === lang);
     });
+    const gif = document.getElementById('ops-gif');
+    if (gif) gif.src = lang === 'zh'
+      ? 'images/OpenTraffic-Ops-Animation_CN.gif'
+      : 'images/OpenTraffic-Ops-Animation.gif';
     localStorage.setItem('ot-lang', lang);
   }
   setLang(localStorage.getItem('ot-lang') || 'en');
