@@ -53,7 +53,7 @@ type ProcessConfig struct {
 // Default 返回默认配置
 func Default() *Config {
 	return &Config{
-		PlatformURL:       "http://127.0.0.1:8080",
+		PlatformURL:       "http://127.0.0.1:18081",
 		Version:           "1.0.0",
 		HeartbeatInterval: 3,
 		PollInterval:      10,

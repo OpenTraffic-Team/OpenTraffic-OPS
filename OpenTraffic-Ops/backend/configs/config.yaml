@@ -1,19 +1,19 @@
 server:
-  port: 18084
+  port: 18081
   mode: release
 
 app:
-  name: RTM
-  version: 3.8.7
+  name: OpenTrafficOps
+  version: 1.0.0
   copyrightYear: 2026
   demoEnabled: false
   captchaType: math
   addressEnabled: false
-  profile: D:/app/rtm-mon-ops/profile
+  profile: ./opentraffic-ops/profile
 
 datasource:
   driver: postgres
-  host: 191.168.6.220
+  host: 192.168.6.220
   port: 5432
   database: rtm-go
   username: postgres
@@ -61,7 +61,7 @@ xss:
 
 log:
   level: info
-  filename: logs/opentraffic-ops-backend.log
+  filename: ./opentraffic-ops/logs/opentraffic-ops-backend.log
   maxSize: 100
   maxBackups: 30
   maxAge: 30
