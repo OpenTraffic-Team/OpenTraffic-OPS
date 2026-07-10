@@ -60,6 +60,17 @@ if errorlevel 1 (
     echo       [OK] opentraffic-ops-proxy-linux-arm64
 )
 
+:: loong64 (LoongArch, 龙芯 3A5000+/3C5000+/3D5000+)
+echo   --^> Building loong64 ...
+set GOARCH=loong64
+go build -ldflags "%LDFLAGS%" -o dist\opentraffic-ops-proxy-linux-loong64 .
+if errorlevel 1 (
+    echo       [FAIL] loong64 build failed
+    set "BUILD_FAILED=1"
+) else (
+    echo       [OK] opentraffic-ops-proxy-linux-loong64
+)
+
 echo.
 echo =========================================
 if "%BUILD_FAILED%"=="1" (
