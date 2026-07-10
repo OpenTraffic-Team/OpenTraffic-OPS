@@ -220,7 +220,7 @@ go mod download
 go run cmd/server/main.go
 ```
 
-Backend service starts at `http://localhost:18084`.
+Backend service starts at `http://localhost:18081`.
 
 #### 4. Start Frontend
 
@@ -230,7 +230,7 @@ npm install
 npm run dev
 ```
 
-Frontend dev server starts at `http://localhost:80`, proxying `/dev-api` and `/dev-ws-api` to `127.0.0.1:18084`.
+Frontend dev server starts at `http://localhost:80`, proxying `/dev-api` and `/dev-ws-api` to `127.0.0.1:18081`.
 
 #### 5. Access System
 
@@ -260,7 +260,7 @@ go run cmd\server\main.go
 
 #### Windows Cross-Compile for Linux
 
-Run `build-opentraffic-ops.bat` to generate Linux AMD64 and ARM64 binaries with frontend embedded:
+Run `build-opentraffic-ops.bat` to generate Linux AMD64, ARM64 and Loong64 binaries with frontend embedded:
 
 ```cmd
 build-opentraffic-ops.bat
@@ -269,6 +269,7 @@ build-opentraffic-ops.bat
 Output files:
 - `backend\opentraffic-ops-linux-amd64`
 - `backend\opentraffic-ops-linux-arm64`
+- `backend\opentraffic-ops-linux-loong64`
 
 Upload to Linux server and run:
 
@@ -291,6 +292,7 @@ build-opentraffic-ops-proxy.bat
 Output files:
 - `proxy/dist/opentraffic-ops-proxy-linux-amd64`
 - `proxy/dist/opentraffic-ops-proxy-linux-arm64`
+- `proxy/dist/opentraffic-ops-proxy-linux-loong64`
 
 > Proxy only supports Linux runtime; Windows / macOS are build hosts only.
 
@@ -321,7 +323,7 @@ export RTM_DATASOURCE_PASSWORD=secret
 
 ```yaml
 server:
-  port: 18084
+  port: 18081
   mode: release        # debug / test / release
 
 datasource:
@@ -392,7 +394,7 @@ log:
 - Platform and edge Redis can be the same instance with different db numbers
 
 ### Frontend shows "Connection refused" to backend
-- Ensure backend is running on port 18084
+- Ensure backend is running on port 18081
 - Check Vite proxy config in `frontend/vite.config.js`
 - For production, ensure `server.port` in config.yaml matches the expected port
 

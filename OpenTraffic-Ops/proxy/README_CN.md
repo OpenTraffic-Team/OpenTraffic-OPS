@@ -191,6 +191,7 @@ build-opentraffic-ops-proxy.bat
 |---------|---------|
 | `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
 | `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
+| `opentraffic-ops-proxy-linux-loong64` | Linux LoongArch64 |
 
 ### 🚀 部署到 Linux 服务器
 
@@ -216,7 +217,7 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 
 ```json
 {
-  "platformUrl": "http://192.168.1.100:8080",
+  "platformUrl": "http://192.168.1.100:18081",
   "ip": "",
   "hostName": "",
   "version": "1.0.0",
@@ -249,7 +250,7 @@ chmod +x opentraffic-ops-proxy-linux-amd64
 
 **配置项说明**：
 - **`enableRemote`**: 设为 `false` 可禁用远程终端和文件管理功能，Proxy 将拒绝所有远程操作请求
-- **`wsEndpoint`**: 当平台 WebSocket 使用独立端口或反向代理时，可手动指定，如 `ws://192.168.1.100:8081/api/v1/proxy/ws`
+- **`wsEndpoint`**: 当平台 WebSocket 使用独立端口或反向代理时，可手动指定，如 `ws://192.168.1.100:18081/api/v1/proxy/ws`
 
 ---
 

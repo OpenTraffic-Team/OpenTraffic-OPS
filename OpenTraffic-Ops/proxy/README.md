@@ -192,6 +192,7 @@ The script will automatically compile the following targets and output to the `d
 |---------|---------|
 | `opentraffic-ops-proxy-linux-amd64` | Linux x86_64 |
 | `opentraffic-ops-proxy-linux-arm64` | Linux ARM64 |
+| `opentraffic-ops-proxy-linux-loong64` | Linux LoongArch64 |
 
 ### 🚀 Deploy to Linux Server
 
@@ -217,7 +218,7 @@ On first run, a default config file will be automatically created at `~/.opentra
 
 ```json
 {
-  "platformUrl": "http://192.168.1.100:8080",
+  "platformUrl": "http://192.168.1.100:18081",
   "ip": "",
   "hostName": "",
   "version": "1.0.0",
@@ -250,7 +251,7 @@ On first run, a default config file will be automatically created at `~/.opentra
 
 **Configuration Notes**:
 - **`enableRemote`**: Set to `false` to disable remote terminal and file management; the Proxy will reject all remote operation requests
-- **`wsEndpoint`**: When the platform WebSocket uses an independent port or reverse proxy, you can manually specify it, e.g., `ws://192.168.1.100:8081/api/v1/proxy/ws`
+- **`wsEndpoint`**: When the platform WebSocket uses an independent port or reverse proxy, you can manually specify it, e.g., `ws://192.168.1.100:18081/api/v1/proxy/ws`
 
 ---
 

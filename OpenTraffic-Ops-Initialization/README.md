@@ -187,7 +187,7 @@ go mod download
 go run cmd/server/main.go
 ```
 
-Backend service starts at `http://localhost:8080`.
+Backend service starts at `http://localhost:18080`.
 
 #### 3. Start Frontend
 
@@ -197,7 +197,7 @@ npm install
 npm run dev
 ```
 
-Frontend dev server starts at `http://localhost:5173`, with Vite Proxy automatically forwarding `/api` to `http://localhost:8080`.
+Frontend dev server starts at `http://localhost:5173`, with Vite Proxy automatically forwarding `/api` to `http://localhost:18080`.
 
 #### 4. Access System
 
@@ -227,7 +227,7 @@ go run cmd\server\main.go
 
 #### Windows Cross-Compile for Linux
 
-Run `build-opentraffic-ops-initialization.bat` to generate Linux AMD64 and ARM64 binaries:
+Run `build-opentraffic-ops-initialization.bat` to generate Linux AMD64, ARM64 and Loong64 binaries:
 
 ```cmd
 build-opentraffic-ops-initialization.bat
@@ -236,6 +236,7 @@ build-opentraffic-ops-initialization.bat
 Output files:
 - `backend\opentraffic-ops-init-linux-amd64`
 - `backend\opentraffic-ops-init-linux-arm64`
+- `backend\opentraffic-ops-init-linux-loong64`
 
 Upload to Linux server and run:
 
@@ -251,7 +252,7 @@ Create `backend/.env` file:
 ```env
 # Server config
 SERVER_HOST=0.0.0.0
-SERVER_PORT=8080
+SERVER_PORT=18080
 
 # Database config
 DATA_DIR=./data

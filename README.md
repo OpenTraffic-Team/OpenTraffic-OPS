@@ -188,7 +188,7 @@ Deployed on each monitored edge host. Responsible for system metrics collection 
 cd OpenTraffic-Ops-Initialization/backend
 go mod download
 go run cmd/server/main.go
-# Service runs on http://localhost:8080
+# Service runs on http://localhost:18080
 ```
 
 ### 📊 Start the Monitoring Platform
@@ -208,7 +208,7 @@ psql -d rtm -f sql/chat/01_chat_tables.sql
 cd backend
 go mod download
 go run cmd/server/main.go
-# Service runs on http://localhost:18084
+# Service runs on http://localhost:18081
 
 # 4. Start frontend (dev mode)
 cd ../frontend
@@ -225,17 +225,17 @@ Default credentials for both systems: `admin` / `admin123`
 # Monitoring platform (backend + embedded frontend)
 cd OpenTraffic-Ops
 build-opentraffic-ops.bat
-# Outputs: backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64
+# Outputs: backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64, backend/opentraffic-ops-linux-loong64
 
 # Edge proxy
 cd proxy
 build-opentraffic-ops-proxy.bat
-# Outputs: proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
+# Outputs: proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64, proxy/dist/opentraffic-ops-proxy-linux-loong64
 
 # Deployment panel
 cd ../../OpenTraffic-Ops-Initialization
 build-opentraffic-ops-initialization.bat
-# Outputs: backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64
+# Outputs: backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64, backend/opentraffic-ops-init-linux-loong64
 ```
 
 ---

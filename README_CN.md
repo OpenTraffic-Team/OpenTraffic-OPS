@@ -188,7 +188,7 @@
 cd OpenTraffic-Ops-Initialization/backend
 go mod download
 go run cmd/server/main.go
-# 服务运行在 http://localhost:8080
+# 服务运行在 http://localhost:18080
 ```
 
 ### 📊 启动监控平台
@@ -208,7 +208,7 @@ psql -d rtm -f sql/chat/01_chat_tables.sql
 cd backend
 go mod download
 go run cmd/server/main.go
-# 服务运行在 http://localhost:18084
+# 服务运行在 http://localhost:18081
 
 # 4. 启动前端（开发模式）
 cd ../frontend
@@ -225,17 +225,17 @@ npm run dev
 # 监控平台（后端 + 内嵌前端）
 cd OpenTraffic-Ops
 build-opentraffic-ops.bat
-# 输出：backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64
+# 输出：backend/opentraffic-ops-linux-amd64, backend/opentraffic-ops-linux-arm64, backend/opentraffic-ops-linux-loong64
 
 # 边缘代理
 cd proxy
 build-opentraffic-ops-proxy.bat
-# 输出：proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64
+# 输出：proxy/dist/opentraffic-ops-proxy-linux-amd64, proxy/dist/opentraffic-ops-proxy-linux-arm64, proxy/dist/opentraffic-ops-proxy-linux-loong64
 
 # 部署面板
 cd ../../OpenTraffic-Ops-Initialization
 build-opentraffic-ops-initialization.bat
-# 输出：backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64
+# 输出：backend/opentraffic-ops-init-linux-amd64, backend/opentraffic-ops-init-linux-arm64, backend/opentraffic-ops-init-linux-loong64
 ```
 
 ---

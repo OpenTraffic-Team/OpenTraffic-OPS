@@ -187,7 +187,7 @@ go mod download
 go run cmd/server/main.go
 ```
 
-后端服务将在 `http://localhost:8080` 启动。
+后端服务将在 `http://localhost:18080` 启动。
 
 #### 3. 启动前端
 
@@ -197,7 +197,7 @@ npm install
 npm run dev
 ```
 
-前端服务将在 `http://localhost:5173` 启动，开发时通过 Vite Proxy 自动转发 `/api` 到 `http://localhost:8080`。
+前端服务将在 `http://localhost:5173` 启动，开发时通过 Vite Proxy 自动转发 `/api` 到 `http://localhost:18080`。
 
 #### 4. 访问系统
 
@@ -227,7 +227,7 @@ go run cmd\server\main.go
 
 #### Windows 交叉编译 Linux 部署包
 
-执行 `build-opentraffic-ops-initialization.bat` 生成 Linux AMD64 和 ARM64 二进制：
+执行 `build-opentraffic-ops-initialization.bat` 生成 Linux AMD64、ARM64 和 Loong64 二进制：
 
 ```cmd
 build-opentraffic-ops-initialization.bat
@@ -236,6 +236,7 @@ build-opentraffic-ops-initialization.bat
 输出文件为：
 - `backend\opentraffic-ops-init-linux-amd64`
 - `backend\opentraffic-ops-init-linux-arm64`
+- `backend\opentraffic-ops-init-linux-loong64`
 
 上传至 Linux 服务器并运行：
 
@@ -251,7 +252,7 @@ chmod +x opentraffic-ops-init-linux-amd64
 ```env
 # 服务器配置
 SERVER_HOST=0.0.0.0
-SERVER_PORT=8080
+SERVER_PORT=18080
 
 # 数据库配置
 DATA_DIR=./data

@@ -220,7 +220,7 @@ go mod download
 go run cmd/server/main.go
 ```
 
-后端服务默认运行在 `http://localhost:18084`。
+后端服务默认运行在 `http://localhost:18081`。
 
 #### 4. 启动前端
 
@@ -230,7 +230,7 @@ npm install
 npm run dev
 ```
 
-前端开发服务器默认运行在 `http://localhost:80`，并将 `/dev-api`、`/dev-ws-api` 代理到 `127.0.0.1:18084`。
+前端开发服务器默认运行在 `http://localhost:80`，并将 `/dev-api`、`/dev-ws-api` 代理到 `127.0.0.1:18081`。
 
 #### 5. 访问系统
 
@@ -260,7 +260,7 @@ go run cmd\server\main.go
 
 #### Windows 交叉编译 Linux 部署包
 
-执行 `build-opentraffic-ops.bat` 生成内嵌前端的 Linux AMD64 和 ARM64 二进制：
+执行 `build-opentraffic-ops.bat` 生成内嵌前端的 Linux AMD64、ARM64 和 Loong64 二进制：
 
 ```cmd
 build-opentraffic-ops.bat
@@ -269,6 +269,7 @@ build-opentraffic-ops.bat
 输出文件：
 - `backend\opentraffic-ops-linux-amd64`
 - `backend\opentraffic-ops-linux-arm64`
+- `backend\opentraffic-ops-linux-loong64`
 
 上传至 Linux 服务器并运行：
 
@@ -291,6 +292,7 @@ build-opentraffic-ops-proxy.bat
 输出文件：
 - `proxy/dist/opentraffic-ops-proxy-linux-amd64`
 - `proxy/dist/opentraffic-ops-proxy-linux-arm64`
+- `proxy/dist/opentraffic-ops-proxy-linux-loong64`
 
 > Proxy 仅支持 Linux 运行；Windows / macOS 仅用作构建主机。
 
@@ -321,7 +323,7 @@ export RTM_DATASOURCE_PASSWORD=secret
 
 ```yaml
 server:
-  port: 18084
+  port: 18081
   mode: release        # debug / test / release
 
 datasource:
@@ -392,7 +394,7 @@ log:
 - 平台与边缘 Redis 可以是同一实例的不同 db
 
 ### 前端提示无法连接后端
-- 确认后端在 18084 端口正常运行
+- 确认后端在 18081 端口正常运行
 - 检查 `frontend/vite.config.js` 中的 Vite 代理配置
 - 生产环境确保 `config.yaml` 中的 `server.port` 与预期端口一致
 
