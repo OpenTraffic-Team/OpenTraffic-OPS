@@ -395,10 +395,37 @@ func (s *ServerService) UpdateProxyConfig(id string, content string) error {
 	return s.UpdateSoftwareConfig(id, "opentraffic-ops-proxy", content)
 }
 
-// binaryFileMapForControl 服务控制用的二进制文件名映射
-var binaryFileMapForControl = map[string]string{
-	"opentraffic-ops-proxy": "opentraffic-ops-proxy-linux-amd64",
-	"opentraffic-ops":       "opentraffic-ops-linux-amd64",
+// archToBinarySuffix 将 uname -m 输出映射到二进制文件名后缀
+var archToBinarySuffix = map[string]string{
+	"x86_64":      "linux-amd64",
+	"amd64":       "linux-amd64",
+	"aarch64":     "linux-arm64",
+	"arm64":       "linux-arm64",
+	"loongarch64": "linux-loong64",
+}
+
+// getBinaryFileName 根据软件名和远程架构生成二进制文件名
+func getBinaryFileName(binaryName string, arch string) (string, error) {
+	suffix, ok := archToBinarySuffix[strings.ToLower(strings.TrimSpace(arch))]
+	if !ok {
+		return "", fmt.Errorf("unsupported architecture: %s", arch)
+	}
+	return fmt.Sprintf("%s-%s", binaryName, suffix), nil
+}
+
+// detectRemoteArch 通过 SSH 执行 uname -m 获取远程服务器架构
+func detectRemoteArch(client *ssh.Client) (string, error) {
+	output, err := client.Execute("uname -m")
+	if err != nil {
+		return "", fmt.Errorf("failed to detect remote architecture: %w", err)
+	}
+	return strings.TrimSpace(output), nil
+}
+
+// isValidSoftwareName 校验软件名是否受支持
+func isValidSoftwareName(name string) bool {
+	_, ok := softwareConfigMeta[name]
+	return ok
 }
 
 // pidFilePath 生成pid文件远程路径
@@ -408,8 +435,7 @@ func pidFilePath(deployPath string, softwareName string) string {
 
 // GetServiceStatus 获取指定软件的运行状态（通过pid文件检测）
 func (s *ServerService) GetServiceStatus(id string, softwareName string) (string, error) {
-	_, ok := binaryFileMapForControl[softwareName]
-	if !ok {
+	if !isValidSoftwareName(softwareName) {
 		return "unknown", fmt.Errorf("unknown software: %s", softwareName)
 	}
 
@@ -447,8 +473,7 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 
 // StartService 启动指定软件（使用pid文件管理）
 func (s *ServerService) StartService(id string, softwareName string) error {
-	binaryName, ok := binaryFileMapForControl[softwareName]
-	if !ok {
+	if !isValidSoftwareName(softwareName) {
 		return fmt.Errorf("unknown software: %s", softwareName)
 	}
 
@@ -471,6 +496,15 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 	}
 	defer client.Close()
 
+	arch, err := detectRemoteArch(client)
+	if err != nil {
+		return err
+	}
+	binaryName, err := getBinaryFileName(softwareName, arch)
+	if err != nil {
+		return err
+	}
+
 	remotePath := filepath.Join(creds.Server.DeployPath, binaryName)
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
 	// setsid 创建新 session，使后台进程脱离 SSH session 追踪；
@@ -484,8 +518,7 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 
 // StopService 停止指定软件（通过pid文件停止）
 func (s *ServerService) StopService(id string, softwareName string) error {
-	_, ok := binaryFileMapForControl[softwareName]
-	if !ok {
+	if !isValidSoftwareName(softwareName) {
 		return fmt.Errorf("unknown software: %s", softwareName)
 	}
 

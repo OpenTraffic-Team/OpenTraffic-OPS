@@ -5,7 +5,7 @@ import (
 	"opentraffic-ops-init-backend/internal/model"
 	"time"
 
-	"github.com/glebarez/sqlite"
+	"github.com/ncruces/go-sqlite3/gormlite"
 	"gorm.io/gorm"
 	"gorm.io/gorm/logger"
 )
@@ -18,7 +18,7 @@ func InitDatabase(dataDir string) error {
 	var err error
 	dbPath := fmt.Sprintf("%s/rtm_init.db", dataDir)
 
-	DB, err = gorm.Open(sqlite.Open(dbPath), &gorm.Config{
+	DB, err = gorm.Open(gormlite.Open(dbPath), &gorm.Config{
 		Logger: logger.Default.LogMode(logger.Info),
 	})
 	if err != nil {

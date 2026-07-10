@@ -34,12 +34,6 @@ type DeployRequest struct {
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
 }
 
-// binaryFileMap 二进制文件名映射
-var binaryFileMap = map[string]string{
-	"opentraffic-ops-proxy": "opentraffic-ops-proxy-linux-amd64",
-	"opentraffic-ops":       "opentraffic-ops-linux-amd64",
-}
-
 // Deploy 执行部署
 func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.DeployRecord, error) {
 	// 1. 获取服务器配置（解密凭据）
@@ -57,22 +51,12 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 		return nil, fmt.Errorf("service %s has already been deployed on this server", req.BinaryName)
 	}
 
-	// 检查二进制文件是否存在
-	binaryFileName, ok := binaryFileMap[req.BinaryName]
-	if !ok {
-		return nil, fmt.Errorf("unknown binary name: %s", req.BinaryName)
-	}
-	if !assets.HasBinary(binaryFileName) {
-		return nil, fmt.Errorf("binary file not found: %s", binaryFileName)
-	}
-
-	// 创建部署记录
-	remotePath := filepath.Join(server.DeployPath, binaryFileName)
+	// 创建部署记录（路径稍后根据远程架构更新）
 	record := &model.DeployRecord{
 		ServerID:   server.ID,
 		ServerName: server.Name,
 		BinaryName: req.BinaryName,
-		RemotePath: remotePath,
+		RemotePath: "",
 		Status:     string(model.DeployStatusPending),
 		CreatedAt:  time.Now(),
 	}
@@ -96,7 +80,36 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	defer client.Close()
 	deployLog.WriteString(fmt.Sprintf("[%s] SSH连接成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
-	// 3. 创建远程部署目录
+	// 3. 探测远程服务器架构并选择对应二进制
+	arch, err := detectRemoteArch(client)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 探测远程架构失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to detect remote architecture: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 远程架构: %s\n", time.Now().Format("2006-01-02 15:04:05"), arch))
+
+	binaryFileName, err := getBinaryFileName(req.BinaryName, arch)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 不支持的架构: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, err
+	}
+	if !assets.HasBinary(binaryFileName) {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 嵌入式二进制文件不存在: %s\n", binaryFileName))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("binary file not found: %s", binaryFileName)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 使用二进制: %s\n", time.Now().Format("2006-01-02 15:04:05"), binaryFileName))
+
+	// 更新部署记录中的远程路径
+	remotePath := filepath.Join(server.DeployPath, binaryFileName)
+	record.RemotePath = remotePath
+	if err := s.deployRecordRepo.Update(record); err != nil {
+		return record, fmt.Errorf("failed to update deploy record: %w", err)
+	}
+
+	// 4. 创建远程部署目录
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", server.DeployPath)
 	if _, err := client.Execute(mkdirCmd); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 创建远程目录失败: %v\n", err))
@@ -105,7 +118,7 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 创建远程目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), server.DeployPath))
 
-	// 4. 读取嵌入的二进制文件
+	// 5. 读取嵌入的二进制文件
 	reader, err := assets.GetBinaryReader(binaryFileName)
 	if err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取二进制文件失败: %v\n", err))
@@ -220,12 +233,20 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 	}
 	defer client.Close()
 
-	binaryFileName := binaryFileMap[req.BinaryName]
-	remotePath := filepath.Join(record.RemotePath)
+	binaryFileName := ""
+	remotePath := record.RemotePath
 	if remotePath == "" {
-		// 如果记录中没有远程路径，从服务器配置中构造
+		// 如果记录中没有远程路径，探测远程架构后构造
 		_, server, _ := s.serverService.BuildSSHConfig(req.ServerID)
 		if server != nil {
+			arch, err := detectRemoteArch(client)
+			if err == nil {
+				binaryFileName, _ = getBinaryFileName(req.BinaryName, arch)
+			}
+			if binaryFileName == "" {
+				// 兼容旧记录：未探测到架构时默认 amd64
+				binaryFileName = fmt.Sprintf("%s-linux-amd64", req.BinaryName)
+			}
 			remotePath = filepath.Join(server.DeployPath, binaryFileName)
 		}
 	}

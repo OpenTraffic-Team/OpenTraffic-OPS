@@ -77,6 +77,17 @@ if errorlevel 1 (
     echo       [OK] opentraffic-ops-init-linux-arm64
 )
 
+:: loong64 (LoongArch, 龙芯 3A5000+/3C5000+/3D5000+)
+echo   --^> Building loong64 ...
+set GOARCH=loong64
+go build -ldflags "-s -w" -o opentraffic-ops-init-linux-loong64 cmd\server\main.go
+if errorlevel 1 (
+    echo       [FAIL] loong64 build failed
+    set "BUILD_FAILED=1"
+) else (
+    echo       [OK] opentraffic-ops-init-linux-loong64
+)
+
 cd /d "%~dp0"
 
 echo.
