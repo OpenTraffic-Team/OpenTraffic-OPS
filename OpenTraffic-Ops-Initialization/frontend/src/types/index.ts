@@ -131,7 +131,7 @@ export interface CreateServerRequest {
 
 export interface DeployRequest {
   server_id: string
-  binary_name: 'opentraffic-ops-proxy' | 'opentraffic-ops' | 'algo_md'
+  binary_name: 'opentraffic-ops-proxy' | 'opentraffic-ops' | 'opentraffic-control-linux-amd64'
   version?: string
   config_content?: string
 }

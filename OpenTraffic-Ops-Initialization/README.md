@@ -135,7 +135,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 
 ### 📦 Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
-- Deploy the `algo_md` algorithm package (tar archive) to remote servers with version tracking
+- Deploy the `opentraffic-control-linux-amd64` algorithm package (tar archive) to remote servers with version tracking
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
 - Duplicate deployment detection for binaries; algorithm packages allow repeated deployments with version history

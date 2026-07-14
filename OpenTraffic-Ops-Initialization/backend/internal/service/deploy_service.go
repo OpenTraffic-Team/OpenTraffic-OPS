@@ -30,14 +30,14 @@ func NewDeployService(serverService *ServerService) *DeployService {
 // DeployRequest 部署请求
 type DeployRequest struct {
 	ServerID      string  `json:"server_id" binding:"required"`
-	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops algo_md"`
-	Version       string  `json:"version"`        // 可选：部署版本（algo_md 等可重复部署资源使用）
+	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control-linux-amd64"`
+	Version       string  `json:"version"`        // 可选：部署版本（opentraffic-control-linux-amd64 等可重复部署资源使用）
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
 }
 
 // isRepeatableDeploy 判断该资源是否允许重复部署（每次部署都会产生一条新的成功记录）
 func isRepeatableDeploy(binaryName string) bool {
-	return binaryName == "algo_md"
+	return binaryName == "opentraffic-control-linux-amd64"
 }
 
 // Deploy 执行部署
@@ -48,7 +48,7 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 		return nil, fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	// 检查是否已部署过该服务（algo_md 等可重复部署资源除外）
+	// 检查是否已部署过该服务（opentraffic-control-linux-amd64 等可重复部署资源除外）
 	if !isRepeatableDeploy(req.BinaryName) {
 		hasDeployed, err := s.deployRecordRepo.HasSuccessfulDeploy(req.ServerID, req.BinaryName)
 		if err != nil {
@@ -89,8 +89,8 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	defer client.Close()
 	deployLog.WriteString(fmt.Sprintf("[%s] SSH连接成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
-	// algo_md 算法包走 tar 包部署分支
-	if req.BinaryName == "algo_md" {
+	// opentraffic-control-linux-amd64 算法包走 tar 包部署分支
+	if req.BinaryName == "opentraffic-control-linux-amd64" {
 		return s.deployTarPackage(client, server, req, record, &deployLog)
 	}
 
@@ -215,10 +215,10 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	return record, nil
 }
 
-// deployTarPackage 部署 tar 包资源（algo_md）
+// deployTarPackage 部署 tar 包资源（opentraffic-control-linux-amd64）
 func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Server, req *DeployRequest, record *model.DeployRecord, deployLog *strings.Builder) (*model.DeployRecord, error) {
-	const tarFileName = "algo_md.tar"
-	const packageDir = "ops/algo_md"
+	const tarFileName = "opentraffic-control-linux-amd64.tar"
+	const packageDir = "ops/opentraffic-control"
 
 	remoteDir := filepath.Join(server.DeployPath, packageDir)
 	remoteTarPath := filepath.Join(remoteDir, tarFileName)
@@ -286,7 +286,7 @@ func (s *DeployService) updateRecordFailed(id int, log string) {
 // UndeployRequest 卸载请求
 type UndeployRequest struct {
 	ServerID   string `json:"server_id" binding:"required"`
-	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops algo_md"`
+	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control-linux-amd64"`
 }
 
 // Undeploy 执行卸载
@@ -304,9 +304,9 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 	}
 	defer client.Close()
 
-	// algo_md 算法包卸载：直接删除整个目录
-	if req.BinaryName == "algo_md" {
-		remoteDir := filepath.Join(server.DeployPath, "ops/algo_md")
+	// opentraffic-control-linux-amd64 算法包卸载：直接删除整个目录
+	if req.BinaryName == "opentraffic-control-linux-amd64" {
+		remoteDir := filepath.Join(server.DeployPath, "ops/opentraffic-control")
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
 		if err := s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, req.BinaryName); err != nil {
 			return fmt.Errorf("undeploy succeeded but failed to delete record: %w", err)

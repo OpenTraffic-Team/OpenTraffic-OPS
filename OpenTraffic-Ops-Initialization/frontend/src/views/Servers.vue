@@ -42,7 +42,7 @@
                     </div>
                     <div class="service-card-actions">
                       <template v-if="isDeployed(row.id, sw)">
-                        <template v-if="sw === 'algo_md'">
+                        <template v-if="sw === 'opentraffic-control-linux-amd64'">
                           <button
                             class="action-btn btn-undeploy"
                             @click="handleUndeployService(row.id, sw)"
@@ -220,20 +220,20 @@
               value="opentraffic-ops"
               :disabled="deployedSoftwares.has('opentraffic-ops')"
             />
-            <el-option label="algo_md（算法包）" value="algo_md" />
+            <el-option label="opentraffic-control (Linux AMD64)" value="opentraffic-control-linux-amd64" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'algo_md' && deployedSoftwares.has(deployForm.binary_name)">
+        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'opentraffic-control-linux-amd64' && deployedSoftwares.has(deployForm.binary_name)">
           <el-alert type="warning" :closable="false" show-icon>
             <template #title>
               该服务已部署，请勿重复部署
             </template>
           </el-alert>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name === 'algo_md'" label="版本号">
+        <el-form-item v-if="deployForm.binary_name === 'opentraffic-control-linux-amd64'" label="版本号">
           <el-input v-model="deployForm.version" placeholder="如：v1.0.0（留空则自动生成时间戳版本）" />
         </el-form-item>
-        <template v-if="deployForm.binary_name !== 'algo_md'">
+        <template v-if="deployForm.binary_name !== 'opentraffic-control-linux-amd64'">
           <el-form-item label="同时配置">
             <el-switch v-model="deployWithConfig" active-text="是" inactive-text="否" />
           </el-form-item>
@@ -394,7 +394,7 @@ const deployConfigContent = ref('')
 const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
 
-const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'algo_md']
+const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control-linux-amd64']
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
@@ -556,13 +556,13 @@ async function handleDeploy() {
     ElMessage.warning('请选择要部署的资源')
     return
   }
-  if (deployForm.binary_name !== 'algo_md' && deployedSoftwares.value.has(deployForm.binary_name)) {
+  if (deployForm.binary_name !== 'opentraffic-control-linux-amd64' && deployedSoftwares.value.has(deployForm.binary_name)) {
     ElMessage.warning(`服务 ${deployForm.binary_name} 已部署，请勿重复部署`)
     return
   }
   try {
     const payload: DeployRequest = { ...deployForm }
-    if (payload.binary_name === 'algo_md' && !payload.version?.trim()) {
+    if (payload.binary_name === 'opentraffic-control-linux-amd64' && !payload.version?.trim()) {
       payload.version = `v${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}`
     }
     if (deployWithConfig.value && deployConfigContent.value.trim()) {
@@ -578,7 +578,7 @@ async function handleDeploy() {
     // 部署成功后刷新部署记录和服务状态
     if (currentServer.value) {
       await loadServerDeployedSoftwares(currentServer.value.id)
-      if (payload.binary_name !== 'algo_md') {
+      if (payload.binary_name !== 'opentraffic-control-linux-amd64') {
         await refreshServiceStatus(currentServer.value.id, payload.binary_name)
       }
     }
@@ -653,7 +653,7 @@ async function loadServerDeployedSoftwares(serverId: string) {
 
 async function handleUndeployService(serverId: string, software: string) {
   try {
-    const isAlgoMd = software === 'algo_md'
+    const isAlgoMd = software === 'opentraffic-control-linux-amd64'
     await ElMessageBox.confirm(
       isAlgoMd
         ? `确定要卸载算法包 "${software}" 吗？这将删除远程目录并清除部署记录。`
@@ -685,7 +685,7 @@ function getServiceStatus(serverId: string, software: string): string {
 }
 
 function getServiceStatusType(serverId: string, software: string): string {
-  if (software === 'algo_md') {
+  if (software === 'opentraffic-control-linux-amd64') {
     return isDeployed(serverId, software) ? 'success' : 'info'
   }
   const status = getServiceStatus(serverId, software)
@@ -698,7 +698,7 @@ function getServiceStatusType(serverId: string, software: string): string {
 }
 
 function getServiceStatusLabel(serverId: string, software: string): string {
-  if (software === 'algo_md') {
+  if (software === 'opentraffic-control-linux-amd64') {
     return isDeployed(serverId, software) ? '已部署' : '未部署'
   }
   const status = getServiceStatus(serverId, software)

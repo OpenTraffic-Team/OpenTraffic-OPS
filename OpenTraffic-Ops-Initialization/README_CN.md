@@ -135,7 +135,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 
 ### 📦 远程部署
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
-- 部署 `algo_md` 算法包（tar 压缩包）到远程服务器，支持版本记录
+- 部署 `opentraffic-control-linux-amd64` 算法包（tar 压缩包）到远程服务器，支持版本记录
 - 部署二进制文件时可选同时部署配置文件
 - 支持加载默认配置模板
 - 二进制文件防重复部署检测；算法包允许重复部署并保留版本历史
