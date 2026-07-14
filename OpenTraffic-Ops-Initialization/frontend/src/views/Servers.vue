@@ -109,14 +109,22 @@
             </template>
           </el-table-column>
           <el-table-column prop="deploy_path" label="部署路径" show-overflow-tooltip min-width="180" />
-          <el-table-column label="服务状态" width="160">
+          <el-table-column label="服务状态" width="300">
             <template #default="{ row }">
               <div class="service-status-row">
-                <div class="status-item" @click="openServiceConfig(row, 'opentraffic-ops-proxy')">
+                <div
+                  class="status-item"
+                  title="opentraffic-ops-proxy"
+                  @click="openServiceConfig(row, 'opentraffic-ops-proxy')"
+                >
                   <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops-proxy')"></span>
-                  <span class="status-name">opentraffic-ops-proxy</span>
+                  <span class="status-name">proxy</span>
                 </div>
-                <div class="status-item" @click="openServiceConfig(row, 'opentraffic-ops')">
+                <div
+                  class="status-item"
+                  title="opentraffic-ops"
+                  @click="openServiceConfig(row, 'opentraffic-ops')"
+                >
                   <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops')"></span>
                   <span class="status-name">monitor</span>
                 </div>
