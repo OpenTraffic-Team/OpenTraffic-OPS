@@ -727,6 +727,7 @@ async function fetchAllServiceStatuses() {
   const promises: Promise<void>[] = []
   for (const server of serverStore.servers) {
     for (const sw of softwareList) {
+      if (sw === 'opentraffic-control-linux-amd64') continue
       promises.push(
         serverStore.getServiceStatus(server.id, sw).then(status => {
           if (!serviceStatuses.value[server.id]) {
@@ -806,6 +807,7 @@ async function handleExpandChange(row: Server, expandedRows: Server[]) {
 
 async function fetchAllServiceStatusesForServer(serverId: string) {
   for (const sw of softwareList) {
+    if (sw === 'opentraffic-control-linux-amd64') continue
     try {
       const status = await serverStore.getServiceStatus(serverId, sw)
       if (!serviceStatuses.value[serverId]) {
