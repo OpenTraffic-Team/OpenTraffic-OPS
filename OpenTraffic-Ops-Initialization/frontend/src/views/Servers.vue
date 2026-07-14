@@ -42,38 +42,48 @@
                     </div>
                     <div class="service-card-actions">
                       <template v-if="isDeployed(row.id, sw)">
-                        <button
-                          class="action-btn btn-start"
-                          :disabled="getServiceStatus(row.id, sw) === 'running'"
-                          @click="handleStartService(row.id, sw)"
-                        >
-                          <el-icon><VideoPlay /></el-icon>启动
-                        </button>
-                        <button
-                          class="action-btn btn-stop"
-                          :disabled="getServiceStatus(row.id, sw) !== 'running'"
-                          @click="handleStopService(row.id, sw)"
-                        >
-                          <el-icon><VideoPause /></el-icon>停止
-                        </button>
-                        <button
-                          class="action-btn btn-restart"
-                          @click="handleRestartService(row.id, sw)"
-                        >
-                          <el-icon><RefreshRight /></el-icon>重启
-                        </button>
-                        <button
-                          class="action-btn btn-config"
-                          @click="openServiceConfig(row, sw)"
-                        >
-                          <el-icon><Setting /></el-icon>配置
-                        </button>
-                        <button
-                          class="action-btn btn-undeploy"
-                          @click="handleUndeployService(row.id, sw)"
-                        >
-                          <el-icon><Delete /></el-icon>卸载
-                        </button>
+                        <template v-if="sw === 'algo_md'">
+                          <button
+                            class="action-btn btn-undeploy"
+                            @click="handleUndeployService(row.id, sw)"
+                          >
+                            <el-icon><Delete /></el-icon>卸载
+                          </button>
+                        </template>
+                        <template v-else>
+                          <button
+                            class="action-btn btn-start"
+                            :disabled="getServiceStatus(row.id, sw) === 'running'"
+                            @click="handleStartService(row.id, sw)"
+                          >
+                            <el-icon><VideoPlay /></el-icon>启动
+                          </button>
+                          <button
+                            class="action-btn btn-stop"
+                            :disabled="getServiceStatus(row.id, sw) !== 'running'"
+                            @click="handleStopService(row.id, sw)"
+                          >
+                            <el-icon><VideoPause /></el-icon>停止
+                          </button>
+                          <button
+                            class="action-btn btn-restart"
+                            @click="handleRestartService(row.id, sw)"
+                          >
+                            <el-icon><RefreshRight /></el-icon>重启
+                          </button>
+                          <button
+                            class="action-btn btn-config"
+                            @click="openServiceConfig(row, sw)"
+                          >
+                            <el-icon><Setting /></el-icon>配置
+                          </button>
+                          <button
+                            class="action-btn btn-undeploy"
+                            @click="handleUndeployService(row.id, sw)"
+                          >
+                            <el-icon><Delete /></el-icon>卸载
+                          </button>
+                        </template>
                       </template>
                       <template v-else>
                         <span class="not-deployed-tag">未部署</span>
@@ -189,7 +199,7 @@
     <!-- 部署对话框 -->
     <el-dialog
       v-model="showDeployDialog"
-      title="部署二进制文件"
+      title="部署"
       width="800px"
       class="dark-dialog"
       destroy-on-close
@@ -198,8 +208,8 @@
         <el-form-item label="目标服务器">
           <el-input :model-value="currentServer?.name" disabled />
         </el-form-item>
-        <el-form-item label="选择二进制" required>
-          <el-select v-model="deployForm.binary_name" placeholder="选择要部署的二进制文件" style="width: 100%" popper-class="light-select-dropdown">
+        <el-form-item label="选择部署包" required>
+          <el-select v-model="deployForm.binary_name" placeholder="选择要部署的资源" style="width: 100%" popper-class="light-select-dropdown">
             <el-option
               :label="deployedSoftwares.has('opentraffic-ops-proxy') ? 'opentraffic-ops-proxy (Linux AMD64) — 已部署' : 'opentraffic-ops-proxy (Linux AMD64)'"
               value="opentraffic-ops-proxy"
@@ -210,38 +220,44 @@
               value="opentraffic-ops"
               :disabled="deployedSoftwares.has('opentraffic-ops')"
             />
+            <el-option label="algo_md（算法包）" value="algo_md" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name && deployedSoftwares.has(deployForm.binary_name)">
+        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'algo_md' && deployedSoftwares.has(deployForm.binary_name)">
           <el-alert type="warning" :closable="false" show-icon>
             <template #title>
               该服务已部署，请勿重复部署
             </template>
           </el-alert>
         </el-form-item>
-        <el-form-item label="同时配置">
-          <el-switch v-model="deployWithConfig" active-text="是" inactive-text="否" />
+        <el-form-item v-if="deployForm.binary_name === 'algo_md'" label="版本号">
+          <el-input v-model="deployForm.version" placeholder="如：v1.0.0（留空则自动生成时间戳版本）" />
         </el-form-item>
-        <template v-if="deployWithConfig">
-          <el-form-item>
-            <div class="config-actions-row">
-              <el-button type="primary" text size="small" style="color: #ffffff" @click="loadDefaultDeployConfig">
-                <el-icon><Refresh /></el-icon> 加载默认配置
-              </el-button>
-              <el-button type="info" text size="small" @click="deployConfigContent = ''">
-                <el-icon><Delete /></el-icon> 清空
-              </el-button>
-            </div>
+        <template v-if="deployForm.binary_name !== 'algo_md'">
+          <el-form-item label="同时配置">
+            <el-switch v-model="deployWithConfig" active-text="是" inactive-text="否" />
           </el-form-item>
-          <el-form-item>
-            <el-input
-              v-model="deployConfigContent"
-              type="textarea"
-              :rows="12"
-              placeholder="请输入JSON配置内容，或点击「加载默认配置」"
-              class="config-textarea"
-            />
-          </el-form-item>
+          <template v-if="deployWithConfig">
+            <el-form-item>
+              <div class="config-actions-row">
+                <el-button type="primary" text size="small" style="color: #ffffff" @click="loadDefaultDeployConfig">
+                  <el-icon><Refresh /></el-icon> 加载默认配置
+                </el-button>
+                <el-button type="info" text size="small" @click="deployConfigContent = ''">
+                  <el-icon><Delete /></el-icon> 清空
+                </el-button>
+              </div>
+            </el-form-item>
+            <el-form-item>
+              <el-input
+                v-model="deployConfigContent"
+                type="textarea"
+                :rows="12"
+                placeholder="请输入JSON配置内容，或点击「加载默认配置」"
+                class="config-textarea"
+              />
+            </el-form-item>
+          </template>
         </template>
       </el-form>
       <template #footer>
@@ -260,7 +276,8 @@
       <el-table :data="serverStore.deployRecords" class="dark-table" max-height="400">
         <el-table-column prop="id" label="ID" width="60" />
         <el-table-column prop="server_name" label="服务器" width="140" />
-        <el-table-column prop="binary_name" label="二进制文件" width="160" />
+        <el-table-column prop="binary_name" label="资源" width="160" />
+        <el-table-column prop="version" label="版本" width="140" show-overflow-tooltip />
         <el-table-column prop="remote_path" label="远程路径" min-width="200" show-overflow-tooltip />
         <el-table-column label="状态" width="90">
           <template #default="{ row }">
@@ -368,7 +385,8 @@ const serverForm = reactive<CreateServerRequest>({
 
 const deployForm = reactive<DeployRequest>({
   server_id: '',
-  binary_name: 'opentraffic-ops-proxy'
+  binary_name: 'opentraffic-ops-proxy',
+  version: ''
 })
 
 const deployWithConfig = ref(false)
@@ -376,7 +394,7 @@ const deployConfigContent = ref('')
 const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
 
-const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops']
+const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'algo_md']
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
@@ -502,6 +520,7 @@ async function openDeployDialog(server: Server) {
   currentServer.value = server
   deployForm.server_id = server.id
   deployForm.binary_name = 'opentraffic-ops-proxy'
+  deployForm.version = ''
   deployWithConfig.value = false
   deployConfigContent.value = ''
   await loadDeployedSoftwares(server.id)
@@ -534,15 +553,18 @@ async function loadDefaultDeployConfig() {
 
 async function handleDeploy() {
   if (!deployForm.binary_name) {
-    ElMessage.warning('请选择要部署的二进制文件')
+    ElMessage.warning('请选择要部署的资源')
     return
   }
-  if (deployedSoftwares.value.has(deployForm.binary_name)) {
+  if (deployForm.binary_name !== 'algo_md' && deployedSoftwares.value.has(deployForm.binary_name)) {
     ElMessage.warning(`服务 ${deployForm.binary_name} 已部署，请勿重复部署`)
     return
   }
   try {
     const payload: DeployRequest = { ...deployForm }
+    if (payload.binary_name === 'algo_md' && !payload.version?.trim()) {
+      payload.version = `v${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}`
+    }
     if (deployWithConfig.value && deployConfigContent.value.trim()) {
       payload.config_content = deployConfigContent.value.trim()
     }
@@ -556,7 +578,9 @@ async function handleDeploy() {
     // 部署成功后刷新部署记录和服务状态
     if (currentServer.value) {
       await loadServerDeployedSoftwares(currentServer.value.id)
-      await refreshServiceStatus(currentServer.value.id, deployForm.binary_name)
+      if (payload.binary_name !== 'algo_md') {
+        await refreshServiceStatus(currentServer.value.id, payload.binary_name)
+      }
     }
   } catch (error: any) {
     ElMessage.error(`部署失败: ${error?.message || '未知错误'}`)
@@ -629,8 +653,11 @@ async function loadServerDeployedSoftwares(serverId: string) {
 
 async function handleUndeployService(serverId: string, software: string) {
   try {
+    const isAlgoMd = software === 'algo_md'
     await ElMessageBox.confirm(
-      `确定要卸载服务 "${software}" 吗？这将停止服务、删除远程文件并清除部署记录。`,
+      isAlgoMd
+        ? `确定要卸载算法包 "${software}" 吗？这将删除远程目录并清除部署记录。`
+        : `确定要卸载服务 "${software}" 吗？这将停止服务、删除远程文件并清除部署记录。`,
       '警告',
       {
         confirmButtonText: '确定',
@@ -642,7 +669,9 @@ async function handleUndeployService(serverId: string, software: string) {
     ElMessage.success(`${software} 卸载成功`)
     // 刷新部署状态和服务状态
     await loadServerDeployedSoftwares(serverId)
-    await refreshServiceStatus(serverId, software)
+    if (!isAlgoMd) {
+      await refreshServiceStatus(serverId, software)
+    }
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(`卸载失败: ${error?.message || '未知错误'}`)
@@ -656,6 +685,9 @@ function getServiceStatus(serverId: string, software: string): string {
 }
 
 function getServiceStatusType(serverId: string, software: string): string {
+  if (software === 'algo_md') {
+    return isDeployed(serverId, software) ? 'success' : 'info'
+  }
   const status = getServiceStatus(serverId, software)
   const map: Record<string, string> = {
     running: 'success',
@@ -666,6 +698,9 @@ function getServiceStatusType(serverId: string, software: string): string {
 }
 
 function getServiceStatusLabel(serverId: string, software: string): string {
+  if (software === 'algo_md') {
+    return isDeployed(serverId, software) ? '已部署' : '未部署'
+  }
   const status = getServiceStatus(serverId, software)
   const map: Record<string, string> = {
     running: '运行中',
