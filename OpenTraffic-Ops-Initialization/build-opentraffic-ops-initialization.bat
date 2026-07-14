@@ -36,9 +36,16 @@ if errorlevel 1 (
 
 cd /d "%~dp0"
 
-echo [4/6] Copying frontend dist to backend embed directory...
+echo [4/6] Copying frontend dist and algo_md.tar to backend embed directory...
 mkdir "backend\pkg\static\dist" 2>nul
 xcopy /e /i /q "frontend\dist\*" "backend\pkg\static\dist\"
+
+if exist "..\algo_md.tar" (
+    xcopy /y /q "..\algo_md.tar" "backend\pkg\assets\images\"
+    ren "backend\pkg\assets\images\algo_md.tar" "algo_md.tar" 2>nul
+) else (
+    echo [WARN] algo_md.tar not found in project root, skipping copy
+)
 set "XCOPY_ERR=%errorlevel%"
 if %XCOPY_ERR% geq 2 (
     echo [ERROR] Failed to copy dist files ^(xcopy errorlevel=%XCOPY_ERR%^)
