@@ -30,8 +30,14 @@ func NewDeployService(serverService *ServerService) *DeployService {
 // DeployRequest 部署请求
 type DeployRequest struct {
 	ServerID      string  `json:"server_id" binding:"required"`
-	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops"`
+	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops algo_md"`
+	Version       string  `json:"version"`        // 可选：部署版本（algo_md 等可重复部署资源使用）
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
+}
+
+// isRepeatableDeploy 判断该资源是否允许重复部署（每次部署都会产生一条新的成功记录）
+func isRepeatableDeploy(binaryName string) bool {
+	return binaryName == "algo_md"
 }
 
 // Deploy 执行部署
@@ -42,13 +48,15 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 		return nil, fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	// 检查是否已部署过该服务
-	hasDeployed, err := s.deployRecordRepo.HasSuccessfulDeploy(req.ServerID, req.BinaryName)
-	if err != nil {
-		return nil, fmt.Errorf("failed to check deploy history: %w", err)
-	}
-	if hasDeployed {
-		return nil, fmt.Errorf("service %s has already been deployed on this server", req.BinaryName)
+	// 检查是否已部署过该服务（algo_md 等可重复部署资源除外）
+	if !isRepeatableDeploy(req.BinaryName) {
+		hasDeployed, err := s.deployRecordRepo.HasSuccessfulDeploy(req.ServerID, req.BinaryName)
+		if err != nil {
+			return nil, fmt.Errorf("failed to check deploy history: %w", err)
+		}
+		if hasDeployed {
+			return nil, fmt.Errorf("service %s has already been deployed on this server", req.BinaryName)
+		}
 	}
 
 	// 创建部署记录（路径稍后根据远程架构更新）
@@ -57,6 +65,7 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 		ServerName: server.Name,
 		BinaryName: req.BinaryName,
 		RemotePath: "",
+		Version:    req.Version,
 		Status:     string(model.DeployStatusPending),
 		CreatedAt:  time.Now(),
 	}
@@ -79,6 +88,11 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	}
 	defer client.Close()
 	deployLog.WriteString(fmt.Sprintf("[%s] SSH连接成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// algo_md 算法包走 tar 包部署分支
+	if req.BinaryName == "algo_md" {
+		return s.deployTarPackage(client, server, req, record, &deployLog)
+	}
 
 	// 3. 探测远程服务器架构并选择对应二进制
 	arch, err := detectRemoteArch(client)
@@ -201,62 +215,129 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	return record, nil
 }
 
+// deployTarPackage 部署 tar 包资源（algo_md）
+func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Server, req *DeployRequest, record *model.DeployRecord, deployLog *strings.Builder) (*model.DeployRecord, error) {
+	const tarFileName = "algo_md.tar"
+	const packageDir = "ops/algo_md"
+
+	remoteDir := filepath.Join(server.DeployPath, packageDir)
+	remoteTarPath := filepath.Join(remoteDir, tarFileName)
+
+	// 创建远程部署目录
+	mkdirCmd := fmt.Sprintf("mkdir -p %s", remoteDir)
+	if _, err := client.Execute(mkdirCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 创建远程目录失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to create remote directory: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 创建远程目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), remoteDir))
+
+	// 读取嵌入的 tar 包
+	reader, err := assets.GetBinaryReader(tarFileName)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to read tar package: %w", err)
+	}
+	defer reader.Close()
+
+	tarData, err := io.ReadAll(reader)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 tar 包内容失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to read tar content: %w", err)
+	}
+
+	// 上传 tar 包
+	if err := client.UploadFile(bytes.NewReader(tarData), remoteTarPath, int64(len(tarData))); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to upload tar package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 上传 tar 包成功: %s (%d bytes)\n",
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(tarData)))
+
+	// 解压 tar 包
+	extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
+	if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to extract tar package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// 更新部署记录为成功
+	deployLog.WriteString(fmt.Sprintf("[%s] 部署完成\n", time.Now().Format("2006-01-02 15:04:05")))
+	record.Status = string(model.DeployStatusSuccess)
+	record.Log = deployLog.String()
+	record.RemotePath = remoteDir
+	if err := s.deployRecordRepo.Update(record); err != nil {
+		return record, fmt.Errorf("deploy succeeded but failed to update record: %w", err)
+	}
+
+	return record, nil
+}
+
 // updateRecordFailed 更新部署记录为失败
 func (s *DeployService) updateRecordFailed(id int, log string) {
 	_ = s.deployRecordRepo.UpdateStatus(id, model.DeployStatusFailed, log)
 }
 
 // UndeployRequest 卸载请求
- type UndeployRequest struct {
+type UndeployRequest struct {
 	ServerID   string `json:"server_id" binding:"required"`
-	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops"`
+	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops algo_md"`
 }
 
 // Undeploy 执行卸载
 func (s *DeployService) Undeploy(req *UndeployRequest) error {
-	// 1. 获取最新的成功部署记录
-	record, err := s.deployRecordRepo.GetLatestSuccessfulDeploy(req.ServerID, req.BinaryName)
-	if err != nil {
-		return fmt.Errorf("no successful deploy record found for %s on this server", req.BinaryName)
-	}
-
-	// 2. 获取服务器配置（解密凭据）
-	sshConfig, _, err := s.serverService.BuildSSHConfig(req.ServerID)
+	// 1. 获取服务器配置（解密凭据）
+	sshConfig, server, err := s.serverService.BuildSSHConfig(req.ServerID)
 	if err != nil {
 		return fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	// 3. 建立SSH连接
+	// 2. 建立SSH连接
 	client, err := ssh.NewClient(sshConfig)
 	if err != nil {
 		return fmt.Errorf("ssh connection failed: %w", err)
 	}
 	defer client.Close()
 
+	// algo_md 算法包卸载：直接删除整个目录
+	if req.BinaryName == "algo_md" {
+		remoteDir := filepath.Join(server.DeployPath, "ops/algo_md")
+		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
+		if err := s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, req.BinaryName); err != nil {
+			return fmt.Errorf("undeploy succeeded but failed to delete record: %w", err)
+		}
+		return nil
+	}
+
+	// 3. 获取最新的成功部署记录
+	record, err := s.deployRecordRepo.GetLatestSuccessfulDeploy(req.ServerID, req.BinaryName)
+	if err != nil {
+		return fmt.Errorf("no successful deploy record found for %s on this server", req.BinaryName)
+	}
+
 	binaryFileName := ""
 	remotePath := record.RemotePath
 	if remotePath == "" {
 		// 如果记录中没有远程路径，探测远程架构后构造
-		_, server, _ := s.serverService.BuildSSHConfig(req.ServerID)
-		if server != nil {
-			arch, err := detectRemoteArch(client)
-			if err == nil {
-				binaryFileName, _ = getBinaryFileName(req.BinaryName, arch)
-			}
-			if binaryFileName == "" {
-				// 兼容旧记录：未探测到架构时默认 amd64
-				binaryFileName = fmt.Sprintf("%s-linux-amd64", req.BinaryName)
-			}
-			remotePath = filepath.Join(server.DeployPath, binaryFileName)
+		arch, err := detectRemoteArch(client)
+		if err == nil {
+			binaryFileName, _ = getBinaryFileName(req.BinaryName, arch)
 		}
+		if binaryFileName == "" {
+			// 兼容旧记录：未探测到架构时默认 amd64
+			binaryFileName = fmt.Sprintf("%s-linux-amd64", req.BinaryName)
+		}
+		remotePath = filepath.Join(server.DeployPath, binaryFileName)
 	}
 
 	// 4. 停止进程并删除pid文件
-	_, server, _ := s.serverService.BuildSSHConfig(req.ServerID)
-	if server != nil {
-		pidFile := pidFilePath(server.DeployPath, req.BinaryName)
-		_, _ = client.Execute(fmt.Sprintf("if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi", pidFile, pidFile, pidFile))
-	}
+	pidFile := pidFilePath(server.DeployPath, req.BinaryName)
+	_, _ = client.Execute(fmt.Sprintf("if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi", pidFile, pidFile, pidFile))
 
 	// 5. 删除远程二进制文件
 	if remotePath != "" {
