@@ -253,6 +253,24 @@ var softwareConfigMeta = map[string]struct {
 	},
 }
 
+// controlServiceConfig opentraffic-control 服务配置
+var controlServiceConfig = struct {
+	DirName     string
+	StartScript string
+	ProcessPattern string
+	PidFileName string
+}{
+	DirName:        "opentraffic-control",
+	StartScript:    "start_algorithm.sh",
+	ProcessPattern: "run_algorithms.py",
+	PidFileName:    "opentraffic-control.pid",
+}
+
+// isControlService 判断是否为 opentraffic-control 服务
+func isControlService(name string) bool {
+	return name == controlServiceConfig.DirName || name == "opentraffic-control-linux-amd64"
+}
+
 // getDefaultConfig 从嵌入资源读取指定软件的默认配置，如不存在则返回空JSON
 func getDefaultConfig(softwareName string) string {
 	meta, ok := softwareConfigMeta[softwareName]
@@ -422,10 +440,10 @@ func detectRemoteArch(client *ssh.Client) (string, error) {
 	return strings.TrimSpace(output), nil
 }
 
-// isValidSoftwareName 校验软件名是否受支持
+// isValidSoftwareName 校验软件名是否受支持（服务状态管理）
 func isValidSoftwareName(name string) bool {
 	_, ok := softwareConfigMeta[name]
-	return ok
+	return ok || isControlService(name)
 }
 
 // pidFilePath 生成pid文件远程路径
@@ -458,8 +476,30 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 	}
 	defer client.Close()
 
+	if isControlService(softwareName) {
+		return s.getControlServiceStatus(client, creds.Server.DeployPath)
+	}
+
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
 	checkCmd := fmt.Sprintf("if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; else echo stopped; fi", pidFile, pidFile)
+	output, err := client.Execute(checkCmd)
+	if err != nil {
+		return "unknown", nil
+	}
+	status := strings.TrimSpace(output)
+	if status == "running" {
+		return "running", nil
+	}
+	return "stopped", nil
+}
+
+// getControlServiceStatus 获取 opentraffic-control 运行状态
+func (s *ServerService) getControlServiceStatus(client *ssh.Client, deployPath string) (string, error) {
+	pidFile := filepath.Join(deployPath, controlServiceConfig.DirName, controlServiceConfig.PidFileName)
+	checkCmd := fmt.Sprintf(
+		"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f %s >/dev/null 2>&1; then echo running; else echo stopped; fi",
+		pidFile, pidFile, controlServiceConfig.ProcessPattern,
+	)
 	output, err := client.Execute(checkCmd)
 	if err != nil {
 		return "unknown", nil
@@ -496,6 +536,10 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 	}
 	defer client.Close()
 
+	if isControlService(softwareName) {
+		return s.startControlService(client, creds.Server.DeployPath)
+	}
+
 	arch, err := detectRemoteArch(client)
 	if err != nil {
 		return err
@@ -512,6 +556,23 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 	startCmd := fmt.Sprintf("cd %s && setsid sh -c '%s > /dev/null 2>&1 </dev/null & echo \"$!\"' > %s", creds.Server.DeployPath, remotePath, pidFile)
 	if _, err := client.ExecuteWithTimeout(startCmd, 60*time.Second); err != nil {
 		return fmt.Errorf("failed to start service: %w", err)
+	}
+	return nil
+}
+
+// startControlService 启动 opentraffic-control
+func (s *ServerService) startControlService(client *ssh.Client, deployPath string) error {
+	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
+	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
+
+	// 先停止可能已存在的进程，避免重复启动
+	_, _ = client.Execute(fmt.Sprintf("pkill -f %s 2>/dev/null || true", controlServiceConfig.ProcessPattern))
+
+	// 启动脚本内部已后台运行；执行后等待进程拉起并写入 pid 文件
+	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f %s > %s",
+		deployDir, controlServiceConfig.StartScript, controlServiceConfig.ProcessPattern, pidFile)
+	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
+		return fmt.Errorf("failed to start control service: %w", err)
 	}
 	return nil
 }
@@ -541,10 +602,28 @@ func (s *ServerService) StopService(id string, softwareName string) error {
 	}
 	defer client.Close()
 
+	if isControlService(softwareName) {
+		return s.stopControlService(client, creds.Server.DeployPath)
+	}
+
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
 	stopCmd := fmt.Sprintf("if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi", pidFile, pidFile, pidFile)
 	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
 		return fmt.Errorf("failed to stop service: %w", err)
+	}
+	return nil
+}
+
+// stopControlService 停止 opentraffic-control
+func (s *ServerService) stopControlService(client *ssh.Client, deployPath string) error {
+	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
+	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
+	stopCmd := fmt.Sprintf(
+		"if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f %s 2>/dev/null || true",
+		pidFile, pidFile, pidFile, controlServiceConfig.ProcessPattern,
+	)
+	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
+		return fmt.Errorf("failed to stop control service: %w", err)
 	}
 	return nil
 }
