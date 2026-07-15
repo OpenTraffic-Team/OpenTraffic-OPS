@@ -36,7 +36,7 @@ if errorlevel 1 (
 
 cd /d "%~dp0"
 
-echo [4/6] Copying frontend dist and opentraffic-control tar packages to backend embed directory...
+echo [4/6] Copying frontend dist, binary packages and opentraffic-control tar packages to backend embed directory...
 mkdir "backend\pkg\static\dist" 2>nul
 xcopy /e /i /q "frontend\dist\*" "backend\pkg\static\dist\"
 
@@ -47,6 +47,24 @@ for %%a in (amd64 arm64 loong64) do (
         xcopy /y /q "!SRC_TAR!" "backend\pkg\assets\images\"
     ) else if not exist "!DST_TAR!" (
         echo [WARN] opentraffic-control-linux-%%a.tar not found in project root or embed dir, skipping copy
+    )
+)
+
+for %%a in (amd64 arm64 loong64) do (
+    set "SRC_OPS=..\OpenTraffic-Ops\backend\opentraffic-ops-linux-%%a"
+    set "DST_OPS=backend\pkg\assets\images\opentraffic-ops-linux-%%a"
+    if exist "!SRC_OPS!" (
+        xcopy /y /q "!SRC_OPS!" "backend\pkg\assets\images\"
+    ) else if not exist "!DST_OPS!" (
+        echo [WARN] opentraffic-ops-linux-%%a not found, skipping copy
+    )
+
+    set "SRC_PROXY=..\OpenTraffic-Ops\proxy\dist\opentraffic-ops-proxy-linux-%%a"
+    set "DST_PROXY=backend\pkg\assets\images\opentraffic-ops-proxy-linux-%%a"
+    if exist "!SRC_PROXY!" (
+        xcopy /y /q "!SRC_PROXY!" "backend\pkg\assets\images\"
+    ) else if not exist "!DST_PROXY!" (
+        echo [WARN] opentraffic-ops-proxy-linux-%%a not found, skipping copy
     )
 )
 set "XCOPY_ERR=%errorlevel%"
