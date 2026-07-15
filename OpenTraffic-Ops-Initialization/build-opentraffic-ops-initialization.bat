@@ -36,14 +36,18 @@ if errorlevel 1 (
 
 cd /d "%~dp0"
 
-echo [4/6] Copying frontend dist and opentraffic-control tar to backend embed directory...
+echo [4/6] Copying frontend dist and opentraffic-control tar packages to backend embed directory...
 mkdir "backend\pkg\static\dist" 2>nul
 xcopy /e /i /q "frontend\dist\*" "backend\pkg\static\dist\"
 
-if exist "..\opentraffic-control-linux-amd64.tar" (
-    xcopy /y /q "..\opentraffic-control-linux-amd64.tar" "backend\pkg\assets\images\"
-) else (
-    echo [WARN] opentraffic-control-linux-amd64.tar not found in project root, skipping copy
+for %%a in (amd64 arm64 loong64) do (
+    set "SRC_TAR=..\opentraffic-control-linux-%%a.tar"
+    set "DST_TAR=backend\pkg\assets\images\opentraffic-control-linux-%%a.tar"
+    if exist "!SRC_TAR!" (
+        xcopy /y /q "!SRC_TAR!" "backend\pkg\assets\images\"
+    ) else if not exist "!DST_TAR!" (
+        echo [WARN] opentraffic-control-linux-%%a.tar not found in project root or embed dir, skipping copy
+    )
 )
 set "XCOPY_ERR=%errorlevel%"
 if %XCOPY_ERR% geq 2 (

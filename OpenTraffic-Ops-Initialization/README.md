@@ -127,15 +127,15 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Add / edit / delete remote server SSH configurations
 - Two authentication methods supported: password auth and key auth (supports Passphrase)
 - SSH connection test
-- Server list displays service status (proxy / monitor)
+- Server list displays service status (proxy / monitor / control)
 - Expandable rows to view deployed service details
-- Supported operations: start / stop / restart / configure / uninstall remote services
+- Supported operations: start / stop / restart / configure / uninstall remote services; control package supports start / stop / restart / uninstall
 
 ![Server Management](images/image-1.png)
 
 ### 📦 Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
-- Deploy the `opentraffic-control-linux-amd64` algorithm package (tar archive) to remote servers with version tracking
+- Deploy the `opentraffic-control` algorithm package (tar archive) to remote servers with architecture auto-detection (amd64 / arm64 / loong64) and version tracking
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
 - Duplicate deployment detection for binaries; algorithm packages allow repeated deployments with version history

@@ -127,15 +127,15 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 新增 / 编辑 / 删除远程服务器 SSH 配置
 - 支持两种认证方式：密码认证和密钥认证（支持带 Passphrase 的私钥）
 - SSH 连接测试
-- 服务器列表展示服务状态（proxy / monitor）
+- 服务器列表展示服务状态（proxy / monitor / control）
 - 展开行查看已部署服务详情
-- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务
+- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务；control 算法包支持启动 / 停止 / 重启 / 卸载
 
 ![服务器管理](images/image-1.png)
 
 ### 📦 远程部署
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
-- 部署 `opentraffic-control-linux-amd64` 算法包（tar 压缩包）到远程服务器，支持版本记录
+- 部署 `opentraffic-control` 算法包（tar 压缩包）到远程服务器，自动识别架构（amd64 / arm64 / loong64），支持版本记录
 - 部署二进制文件时可选同时部署配置文件
 - 支持加载默认配置模板
 - 二进制文件防重复部署检测；算法包允许重复部署并保留版本历史
