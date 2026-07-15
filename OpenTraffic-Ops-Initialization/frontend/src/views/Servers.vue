@@ -42,48 +42,39 @@
                     </div>
                     <div class="service-card-actions">
                       <template v-if="isDeployed(row.id, sw)">
-                        <template v-if="sw === 'opentraffic-control-linux-amd64'">
-                          <button
-                            class="action-btn btn-undeploy"
-                            @click="handleUndeployService(row.id, sw)"
-                          >
-                            <el-icon><Delete /></el-icon>卸载
-                          </button>
-                        </template>
-                        <template v-else>
-                          <button
-                            class="action-btn btn-start"
-                            :disabled="getServiceStatus(row.id, sw) === 'running'"
-                            @click="handleStartService(row.id, sw)"
-                          >
-                            <el-icon><VideoPlay /></el-icon>启动
-                          </button>
-                          <button
-                            class="action-btn btn-stop"
-                            :disabled="getServiceStatus(row.id, sw) !== 'running'"
-                            @click="handleStopService(row.id, sw)"
-                          >
-                            <el-icon><VideoPause /></el-icon>停止
-                          </button>
-                          <button
-                            class="action-btn btn-restart"
-                            @click="handleRestartService(row.id, sw)"
-                          >
-                            <el-icon><RefreshRight /></el-icon>重启
-                          </button>
-                          <button
-                            class="action-btn btn-config"
-                            @click="openServiceConfig(row, sw)"
-                          >
-                            <el-icon><Setting /></el-icon>配置
-                          </button>
-                          <button
-                            class="action-btn btn-undeploy"
-                            @click="handleUndeployService(row.id, sw)"
-                          >
-                            <el-icon><Delete /></el-icon>卸载
-                          </button>
-                        </template>
+                        <button
+                          class="action-btn btn-start"
+                          :disabled="getServiceStatus(row.id, sw) === 'running'"
+                          @click="handleStartService(row.id, sw)"
+                        >
+                          <el-icon><VideoPlay /></el-icon>启动
+                        </button>
+                        <button
+                          class="action-btn btn-stop"
+                          :disabled="getServiceStatus(row.id, sw) !== 'running'"
+                          @click="handleStopService(row.id, sw)"
+                        >
+                          <el-icon><VideoPause /></el-icon>停止
+                        </button>
+                        <button
+                          class="action-btn btn-restart"
+                          @click="handleRestartService(row.id, sw)"
+                        >
+                          <el-icon><RefreshRight /></el-icon>重启
+                        </button>
+                        <button
+                          v-if="sw !== 'opentraffic-control'"
+                          class="action-btn btn-config"
+                          @click="openServiceConfig(row, sw)"
+                        >
+                          <el-icon><Setting /></el-icon>配置
+                        </button>
+                        <button
+                          class="action-btn btn-undeploy"
+                          @click="handleUndeployService(row.id, sw)"
+                        >
+                          <el-icon><Delete /></el-icon>卸载
+                        </button>
                       </template>
                       <template v-else>
                         <span class="not-deployed-tag">未部署</span>
@@ -127,6 +118,13 @@
                 >
                   <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops')"></span>
                   <span class="status-name">monitor</span>
+                </div>
+                <div
+                  class="status-item"
+                  title="opentraffic-control"
+                >
+                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-control')"></span>
+                  <span class="status-name">control</span>
                 </div>
               </div>
             </template>
@@ -228,20 +226,20 @@
               value="opentraffic-ops"
               :disabled="deployedSoftwares.has('opentraffic-ops')"
             />
-            <el-option label="opentraffic-control (Linux AMD64)" value="opentraffic-control-linux-amd64" />
+            <el-option label="opentraffic-control（自动识别架构）" value="opentraffic-control" />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'opentraffic-control-linux-amd64' && deployedSoftwares.has(deployForm.binary_name)">
+        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'opentraffic-control' && deployedSoftwares.has(deployForm.binary_name)">
           <el-alert type="warning" :closable="false" show-icon>
             <template #title>
               该服务已部署，请勿重复部署
             </template>
           </el-alert>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name === 'opentraffic-control-linux-amd64'" label="版本号">
+        <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'" label="版本号">
           <el-input v-model="deployForm.version" placeholder="如：v1.0.0（留空则自动生成时间戳版本）" />
         </el-form-item>
-        <template v-if="deployForm.binary_name !== 'opentraffic-control-linux-amd64'">
+        <template v-if="deployForm.binary_name !== 'opentraffic-control'">
           <el-form-item label="同时配置">
             <el-switch v-model="deployWithConfig" active-text="是" inactive-text="否" />
           </el-form-item>
@@ -402,7 +400,7 @@ const deployConfigContent = ref('')
 const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
 
-const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control-linux-amd64']
+const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control']
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
@@ -541,7 +539,7 @@ async function loadDeployedSoftwares(serverId: string) {
     deployedSoftwares.value = new Set(
       serverStore.deployRecords
         .filter(r => r.status === 'success')
-        .map(r => r.binary_name)
+        .map(r => normalizeBinaryName(r.binary_name))
     )
   } catch {
     deployedSoftwares.value = new Set()
@@ -549,7 +547,7 @@ async function loadDeployedSoftwares(serverId: string) {
 }
 
 async function loadDefaultDeployConfig() {
-  if (!deployForm.binary_name) return
+  if (!deployForm.binary_name || deployForm.binary_name === 'opentraffic-control') return
   try {
     const content = await serverStore.getDefaultSoftwareConfig(deployForm.binary_name)
     deployConfigContent.value = content
@@ -564,13 +562,13 @@ async function handleDeploy() {
     ElMessage.warning('请选择要部署的资源')
     return
   }
-  if (deployForm.binary_name !== 'opentraffic-control-linux-amd64' && deployedSoftwares.value.has(deployForm.binary_name)) {
+  if (deployForm.binary_name !== 'opentraffic-control' && deployedSoftwares.value.has(deployForm.binary_name)) {
     ElMessage.warning(`服务 ${deployForm.binary_name} 已部署，请勿重复部署`)
     return
   }
   try {
     const payload: DeployRequest = { ...deployForm }
-    if (payload.binary_name === 'opentraffic-control-linux-amd64' && !payload.version?.trim()) {
+    if (payload.binary_name === 'opentraffic-control' && !payload.version?.trim()) {
       payload.version = `v${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}`
     }
     if (deployWithConfig.value && deployConfigContent.value.trim()) {
@@ -586,9 +584,7 @@ async function handleDeploy() {
     // 部署成功后刷新部署记录和服务状态
     if (currentServer.value) {
       await loadServerDeployedSoftwares(currentServer.value.id)
-      if (payload.binary_name !== 'opentraffic-control-linux-amd64') {
-        await refreshServiceStatus(currentServer.value.id, payload.binary_name)
-      }
+      await refreshServiceStatus(currentServer.value.id, payload.binary_name)
     }
   } catch (error: any) {
     ElMessage.error(`部署失败: ${error?.message || '未知错误'}`)
@@ -645,13 +641,20 @@ function isDeployed(serverId: string, software: string): boolean {
   return serverDeployedMap.value[serverId]?.has(software) || false
 }
 
+function normalizeBinaryName(binaryName: string): string {
+  if (binaryName === 'opentraffic-control-linux-amd64') {
+    return 'opentraffic-control'
+  }
+  return binaryName
+}
+
 async function loadServerDeployedSoftwares(serverId: string) {
   try {
     await serverStore.fetchDeployRecords(serverId)
     const set = new Set(
       serverStore.deployRecords
         .filter(r => r.status === 'success')
-        .map(r => r.binary_name)
+        .map(r => normalizeBinaryName(r.binary_name))
     )
     serverDeployedMap.value[serverId] = set
   } catch {
@@ -661,9 +664,9 @@ async function loadServerDeployedSoftwares(serverId: string) {
 
 async function handleUndeployService(serverId: string, software: string) {
   try {
-    const isAlgoMd = software === 'opentraffic-control-linux-amd64'
+    const isControl = software === 'opentraffic-control'
     await ElMessageBox.confirm(
-      isAlgoMd
+      isControl
         ? `确定要卸载算法包 "${software}" 吗？这将删除远程目录并清除部署记录。`
         : `确定要卸载服务 "${software}" 吗？这将停止服务、删除远程文件并清除部署记录。`,
       '警告',
@@ -677,9 +680,7 @@ async function handleUndeployService(serverId: string, software: string) {
     ElMessage.success(`${software} 卸载成功`)
     // 刷新部署状态和服务状态
     await loadServerDeployedSoftwares(serverId)
-    if (!isAlgoMd) {
-      await refreshServiceStatus(serverId, software)
-    }
+    await refreshServiceStatus(serverId, software)
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(`卸载失败: ${error?.message || '未知错误'}`)
@@ -693,9 +694,6 @@ function getServiceStatus(serverId: string, software: string): string {
 }
 
 function getServiceStatusType(serverId: string, software: string): string {
-  if (software === 'opentraffic-control-linux-amd64') {
-    return isDeployed(serverId, software) ? 'success' : 'info'
-  }
   const status = getServiceStatus(serverId, software)
   const map: Record<string, string> = {
     running: 'success',
@@ -706,8 +704,8 @@ function getServiceStatusType(serverId: string, software: string): string {
 }
 
 function getServiceStatusLabel(serverId: string, software: string): string {
-  if (software === 'opentraffic-control-linux-amd64') {
-    return isDeployed(serverId, software) ? '已部署' : '未部署'
+  if (software === 'opentraffic-control' && !isDeployed(serverId, software)) {
+    return '未部署'
   }
   const status = getServiceStatus(serverId, software)
   const map: Record<string, string> = {
@@ -727,7 +725,6 @@ async function fetchAllServiceStatuses() {
   const promises: Promise<void>[] = []
   for (const server of serverStore.servers) {
     for (const sw of softwareList) {
-      if (sw === 'opentraffic-control-linux-amd64') continue
       promises.push(
         serverStore.getServiceStatus(server.id, sw).then(status => {
           if (!serviceStatuses.value[server.id]) {
@@ -807,7 +804,6 @@ async function handleExpandChange(row: Server, expandedRows: Server[]) {
 
 async function fetchAllServiceStatusesForServer(serverId: string) {
   for (const sw of softwareList) {
-    if (sw === 'opentraffic-control-linux-amd64') continue
     try {
       const status = await serverStore.getServiceStatus(serverId, sw)
       if (!serviceStatuses.value[serverId]) {
