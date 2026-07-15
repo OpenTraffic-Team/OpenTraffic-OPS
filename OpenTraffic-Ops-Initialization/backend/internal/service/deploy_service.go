@@ -1,6 +1,7 @@
 package service
 
 import (
+	"archive/tar"
 	"bytes"
 	"fmt"
 	"io"
@@ -30,14 +31,14 @@ func NewDeployService(serverService *ServerService) *DeployService {
 // DeployRequest 部署请求
 type DeployRequest struct {
 	ServerID      string  `json:"server_id" binding:"required"`
-	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control-linux-amd64"`
-	Version       string  `json:"version"`        // 可选：部署版本（opentraffic-control-linux-amd64 等可重复部署资源使用）
+	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control"`
+	Version       string  `json:"version"`        // 可选：部署版本（opentraffic-control 等可重复部署资源使用）
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
 }
 
 // isRepeatableDeploy 判断该资源是否允许重复部署（每次部署都会产生一条新的成功记录）
 func isRepeatableDeploy(binaryName string) bool {
-	return binaryName == "opentraffic-control-linux-amd64"
+	return binaryName == "opentraffic-control"
 }
 
 // Deploy 执行部署
@@ -48,7 +49,7 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 		return nil, fmt.Errorf("failed to get server config: %w", err)
 	}
 
-	// 检查是否已部署过该服务（opentraffic-control-linux-amd64 等可重复部署资源除外）
+	// 检查是否已部署过该服务（opentraffic-control 等可重复部署资源除外）
 	if !isRepeatableDeploy(req.BinaryName) {
 		hasDeployed, err := s.deployRecordRepo.HasSuccessfulDeploy(req.ServerID, req.BinaryName)
 		if err != nil {
@@ -89,8 +90,8 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	defer client.Close()
 	deployLog.WriteString(fmt.Sprintf("[%s] SSH连接成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
-	// opentraffic-control-linux-amd64 算法包走 tar 包部署分支
-	if req.BinaryName == "opentraffic-control-linux-amd64" {
+	// opentraffic-control 算法包走 tar 包部署分支
+	if req.BinaryName == "opentraffic-control" {
 		return s.deployTarPackage(client, server, req, record, &deployLog)
 	}
 
@@ -215,10 +216,31 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	return record, nil
 }
 
-// deployTarPackage 部署 tar 包资源（opentraffic-control-linux-amd64）
+// deployTarPackage 部署 tar 包资源（opentraffic-control）
 func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Server, req *DeployRequest, record *model.DeployRecord, deployLog *strings.Builder) (*model.DeployRecord, error) {
-	const tarFileName = "opentraffic-control-linux-amd64.tar"
-	const packageDir = "ops/opentraffic-control"
+	const packageDir = "opentraffic-control"
+
+	// 探测远程服务器架构并选择对应 tar 包
+	arch, err := detectRemoteArch(client)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 探测远程架构失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to detect remote architecture: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 远程架构: %s\n", time.Now().Format("2006-01-02 15:04:05"), arch))
+
+	tarFileName, err := getControlTarFileName(arch)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 不支持的架构: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, err
+	}
+	if !assets.HasBinary(tarFileName) {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 嵌入式 tar 包不存在: %s\n", tarFileName))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("tar package not found: %s", tarFileName)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 使用 tar 包: %s\n", time.Now().Format("2006-01-02 15:04:05"), tarFileName))
 
 	remoteDir := filepath.Join(server.DeployPath, packageDir)
 	remoteTarPath := filepath.Join(remoteDir, tarFileName)
@@ -257,8 +279,21 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	deployLog.WriteString(fmt.Sprintf("[%s] 上传 tar 包成功: %s (%d bytes)\n",
 		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(tarData)))
 
+	// 检测 tar 包是否存在单一顶层目录，若存在则剥离，确保内容直接落到 remoteDir 下
+	stripOpt := ""
+	if root, ok := tarHasSingleRootDir(tarData); ok {
+		stripOpt = "--strip-components=1"
+		deployLog.WriteString(fmt.Sprintf("[%s] tar 包存在单一顶层目录 %s，解压时剥离\n",
+			time.Now().Format("2006-01-02 15:04:05"), root))
+	}
+
 	// 解压 tar 包
-	extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
+	extractParts := []string{fmt.Sprintf("cd %s", remoteDir), "&&", "tar", "-xf", tarFileName}
+	if stripOpt != "" {
+		extractParts = append(extractParts, stripOpt)
+	}
+	extractParts = append(extractParts, "&&", "rm", "-f", tarFileName)
+	extractCmd := strings.Join(extractParts, " ")
 	if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
@@ -278,6 +313,50 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	return record, nil
 }
 
+// getControlTarFileName 根据远程架构生成 opentraffic-control tar 包文件名
+func getControlTarFileName(arch string) (string, error) {
+	suffix, ok := archToBinarySuffix[strings.ToLower(strings.TrimSpace(arch))]
+	if !ok {
+		return "", fmt.Errorf("unsupported architecture: %s", arch)
+	}
+	return fmt.Sprintf("opentraffic-control-%s.tar", suffix), nil
+}
+
+// tarHasSingleRootDir 检查 tar 包是否只有一个顶层目录；若是，返回该目录名
+func tarHasSingleRootDir(data []byte) (string, bool) {
+	r := tar.NewReader(bytes.NewReader(data))
+	root := ""
+	for {
+		h, err := r.Next()
+		if err == io.EOF {
+			break
+		}
+		if err != nil {
+			return "", false
+		}
+		name := strings.TrimPrefix(h.Name, "./")
+		if root == "" {
+			if h.Typeflag == tar.TypeDir {
+				if !strings.HasSuffix(name, "/") {
+					name += "/"
+				}
+				root = name
+				continue
+			}
+			idx := strings.Index(name, "/")
+			if idx == -1 {
+				return "", false
+			}
+			root = name[:idx+1]
+			continue
+		}
+		if !strings.HasPrefix(name, root) {
+			return "", false
+		}
+	}
+	return root, root != ""
+}
+
 // updateRecordFailed 更新部署记录为失败
 func (s *DeployService) updateRecordFailed(id int, log string) {
 	_ = s.deployRecordRepo.UpdateStatus(id, model.DeployStatusFailed, log)
@@ -286,7 +365,12 @@ func (s *DeployService) updateRecordFailed(id int, log string) {
 // UndeployRequest 卸载请求
 type UndeployRequest struct {
 	ServerID   string `json:"server_id" binding:"required"`
-	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control-linux-amd64"`
+	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control"`
+}
+
+// isLegacyControlName 兼容旧记录中使用的 opentraffic-control-linux-amd64 名称
+func isLegacyControlName(binaryName string) bool {
+	return binaryName == "opentraffic-control-linux-amd64"
 }
 
 // Undeploy 执行卸载
@@ -304,10 +388,14 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 	}
 	defer client.Close()
 
-	// opentraffic-control-linux-amd64 算法包卸载：直接删除整个目录
-	if req.BinaryName == "opentraffic-control-linux-amd64" {
-		remoteDir := filepath.Join(server.DeployPath, "ops/opentraffic-control")
+	// opentraffic-control 算法包卸载：先停止服务，再删除整个目录
+	if req.BinaryName == "opentraffic-control" || isLegacyControlName(req.BinaryName) {
+		_ = s.serverService.StopService(req.ServerID, "opentraffic-control")
+		remoteDir := filepath.Join(server.DeployPath, "opentraffic-control")
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
+		// 同时兼容旧路径
+		oldRemoteDir := filepath.Join(server.DeployPath, "ops/opentraffic-control")
+		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", oldRemoteDir))
 		if err := s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, req.BinaryName); err != nil {
 			return fmt.Errorf("undeploy succeeded but failed to delete record: %w", err)
 		}
