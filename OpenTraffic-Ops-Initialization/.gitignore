@@ -45,6 +45,7 @@ backend/data/
 
 # Large container images (exceeds 256MB git limit)
 backend/pkg/assets/images/*.tar
+backend/pkg/assets/images/*.tar.gz
 backend/pkg/assets/images/opentraffic-ops*
 
 # Temporary files
