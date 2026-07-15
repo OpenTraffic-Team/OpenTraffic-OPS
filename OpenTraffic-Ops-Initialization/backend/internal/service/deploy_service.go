@@ -396,9 +396,9 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 		// 同时兼容旧路径
 		oldRemoteDir := filepath.Join(server.DeployPath, "ops/opentraffic-control")
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", oldRemoteDir))
-		if err := s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, req.BinaryName); err != nil {
-			return fmt.Errorf("undeploy succeeded but failed to delete record: %w", err)
-		}
+		// 同时删除新名称与旧名称（旧版本使用过 opentraffic-control-linux-amd64）的部署记录
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-control")
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-control-linux-amd64")
 		return nil
 	}
 

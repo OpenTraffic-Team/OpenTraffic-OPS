@@ -261,7 +261,7 @@ var controlServiceConfig = struct {
 	PidFileName string
 }{
 	DirName:        "opentraffic-control",
-	StartScript:    "start_algorithm.sh",
+	StartScript:    "start_algo.sh",
 	ProcessPattern: "run_algorithms.py",
 	PidFileName:    "opentraffic-control.pid",
 }
