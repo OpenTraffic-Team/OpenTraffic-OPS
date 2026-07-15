@@ -678,9 +678,11 @@ async function handleUndeployService(serverId: string, software: string) {
     )
     await serverStore.undeploy(serverId, software)
     ElMessage.success(`${software} 卸载成功`)
-    // 刷新部署状态和服务状态
+    // 刷新部署状态并清空本地服务状态，使界面立即显示"未部署"
     await loadServerDeployedSoftwares(serverId)
-    await refreshServiceStatus(serverId, software)
+    if (serviceStatuses.value[serverId]) {
+      delete serviceStatuses.value[serverId][software]
+    }
   } catch (error: any) {
     if (error !== 'cancel') {
       ElMessage.error(`卸载失败: ${error?.message || '未知错误'}`)
@@ -694,6 +696,9 @@ function getServiceStatus(serverId: string, software: string): string {
 }
 
 function getServiceStatusType(serverId: string, software: string): string {
+  if (!isDeployed(serverId, software)) {
+    return 'info'
+  }
   const status = getServiceStatus(serverId, software)
   const map: Record<string, string> = {
     running: 'success',
@@ -704,7 +709,7 @@ function getServiceStatusType(serverId: string, software: string): string {
 }
 
 function getServiceStatusLabel(serverId: string, software: string): string {
-  if (software === 'opentraffic-control' && !isDeployed(serverId, software)) {
+  if (!isDeployed(serverId, software)) {
     return '未部署'
   }
   const status = getServiceStatus(serverId, software)
@@ -717,6 +722,9 @@ function getServiceStatusLabel(serverId: string, software: string): string {
 }
 
 function getServiceStatusClass(serverId: string, software: string): string {
+  if (!isDeployed(serverId, software)) {
+    return 'status-stopped'
+  }
   const status = getServiceStatus(serverId, software)
   return `status-${status}`
 }
