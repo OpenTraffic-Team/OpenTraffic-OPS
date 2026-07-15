@@ -301,6 +301,15 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
+	// 为启动脚本赋予可执行权限
+	startScriptPath := filepath.Join(remoteDir, controlServiceConfig.StartScript)
+	chmodCmd := fmt.Sprintf("chmod +x %s", startScriptPath)
+	if _, err := client.Execute(chmodCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 设置启动脚本可执行权限失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 设置启动脚本可执行权限: %s\n", time.Now().Format("2006-01-02 15:04:05"), startScriptPath))
+	}
+
 	// 更新部署记录为成功
 	deployLog.WriteString(fmt.Sprintf("[%s] 部署完成\n", time.Now().Format("2006-01-02 15:04:05")))
 	record.Status = string(model.DeployStatusSuccess)
