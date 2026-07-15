@@ -497,8 +497,8 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 func (s *ServerService) getControlServiceStatus(client *ssh.Client, deployPath string) (string, error) {
 	pidFile := filepath.Join(deployPath, controlServiceConfig.DirName, controlServiceConfig.PidFileName)
 	checkCmd := fmt.Sprintf(
-		"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f %s >/dev/null 2>&1; then echo running; else echo stopped; fi",
-		pidFile, pidFile, controlServiceConfig.ProcessPattern,
+		"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '[r]un_algorithms.py' >/dev/null 2>&1; then echo running; else echo stopped; fi",
+		pidFile, pidFile,
 	)
 	output, err := client.Execute(checkCmd)
 	if err != nil {
@@ -565,12 +565,12 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
 	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
 
-	// 先停止可能已存在的进程，避免重复启动
-	_, _ = client.Execute(fmt.Sprintf("pkill -f %s 2>/dev/null || true", controlServiceConfig.ProcessPattern))
+	// 先停止可能已存在的进程，避免重复启动；使用 [r] 模式避免 pkill 匹配自身
+	_, _ = client.Execute("pkill -f '[r]un_algorithms.py' 2>/dev/null || true")
 
 	// 启动脚本内部已后台运行；执行后等待进程拉起并写入 pid 文件
-	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f %s > %s",
-		deployDir, controlServiceConfig.StartScript, controlServiceConfig.ProcessPattern, pidFile)
+	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f '[r]un_algorithms.py' > %s",
+		deployDir, controlServiceConfig.StartScript, pidFile)
 	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
 		return fmt.Errorf("failed to start control service: %w", err)
 	}
@@ -619,8 +619,8 @@ func (s *ServerService) stopControlService(client *ssh.Client, deployPath string
 	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
 	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
 	stopCmd := fmt.Sprintf(
-		"if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f %s 2>/dev/null || true",
-		pidFile, pidFile, pidFile, controlServiceConfig.ProcessPattern,
+		"if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f '[r]un_algorithms.py' 2>/dev/null || true",
+		pidFile, pidFile, pidFile,
 	)
 	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
 		return fmt.Errorf("failed to stop control service: %w", err)
