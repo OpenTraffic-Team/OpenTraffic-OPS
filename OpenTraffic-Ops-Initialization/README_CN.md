@@ -129,13 +129,14 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - SSH 连接测试
 - 服务器列表展示服务状态（proxy / monitor / control）
 - 展开行查看已部署服务详情
-- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务；control 算法包支持启动 / 停止 / 重启 / 卸载
+- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务；control 算法包支持启动 / 停止 / 重启 / 配置 / 卸载，配置路径为 `{deploy_path}/opentraffic-control/config/mq_config.json`
 
 ![服务器管理](images/image-1.png)
 
 ### 📦 远程部署
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
 - 部署 `opentraffic-control` 算法包（tar 压缩包）到远程服务器，自动识别架构（amd64 / arm64 / loong64），支持版本记录
+- **龙芯 LoongArch64**：采用 Python 环境包（`py315-loong.tar.gz`）与算法代码包（`opentraffic-control-linux-loong64.tar`）分离部署，Python 环境固定解压到 `/opt/opentraffic/py315`，首次自动部署，后续只更新算法代码并在板子上执行 `build/build_loongarch.sh` 编译
 - 部署二进制文件时可选同时部署配置文件
 - 支持加载默认配置模板
 - 二进制文件防重复部署检测；算法包允许重复部署并保留版本历史
@@ -316,6 +317,12 @@ docker run --rm \
 - 检查 SSH 用户对部署路径是否有读写权限
 - 确认部署路径所在磁盘有足够空间
 - 检查目标服务器的 SELinux 或 AppArmor 限制
+
+### 龙芯 LoongArch64 控制服务启动失败
+- 确认首次部署时 `/opt/opentraffic/py315/bin/python3` 已存在
+- 检查 `config/mq_config.json` 中的 Redis 地址、端口、密码是否正确
+- 查看 `{deploy_path}/opentraffic-control/run.log` 中的具体错误
+- 板载编译需要目标服务器安装 gcc/make 等编译工具
 
 ### 组件容器启动失败（Permission denied）
 - 使用绑定挂载时，确保宿主机目录的属主与容器默认用户 UID 一致

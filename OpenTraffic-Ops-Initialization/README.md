@@ -129,13 +129,14 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - SSH connection test
 - Server list displays service status (proxy / monitor / control)
 - Expandable rows to view deployed service details
-- Supported operations: start / stop / restart / configure / uninstall remote services; control package supports start / stop / restart / uninstall
+- Supported operations: start / stop / restart / configure / uninstall remote services; control package supports start / stop / restart / configure / uninstall, with config path `{deploy_path}/opentraffic-control/config/mq_config.json`
 
 ![Server Management](images/image-1.png)
 
 ### 📦 Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
 - Deploy the `opentraffic-control` algorithm package (tar archive) to remote servers with architecture auto-detection (amd64 / arm64 / loong64) and version tracking
+- **LoongArch64 (龙芯)**: uses a two-package model — Python environment (`py315-loong.tar.gz`) is extracted once to `/opt/opentraffic/py315`, while the algorithm code package (`opentraffic-control-linux-loong64.tar`) is updated incrementally and compiled on the board via `build/build_loongarch.sh`
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
 - Duplicate deployment detection for binaries; algorithm packages allow repeated deployments with version history
@@ -316,6 +317,12 @@ docker run --rm \
 - Check if SSH user has read/write permissions for deployment path
 - Confirm deployment path disk has sufficient space
 - Check target server's SELinux or AppArmor restrictions
+
+### LoongArch64 control service fails to start
+- Confirm `/opt/opentraffic/py315/bin/python3` exists after first deployment
+- Verify Redis address, port and password in `config/mq_config.json`
+- Check `{deploy_path}/opentraffic-control/run.log` for detailed errors
+- On-board compilation requires gcc/make and other build tools on the target server
 
 ### Component container start failed (Permission denied)
 - When using bind mounts, ensure host directory owner matches container default user UID
