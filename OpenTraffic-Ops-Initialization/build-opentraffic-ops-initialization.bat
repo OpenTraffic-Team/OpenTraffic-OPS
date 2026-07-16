@@ -50,6 +50,23 @@ for %%a in (amd64 arm64 loong64) do (
     )
 )
 
+:: 拷贝龙芯 Python 环境包与 control 默认配置（如存在）
+set "SRC_PY315=..\py315-loong.tar.gz"
+set "DST_PY315=backend\pkg\assets\images\py315-loong.tar.gz"
+if exist "!SRC_PY315!" (
+    xcopy /y /q "!SRC_PY315!" "backend\pkg\assets\images\"
+) else if not exist "!DST_PY315!" (
+    echo [WARN] py315-loong.tar.gz not found, skipping copy
+)
+
+set "SRC_MQ_CONFIG=..\mq_config.json"
+set "DST_MQ_CONFIG=backend\pkg\assets\images\mq_config.json"
+if exist "!SRC_MQ_CONFIG!" (
+    xcopy /y /q "!SRC_MQ_CONFIG!" "backend\pkg\assets\images\"
+) else if not exist "!DST_MQ_CONFIG!" (
+    echo [WARN] mq_config.json not found, skipping copy
+)
+
 for %%a in (amd64 arm64 loong64) do (
     set "SRC_OPS=..\OpenTraffic-Ops\backend\opentraffic-ops-linux-%%a"
     set "DST_OPS=backend\pkg\assets\images\opentraffic-ops-linux-%%a"
