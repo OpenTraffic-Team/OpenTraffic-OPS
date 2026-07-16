@@ -63,7 +63,6 @@
                           <el-icon><RefreshRight /></el-icon>重启
                         </button>
                         <button
-                          v-if="sw !== 'opentraffic-control'"
                           class="action-btn btn-config"
                           @click="openServiceConfig(row, sw)"
                         >
@@ -239,7 +238,14 @@
         <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'" label="版本号">
           <el-input v-model="deployForm.version" placeholder="如：v1.0.0（留空则自动生成时间戳版本）" />
         </el-form-item>
-        <template v-if="deployForm.binary_name !== 'opentraffic-control'">
+        <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'">
+          <el-alert type="info" :closable="false" show-icon>
+            <template #title>
+              龙芯 LoongArch64 首次部署会自动上传 Python 环境到 /opt/opentraffic/py315，后续只更新算法代码并板载编译
+            </template>
+          </el-alert>
+        </el-form-item>
+        <template>
           <el-form-item label="同时配置">
             <el-switch v-model="deployWithConfig" active-text="是" inactive-text="否" />
           </el-form-item>
@@ -327,10 +333,11 @@
           <el-select v-model="configSoftwareName" placeholder="选择软件" style="width: 100%" @change="onConfigSoftwareChange" popper-class="light-select-dropdown">
             <el-option label="opentraffic-ops-proxy" value="opentraffic-ops-proxy" />
             <el-option label="opentraffic-ops" value="opentraffic-ops" />
+            <el-option label="opentraffic-control" value="opentraffic-control" />
           </el-select>
         </el-form-item>
         <el-form-item>
-          <div class="config-path-hint">远程路径：~/.{{ configSoftwareName }}/{{ configFileNameMap[configSoftwareName] || 'config.json' }}</div>
+          <div class="config-path-hint">{{ getConfigPathHint() }}</div>
         </el-form-item>
         <el-form-item>
           <el-input
@@ -408,6 +415,13 @@ const serverDeployedMap = ref<Record<string, Set<string>>>({})
 const configFileNameMap: Record<string, string> = {
   'opentraffic-ops-proxy': 'config.json',
   'opentraffic-ops': 'config.yaml'
+}
+
+function getConfigPathHint(): string {
+  if (configSoftwareName.value === 'opentraffic-control') {
+    return `远程路径：${currentServer.value?.deploy_path || '/opt/rtm'}/opentraffic-control/config/mq_config.json`
+  }
+  return `远程路径：~/.${configSoftwareName.value}/${configFileNameMap[configSoftwareName.value] || 'config.json'}`
 }
 
 onMounted(() => {
@@ -547,7 +561,7 @@ async function loadDeployedSoftwares(serverId: string) {
 }
 
 async function loadDefaultDeployConfig() {
-  if (!deployForm.binary_name || deployForm.binary_name === 'opentraffic-control') return
+  if (!deployForm.binary_name) return
   try {
     const content = await serverStore.getDefaultSoftwareConfig(deployForm.binary_name)
     deployConfigContent.value = content
