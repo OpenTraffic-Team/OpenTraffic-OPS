@@ -168,9 +168,9 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 设置可执行权限成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
-	// 6.5 为部署的软件创建/更新配置文件
+	// 6.5 为部署的软件创建/更新配置文件（opentraffic-control 在 tar 包部署分支中单独处理）
 	meta, hasMeta := softwareConfigMeta[req.BinaryName]
-	if hasMeta {
+	if hasMeta && !isControlService(req.BinaryName) {
 		configDirCmd := fmt.Sprintf("eval echo %s", meta.ConfigDir)
 		configDir, _ := client.Execute(configDirCmd)
 		configDir = strings.TrimSpace(configDir)
@@ -242,6 +242,13 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 使用 tar 包: %s\n", time.Now().Format("2006-01-02 15:04:05"), tarFileName))
 
+	// 龙芯架构需确保 Python 环境已部署
+	if isLoongArch(arch) {
+		if err := s.ensureLoongArchPythonEnv(client, deployLog, record); err != nil {
+			return record, err
+		}
+	}
+
 	remoteDir := filepath.Join(server.DeployPath, packageDir)
 	remoteTarPath := filepath.Join(remoteDir, tarFileName)
 
@@ -300,6 +307,36 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 		return record, fmt.Errorf("failed to extract tar package: %w", err)
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// 写入用户自定义配置（mq_config.json）
+	if req.ConfigContent != nil && *req.ConfigContent != "" {
+		configDir := filepath.Join(remoteDir, "config")
+		configPath := filepath.Join(configDir, "mq_config.json")
+		mkdirConfigCmd := fmt.Sprintf("mkdir -p %s", configDir)
+		if _, err := client.Execute(mkdirConfigCmd); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[WARN] 创建配置目录失败: %v\n", err))
+		} else if err := client.WriteFile([]byte(*req.ConfigContent), configPath); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[WARN] 写入 mq_config.json 失败: %v\n", err))
+		} else {
+			deployLog.WriteString(fmt.Sprintf("[%s] 写入配置文件: %s\n", time.Now().Format("2006-01-02 15:04:05"), configPath))
+		}
+	}
+
+	// 龙芯架构：修补启动脚本使用绝对 Python 环境路径，并执行板载编译
+	if isLoongArch(arch) {
+		startScriptPath := filepath.Join(remoteDir, controlServiceConfig.StartScript)
+		patchCmd := fmt.Sprintf("if [ -f %s ]; then sed -i 's|source py315/bin/activate|source /opt/opentraffic/py315/bin/activate|g' %s; fi",
+			startScriptPath, startScriptPath)
+		if _, err := client.Execute(patchCmd); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[WARN] 修补启动脚本失败: %v\n", err))
+		} else {
+			deployLog.WriteString(fmt.Sprintf("[%s] 启动脚本已指向 /opt/opentraffic/py315\n", time.Now().Format("2006-01-02 15:04:05")))
+		}
+
+		if err := s.runLoongArchBuild(client, remoteDir, deployLog, record); err != nil {
+			return record, err
+		}
+	}
 
 	// 为启动脚本赋予可执行权限
 	startScriptPath := filepath.Join(remoteDir, controlServiceConfig.StartScript)
@@ -369,6 +406,92 @@ func tarHasSingleRootDir(data []byte) (string, bool) {
 // updateRecordFailed 更新部署记录为失败
 func (s *DeployService) updateRecordFailed(id int, log string) {
 	_ = s.deployRecordRepo.UpdateStatus(id, model.DeployStatusFailed, log)
+}
+
+// isLoongArch 判断是否为龙芯 LoongArch64 架构
+func isLoongArch(arch string) bool {
+	return strings.ToLower(strings.TrimSpace(arch)) == "loongarch64"
+}
+
+// ensureLoongArchPythonEnv 确保龙芯 Python 环境已部署到 /opt/opentraffic/py315
+func (s *DeployService) ensureLoongArchPythonEnv(client *ssh.Client, deployLog *strings.Builder, record *model.DeployRecord) error {
+	const (
+		pythonPath = "/opt/opentraffic/py315/bin/python3"
+		packageName = "py315-loong.tar.gz"
+		remoteBase  = "/opt/opentraffic"
+	)
+
+	checkCmd := fmt.Sprintf("test -f %s && echo exists || echo missing", pythonPath)
+	output, err := client.Execute(checkCmd)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 检查 Python 环境失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to check python env: %w", err)
+	}
+	if strings.TrimSpace(output) == "exists" {
+		deployLog.WriteString(fmt.Sprintf("[%s] Python 环境已存在: %s\n",
+			time.Now().Format("2006-01-02 15:04:05"), pythonPath))
+		return nil
+	}
+
+	if !assets.HasBinary(packageName) {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 嵌入式 Python 环境包不存在: %s\n", packageName))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("embedded python env package not found: %s", packageName)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] Python 环境不存在，开始部署 %s\n",
+		time.Now().Format("2006-01-02 15:04:05"), packageName))
+
+	reader, err := assets.GetBinaryReader(packageName)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to read python env package: %w", err)
+	}
+	defer reader.Close()
+
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 Python 环境包内容失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to read python env content: %w", err)
+	}
+
+	remoteTarPath := filepath.Join(remoteBase, packageName)
+	if err := client.UploadFile(bytes.NewReader(data), remoteTarPath, int64(len(data))); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to upload python env package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 上传 Python 环境包成功: %s (%d bytes)\n",
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(data)))
+
+	extractCmd := fmt.Sprintf("mkdir -p %s && cd %s && tar -xzf %s && rm -f %s",
+		remoteBase, remoteBase, packageName, packageName)
+	if _, err := client.ExecuteWithTimeout(extractCmd, 300*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to extract python env package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] Python 环境部署完成: %s\n",
+		time.Now().Format("2006-01-02 15:04:05"), pythonPath))
+	return nil
+}
+
+// runLoongArchBuild 执行龙芯板载编译
+func (s *DeployService) runLoongArchBuild(client *ssh.Client, remoteDir string, deployLog *strings.Builder, record *model.DeployRecord) error {
+	buildCmd := fmt.Sprintf("cd %s && bash build/build_loongarch.sh", remoteDir)
+	deployLog.WriteString(fmt.Sprintf("[%s] 开始板载编译: %s\n",
+		time.Now().Format("2006-01-02 15:04:05"), buildCmd))
+	output, err := client.ExecuteWithTimeout(buildCmd, 600*time.Second)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 板载编译失败: %v\n%s\n", err, output))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to run loongarch build: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 板载编译完成\n%s\n",
+		time.Now().Format("2006-01-02 15:04:05"), output))
+	return nil
 }
 
 // UndeployRequest 卸载请求
