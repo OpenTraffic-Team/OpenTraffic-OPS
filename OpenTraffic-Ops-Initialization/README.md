@@ -136,7 +136,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 ### 📦 Remote Deployment
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
 - Deploy the `opentraffic-control` algorithm package (tar archive) to remote servers with architecture auto-detection (amd64 / arm64 / loong64) and version tracking
-- **LoongArch64 (龙芯)**: uses a two-package model — Python environment (`py315-loong.tar.gz`) is extracted once to `/opt/opentraffic/py315`, while the algorithm package (`opentraffic-control-linux-loong64.tar`, pre-compiled .so) is updated incrementally and runs directly after extraction, no on-board compilation required
+- **LoongArch64 (龙芯)**: uses a two-package model — Python environment (`trafficlight-loong64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-loong64.tar`, pre-compiled .so) is updated incrementally; runs directly after extraction, no on-board compilation required
 - **ARM aarch64**: uses a two-package model — Python environment (`trafficlight-arm64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-arm64.tar`) is updated incrementally; runs directly after extraction, no conda / pip / build tools required
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
@@ -320,7 +320,8 @@ docker run --rm \
 - Check target server's SELinux or AppArmor restrictions
 
 ### LoongArch64 control service fails to start
-- Confirm `/opt/opentraffic/py315/bin/python3` exists after first deployment
+- Confirm `{deploy_path}/opentraffic-control/trafficlight_env/bin/python3` exists after first deployment
+- Run `file trafficlight_env/bin/python3` and confirm it shows a LoongArch ELF binary; a mismatch means the wrong env package was used
 - Verify Redis address, port and password in `config/mq_config.json`
 - Check `{deploy_path}/opentraffic-control/run.log` for detailed errors
 
