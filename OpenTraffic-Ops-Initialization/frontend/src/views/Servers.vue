@@ -911,8 +911,9 @@ function getStatusLabel(status: string) {
 /* 服务器卡片网格 */
 .server-grid-wrap {
   flex: 1;
-  overflow: auto;
-  margin: 0 24px 24px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 0 24px 24px;
 }
 
 .card-col {
@@ -923,12 +924,14 @@ function getStatusLabel(status: string) {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
+  overflow: hidden;
   padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
   gap: 12px;
   height: 100%;
+  box-sizing: border-box;
   transition: all 0.3s ease;
 }
 
