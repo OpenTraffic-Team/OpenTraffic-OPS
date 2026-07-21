@@ -137,7 +137,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 选择目标服务器，部署内置二进制文件（`opentraffic-ops-proxy`、`opentraffic-ops`）
 - 部署 `opentraffic-control` 算法包（tar 压缩包）到远程服务器，自动识别架构（amd64 / arm64 / loong64），支持版本记录
 - **龙芯 LoongArch64**：采用 Python 环境包（`py315-loong.tar.gz`）与算法包（`opentraffic-control-linux-loong64.tar`，预编译 .so）分离部署，Python 环境固定解压到 `/opt/opentraffic/py315`，首次自动部署，后续只更新算法包，解压即用，无需板载编译
-- **ARM aarch64**：采用 Python 环境包（`py315-arm.tar.gz`，解压为 `trafficlight_env/`，含全部依赖）与算法包（`opentraffic-control-linux-arm64.tar`）分离部署，Python 环境解压到部署目录 `{deploy_path}/opentraffic-control/trafficlight_env`，首次自动部署，后续只更新算法包，解压即用，无需 conda / pip / 编译环境
+- **ARM aarch64**：采用 Python 环境包（`trafficlight-arm64.tar.gz`，解压为 `trafficlight_env/`，含全部依赖）与算法包（`opentraffic-control-linux-arm64.tar`）分离部署，Python 环境解压到部署目录 `{deploy_path}/opentraffic-control/trafficlight_env`，首次自动部署，后续只更新算法包，解压即用，无需 conda / pip / 编译环境
 - 部署二进制文件时可选同时部署配置文件
 - 支持加载默认配置模板
 - 二进制文件防重复部署检测；算法包允许重复部署并保留版本历史

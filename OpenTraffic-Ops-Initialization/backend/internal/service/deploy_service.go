@@ -424,7 +424,7 @@ func isARMArch(arch string) bool {
 
 // ensureARMVenv 确保 ARM trafficlight_env 虚拟环境已解压到部署目录
 func (s *DeployService) ensureARMVenv(client *ssh.Client, remoteDir string, deployLog *strings.Builder, record *model.DeployRecord) error {
-	const packageName = "py315-arm.tar.gz"
+	const packageName = "trafficlight-arm64.tar.gz"
 	pythonPath := filepath.Join(remoteDir, "trafficlight_env", "bin", "python3")
 
 	checkCmd := fmt.Sprintf("test -f %s && echo exists || echo missing", pythonPath)

@@ -137,7 +137,7 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Select target servers to deploy built-in binaries (`opentraffic-ops-proxy`, `opentraffic-ops`)
 - Deploy the `opentraffic-control` algorithm package (tar archive) to remote servers with architecture auto-detection (amd64 / arm64 / loong64) and version tracking
 - **LoongArch64 (龙芯)**: uses a two-package model — Python environment (`py315-loong.tar.gz`) is extracted once to `/opt/opentraffic/py315`, while the algorithm package (`opentraffic-control-linux-loong64.tar`, pre-compiled .so) is updated incrementally and runs directly after extraction, no on-board compilation required
-- **ARM aarch64**: uses a two-package model — Python environment (`py315-arm.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-arm64.tar`) is updated incrementally; runs directly after extraction, no conda / pip / build tools required
+- **ARM aarch64**: uses a two-package model — Python environment (`trafficlight-arm64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-arm64.tar`) is updated incrementally; runs directly after extraction, no conda / pip / build tools required
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
 - Duplicate deployment detection for binaries; algorithm packages allow repeated deployments with version history

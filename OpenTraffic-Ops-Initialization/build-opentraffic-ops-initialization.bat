@@ -60,12 +60,12 @@ if exist "!SRC_PY315!" (
 )
 
 :: 拷贝 ARM Python 环境包（如存在）
-set "SRC_PY315_ARM=..\py315-arm.tar.gz"
-set "DST_PY315_ARM=backend\pkg\assets\images\py315-arm.tar.gz"
+set "SRC_PY315_ARM=..\trafficlight-arm64.tar.gz"
+set "DST_PY315_ARM=backend\pkg\assets\images\trafficlight-arm64.tar.gz"
 if exist "!SRC_PY315_ARM!" (
     xcopy /y /q "!SRC_PY315_ARM!" "backend\pkg\assets\images\"
 ) else if not exist "!DST_PY315_ARM!" (
-    echo [WARN] py315-arm.tar.gz not found, skipping copy
+    echo [WARN] trafficlight-arm64.tar.gz not found, skipping copy
 )
 
 set "SRC_MQ_CONFIG=..\mq_config.json"
