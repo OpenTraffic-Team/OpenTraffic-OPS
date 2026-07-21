@@ -17,8 +17,18 @@
     <!-- 服务器卡片网格 -->
     <div class="server-grid-wrap" v-loading="serverStore.loading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
       <el-empty v-if="!serverStore.loading && serverStore.servers.length === 0" description="暂无服务器，点击右上角新增" />
-      <div class="server-grid">
-        <div v-for="server in serverStore.servers" :key="server.id" class="server-card">
+      <el-row :gutter="20">
+        <el-col
+          v-for="server in serverStore.servers"
+          :key="server.id"
+          :xs="24"
+          :sm="12"
+          :md="8"
+          :lg="8"
+          :xl="6"
+          class="card-col"
+        >
+          <div class="server-card">
           <div class="server-card-head">
             <div class="server-title">
               <span class="server-name">{{ server.name }}</span>
@@ -135,8 +145,9 @@
               </div>
             </div>
           </div>
-        </div>
-      </div>
+          </div>
+        </el-col>
+      </el-row>
     </div>
 
     <!-- 新增/编辑服务器对话框 -->
@@ -904,21 +915,27 @@ function getStatusLabel(status: string) {
   margin: 0 24px 24px;
 }
 
-.server-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
-  gap: 16px;
+.card-col {
+  margin-bottom: 20px;
 }
 
 .server-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 12px;
+  height: 100%;
+  transition: all 0.3s ease;
+}
+
+.server-card:hover {
+  border-color: #d1d5db;
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
 }
 
 .server-card-head {
@@ -936,7 +953,7 @@ function getStatusLabel(status: string) {
 }
 
 .server-name {
-  font-size: 15px;
+  font-size: 17px;
   font-weight: 600;
   color: #1f2937;
   overflow: hidden;
