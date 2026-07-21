@@ -59,6 +59,15 @@ if exist "!SRC_PY315!" (
     echo [WARN] py315-loong.tar.gz not found, skipping copy
 )
 
+:: 拷贝 ARM Python 环境包（如存在）
+set "SRC_PY315_ARM=..\py315-arm.tar.gz"
+set "DST_PY315_ARM=backend\pkg\assets\images\py315-arm.tar.gz"
+if exist "!SRC_PY315_ARM!" (
+    xcopy /y /q "!SRC_PY315_ARM!" "backend\pkg\assets\images\"
+) else if not exist "!DST_PY315_ARM!" (
+    echo [WARN] py315-arm.tar.gz not found, skipping copy
+)
+
 set "SRC_MQ_CONFIG=..\mq_config.json"
 set "DST_MQ_CONFIG=backend\pkg\assets\images\mq_config.json"
 if exist "!SRC_MQ_CONFIG!" (
