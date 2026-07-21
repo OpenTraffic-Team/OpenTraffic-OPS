@@ -14,139 +14,128 @@
       </button>
     </div>
 
-    <!-- 服务器表格 -->
-    <div class="table-card" v-loading="serverStore.loading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
-      <div class="card-header">
-        <div class="header-title">
-          <div class="title-dot dot-cyan"></div>
-          <span>服务器列表</span>
-        </div>
-      </div>
-      <div class="table-body">
-        <el-table :data="serverStore.servers" class="dark-table" @expand-change="handleExpandChange">
-          <el-table-column type="expand" width="40">
-            <template #default="{ row }">
-              <div class="service-expand-panel">
-                <div class="service-expand-title">已部署服务</div>
-                <div class="service-list">
-                  <div v-for="sw in softwareList" :key="sw" class="service-card">
-                    <div class="service-card-header">
-                      <span class="service-card-name">{{ sw }}</span>
-                      <el-tag
-                        size="small"
-                        :type="getServiceStatusType(row.id, sw)"
-                        effect="dark"
-                      >
-                        {{ getServiceStatusLabel(row.id, sw) }}
-                      </el-tag>
-                    </div>
-                    <div class="service-card-actions">
-                      <template v-if="isDeployed(row.id, sw)">
-                        <button
-                          class="action-btn btn-start"
-                          :disabled="getServiceStatus(row.id, sw) === 'running'"
-                          @click="handleStartService(row.id, sw)"
-                        >
-                          <el-icon><VideoPlay /></el-icon>启动
-                        </button>
-                        <button
-                          class="action-btn btn-stop"
-                          :disabled="getServiceStatus(row.id, sw) !== 'running'"
-                          @click="handleStopService(row.id, sw)"
-                        >
-                          <el-icon><VideoPause /></el-icon>停止
-                        </button>
-                        <button
-                          class="action-btn btn-restart"
-                          @click="handleRestartService(row.id, sw)"
-                        >
-                          <el-icon><RefreshRight /></el-icon>重启
-                        </button>
-                        <button
-                          class="action-btn btn-config"
-                          @click="openServiceConfig(row, sw)"
-                        >
-                          <el-icon><Setting /></el-icon>配置
-                        </button>
-                        <button
-                          class="action-btn btn-undeploy"
-                          @click="handleUndeployService(row.id, sw)"
-                        >
-                          <el-icon><Delete /></el-icon>卸载
-                        </button>
-                      </template>
-                      <template v-else>
-                        <span class="not-deployed-tag">未部署</span>
-                      </template>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </template>
-          </el-table-column>
-          <el-table-column prop="name" label="名称" width="160" />
-          <el-table-column label="主机" width="260">
-            <template #default="{ row }">
-              <span class="host-text">{{ row.host }}:{{ row.port }}</span>
-            </template>
-          </el-table-column>
-          <el-table-column prop="username" label="用户名" width="160" />
-          <el-table-column label="认证方式" width="160">
-            <template #default="{ row }">
-              <el-tag size="small" :type="row.auth_type === 'password' ? 'warning' : 'success'" effect="dark">
-                {{ row.auth_type === 'password' ? '密码' : '密钥' }}
+    <!-- 服务器卡片网格 -->
+    <div class="server-grid-wrap" v-loading="serverStore.loading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
+      <el-empty v-if="!serverStore.loading && serverStore.servers.length === 0" description="暂无服务器，点击右上角新增" />
+      <div class="server-grid">
+        <div v-for="server in serverStore.servers" :key="server.id" class="server-card">
+          <div class="server-card-head">
+            <div class="server-title">
+              <span class="server-name">{{ server.name }}</span>
+              <el-tag size="small" :type="server.auth_type === 'password' ? 'warning' : 'success'" effect="dark">
+                {{ server.auth_type === 'password' ? '密码' : '密钥' }}
               </el-tag>
-            </template>
-          </el-table-column>
-          <el-table-column prop="deploy_path" label="部署路径" show-overflow-tooltip min-width="180" />
-          <el-table-column label="服务状态" width="300">
-            <template #default="{ row }">
-              <div class="service-status-row">
-                <div
-                  class="status-item"
-                  title="opentraffic-ops-proxy"
-                  @click="openServiceConfig(row, 'opentraffic-ops-proxy')"
-                >
-                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops-proxy')"></span>
-                  <span class="status-name">proxy</span>
+            </div>
+            <span class="host-text">{{ server.host }}:{{ server.port }}</span>
+          </div>
+          <div class="server-meta">
+            <span class="meta-item">用户 {{ server.username }}</span>
+            <span class="meta-item meta-path" :title="server.deploy_path">{{ server.deploy_path }}</span>
+          </div>
+          <div class="service-status-row">
+            <div
+              class="status-item"
+              title="opentraffic-ops-proxy"
+              @click="openServiceConfig(server, 'opentraffic-ops-proxy')"
+            >
+              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops-proxy')"></span>
+              <span class="status-name">proxy</span>
+            </div>
+            <div
+              class="status-item"
+              title="opentraffic-ops"
+              @click="openServiceConfig(server, 'opentraffic-ops')"
+            >
+              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops')"></span>
+              <span class="status-name">monitor</span>
+            </div>
+            <div
+              class="status-item"
+              title="opentraffic-control"
+            >
+              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-control')"></span>
+              <span class="status-name">control</span>
+            </div>
+          </div>
+          <div class="server-card-foot">
+            <div class="row-actions">
+              <button class="action-btn btn-edit" @click="openEditDialog(server)">
+                <el-icon><Edit /></el-icon>编辑
+              </button>
+              <button class="action-btn btn-test" @click="handleTest(server)">
+                <el-icon><Connection /></el-icon>测试
+              </button>
+              <button class="action-btn btn-deploy" @click="openDeployDialog(server)">
+                <el-icon><Upload /></el-icon>部署
+              </button>
+              <button class="action-btn btn-delete" @click="handleDelete(server)">
+                <el-icon><Delete /></el-icon>删除
+              </button>
+            </div>
+            <button class="expand-toggle" @click="toggleServerExpand(server)">
+              服务
+              <el-icon>
+                <ArrowUp v-if="expandedServers.has(server.id)" />
+                <ArrowDown v-else />
+              </el-icon>
+            </button>
+          </div>
+          <div v-if="expandedServers.has(server.id)" class="server-services">
+            <div class="service-list">
+              <div v-for="sw in softwareList" :key="sw" class="service-card">
+                <div class="service-card-header">
+                  <span class="service-card-name">{{ sw }}</span>
+                  <el-tag
+                    size="small"
+                    :type="getServiceStatusType(server.id, sw)"
+                    effect="dark"
+                  >
+                    {{ getServiceStatusLabel(server.id, sw) }}
+                  </el-tag>
                 </div>
-                <div
-                  class="status-item"
-                  title="opentraffic-ops"
-                  @click="openServiceConfig(row, 'opentraffic-ops')"
-                >
-                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-ops')"></span>
-                  <span class="status-name">monitor</span>
-                </div>
-                <div
-                  class="status-item"
-                  title="opentraffic-control"
-                >
-                  <span class="status-dot" :class="getServiceStatusClass(row.id, 'opentraffic-control')"></span>
-                  <span class="status-name">control</span>
+                <div class="service-card-actions">
+                  <template v-if="isDeployed(server.id, sw)">
+                    <button
+                      class="action-btn btn-start"
+                      :disabled="getServiceStatus(server.id, sw) === 'running'"
+                      @click="handleStartService(server.id, sw)"
+                    >
+                      <el-icon><VideoPlay /></el-icon>启动
+                    </button>
+                    <button
+                      class="action-btn btn-stop"
+                      :disabled="getServiceStatus(server.id, sw) !== 'running'"
+                      @click="handleStopService(server.id, sw)"
+                    >
+                      <el-icon><VideoPause /></el-icon>停止
+                    </button>
+                    <button
+                      class="action-btn btn-restart"
+                      @click="handleRestartService(server.id, sw)"
+                    >
+                      <el-icon><RefreshRight /></el-icon>重启
+                    </button>
+                    <button
+                      class="action-btn btn-config"
+                      @click="openServiceConfig(server, sw)"
+                    >
+                      <el-icon><Setting /></el-icon>配置
+                    </button>
+                    <button
+                      class="action-btn btn-undeploy"
+                      @click="handleUndeployService(server.id, sw)"
+                    >
+                      <el-icon><Delete /></el-icon>卸载
+                    </button>
+                  </template>
+                  <template v-else>
+                    <span class="not-deployed-tag">未部署</span>
+                  </template>
                 </div>
               </div>
-            </template>
-          </el-table-column>
-          <el-table-column label="操作" width="300">
-            <template #default="{ row }">
-              <div class="row-actions">
-                <button class="action-btn btn-edit" @click="openEditDialog(row)">
-                  <el-icon><Edit /></el-icon>编辑
-                </button>
-                <button class="action-btn btn-test" @click="handleTest(row)">
-                  <el-icon><Connection /></el-icon>测试
-                </button>
-                <button class="action-btn btn-deploy" @click="openDeployDialog(row)">
-                  <el-icon><Upload /></el-icon>部署
-                </button>
-                <button class="action-btn btn-delete" @click="handleDelete(row)">
-                  <el-icon><Delete /></el-icon>删除
-                </button>
-              </div>
-            </template>
-          </el-table-column>
-        </el-table>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -411,6 +400,7 @@ const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-c
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
+const expandedServers = ref<Set<string>>(new Set())
 
 const configFileNameMap: Record<string, string> = {
   'opentraffic-ops-proxy': 'config.json',
@@ -427,6 +417,9 @@ function getConfigPathHint(): string {
 onMounted(() => {
   serverStore.fetchServers().then(() => {
     fetchAllServiceStatuses()
+    for (const server of serverStore.servers) {
+      loadServerDeployedSoftwares(server.id)
+    }
   })
 })
 
@@ -816,12 +809,14 @@ async function handleRestartService(serverId: string, software: string) {
   }
 }
 
-async function handleExpandChange(row: Server, expandedRows: Server[]) {
-  const isExpanded = expandedRows.some(r => r.id === row.id)
-  if (isExpanded) {
-    await loadServerDeployedSoftwares(row.id)
-    await fetchAllServiceStatusesForServer(row.id)
+async function toggleServerExpand(server: Server) {
+  if (expandedServers.value.has(server.id)) {
+    expandedServers.value.delete(server.id)
+    return
   }
+  expandedServers.value.add(server.id)
+  await loadServerDeployedSoftwares(server.id)
+  await fetchAllServiceStatusesForServer(server.id)
 }
 
 async function fetchAllServiceStatusesForServer(serverId: string) {
@@ -902,49 +897,109 @@ function getStatusLabel(status: string) {
   color: #9ca3af;
 }
 
-/* 卡片式表格 */
-.table-card {
+/* 服务器卡片网格 */
+.server-grid-wrap {
+  flex: 1;
+  overflow: auto;
+  margin: 0 24px 24px;
+}
+
+.server-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+  gap: 16px;
+}
+
+.server-card {
   background: #ffffff;
   border: 1px solid #e5e7eb;
   border-radius: 16px;
-  overflow: hidden;
+  padding: 16px 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  flex: 1;
-  margin: 0 24px 24px;
   display: flex;
   flex-direction: column;
+  gap: 10px;
 }
 
-.card-header {
+.server-card-head {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 16px 20px;
-  border-bottom: 1px solid #f3f4f6;
-  flex-shrink: 0;
+  gap: 12px;
 }
 
-.header-title {
+.server-title {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 8px;
+  min-width: 0;
+}
+
+.server-name {
   font-size: 15px;
   font-weight: 600;
-  color: #374151;
+  color: #1f2937;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.title-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
+.server-meta {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 12px;
+  color: #9ca3af;
+  min-width: 0;
 }
 
-.dot-cyan { background: #06b6d4; box-shadow: 0 0 8px rgba(6, 182, 212, 0.4); }
+.meta-item {
+  white-space: nowrap;
+}
 
-.table-body {
-  padding: 0 4px 4px;
+.meta-path {
+  font-family: 'SF Mono', 'Consolas', monospace;
+  color: #6b7280;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   flex: 1;
-  overflow: auto;
+  min-width: 0;
+}
+
+.server-card-foot {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  border-top: 1px solid #f3f4f6;
+  padding-top: 10px;
+}
+
+.expand-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  border: none;
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+  border-radius: 6px;
+  padding: 4px 10px;
+  font-size: 11px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.expand-toggle:hover {
+  background: rgba(99, 102, 241, 0.2);
+}
+
+.server-services {
+  border-top: 1px solid #f3f4f6;
+  padding-top: 12px;
 }
 
 /* 操作按钮 */
@@ -1083,21 +1138,6 @@ function getStatusLabel(status: string) {
   font-size: 12px;
   color: #6b7280;
   font-family: 'SF Mono', 'Consolas', monospace;
-}
-
-/* 展开面板 */
-.service-expand-panel {
-  padding: 16px 20px;
-  background: #f9fafb;
-  border-radius: 8px;
-  margin: 4px 0;
-}
-
-.service-expand-title {
-  font-size: 13px;
-  font-weight: 600;
-  color: #374151;
-  margin-bottom: 12px;
 }
 
 .service-list {
