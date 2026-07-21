@@ -522,21 +522,6 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 
 // getControlServiceStatus 获取 opentraffic-control 运行状态
 func (s *ServerService) getControlServiceStatus(client *ssh.Client, deployPath string) (string, error) {
-	// 龙芯架构无 PID 文件，使用 ps 检测进程
-	arch, _ := detectRemoteArch(client)
-	if isLoongArch(arch) {
-		checkCmd := "ps aux | grep '[r]un_algorithms.py' >/dev/null 2>&1 && echo running || echo stopped"
-		output, err := client.Execute(checkCmd)
-		if err != nil {
-			return "unknown", nil
-		}
-		status := strings.TrimSpace(output)
-		if status == "running" {
-			return "running", nil
-		}
-		return "stopped", nil
-	}
-
 	pidFile := filepath.Join(deployPath, controlServiceConfig.DirName, controlServiceConfig.PidFileName)
 	checkCmd := fmt.Sprintf(
 		"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '[r]un_algorithms.py' >/dev/null 2>&1; then echo running; else echo stopped; fi",
@@ -610,31 +595,18 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	// 先停止可能已存在的进程，避免重复启动；使用 [r] 模式避免 pkill 匹配自身
 	_, _ = client.Execute("pkill -f '[r]un_algorithms.py' 2>/dev/null || true")
 
-	// 龙芯架构：启动脚本使用 /opt/opentraffic/py315 的 Python 环境，不写 PID 文件
 	arch, _ := detectRemoteArch(client)
-	if isLoongArch(arch) {
-		startScriptPath := filepath.Join(deployDir, controlServiceConfig.StartScript)
-		patchCmd := fmt.Sprintf("if [ -f %s ]; then sed -i 's|source py315/bin/activate|source /opt/opentraffic/py315/bin/activate|g' %s; fi",
-			startScriptPath, startScriptPath)
-		_, _ = client.Execute(patchCmd)
-
-		startCmd := fmt.Sprintf("cd %s && ./%s", deployDir, controlServiceConfig.StartScript)
-		if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
-			return fmt.Errorf("failed to start control service: %w", err)
-		}
-		return nil
-	}
 
 	// 启动脚本内部已后台运行；执行后等待进程拉起并写入 pid 文件
 	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f '[r]un_algorithms.py' > %s",
 		deployDir, controlServiceConfig.StartScript, pidFile)
 	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
 		// 附带 run.log 尾部，便于定位启动失败原因
-		if isARMArch(arch) {
+		if controlEnvPackage(arch) != "" {
 			venvPython := filepath.Join(deployDir, "trafficlight_env", "bin", "python3")
 			checkOut, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", venvPython))
 			if strings.TrimSpace(checkOut) != "exists" {
-				return fmt.Errorf("failed to start control service: ARM Python 环境缺失（%s 不存在），请重新部署 opentraffic-control 以自动安装 trafficlight_env", venvPython)
+				return fmt.Errorf("failed to start control service: Python 环境缺失（%s 不存在），请重新部署 opentraffic-control 以自动安装 trafficlight_env", venvPython)
 			}
 		}
 		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.Join(deployDir, "run.log")))
@@ -685,16 +657,6 @@ func (s *ServerService) StopService(id string, softwareName string) error {
 
 // stopControlService 停止 opentraffic-control
 func (s *ServerService) stopControlService(client *ssh.Client, deployPath string) error {
-	// 龙芯架构无 PID 文件，通过 ps 查找进程停止
-	arch, _ := detectRemoteArch(client)
-	if isLoongArch(arch) {
-		stopCmd := "kill $(ps aux | grep '[r]un_algorithms.py' | grep -v grep | awk '{print $2}') 2>/dev/null || true"
-		if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
-			return fmt.Errorf("failed to stop control service: %w", err)
-		}
-		return nil
-	}
-
 	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
 	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
 	stopCmd := fmt.Sprintf(
