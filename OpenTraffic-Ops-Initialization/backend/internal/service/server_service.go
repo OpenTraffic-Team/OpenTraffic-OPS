@@ -592,6 +592,20 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
 	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
 
+	// 启动前校验 mq_config.json，缺失或无效时阻止启动并给出引导
+	configPath := filepath.Join(deployDir, "config", "mq_config.json")
+	configData, err := client.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("配置文件 %s 不存在，请先在配置管理中填写并保存 mq_config.json 后再启动", configPath)
+	}
+	var mqConfig map[string]interface{}
+	if err := json.Unmarshal(configData, &mqConfig); err != nil {
+		return fmt.Errorf("配置文件 mq_config.json 不是合法的 JSON: %v，请在配置管理中修正后再启动", err)
+	}
+	if addr, ok := mqConfig["redis_addr"].(string); !ok || strings.TrimSpace(addr) == "" {
+		return fmt.Errorf("配置文件 mq_config.json 缺少 redis_addr，请在配置管理中填写 Redis 地址后再启动")
+	}
+
 	// 先停止可能已存在的进程，避免重复启动；使用 [r] 模式避免 pkill 匹配自身
 	_, _ = client.Execute("pkill -f '[r]un_algorithms.py' 2>/dev/null || true")
 
