@@ -629,6 +629,18 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f '[r]un_algorithms.py' > %s",
 		deployDir, controlServiceConfig.StartScript, pidFile)
 	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
+		// 附带 run.log 尾部，便于定位启动失败原因
+		if isARMArch(arch) {
+			venvPython := filepath.Join(deployDir, "trafficlight_env", "bin", "python3")
+			checkOut, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", venvPython))
+			if strings.TrimSpace(checkOut) != "exists" {
+				return fmt.Errorf("failed to start control service: ARM Python 环境缺失（%s 不存在），请重新部署 opentraffic-control 以自动安装 trafficlight_env", venvPython)
+			}
+		}
+		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.Join(deployDir, "run.log")))
+		if strings.TrimSpace(logTail) != "" {
+			return fmt.Errorf("failed to start control service: %w, run.log:\n%s", err, strings.TrimSpace(logTail))
+		}
 		return fmt.Errorf("failed to start control service: %w", err)
 	}
 	return nil
