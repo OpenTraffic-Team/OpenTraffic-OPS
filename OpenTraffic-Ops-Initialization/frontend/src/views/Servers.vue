@@ -29,6 +29,7 @@
           class="card-col"
         >
           <div class="server-card">
+            <div class="card-top">
           <div class="server-card-head">
             <div class="server-title">
               <span class="server-name">{{ server.name }}</span>
@@ -66,29 +67,6 @@
               <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-control')"></span>
               <span class="status-name">control</span>
             </div>
-          </div>
-          <div class="server-card-foot">
-            <div class="row-actions">
-              <button class="action-btn btn-edit" @click="openEditDialog(server)">
-                <el-icon><Edit /></el-icon>编辑
-              </button>
-              <button class="action-btn btn-test" @click="handleTest(server)">
-                <el-icon><Connection /></el-icon>测试
-              </button>
-              <button class="action-btn btn-deploy" @click="openDeployDialog(server)">
-                <el-icon><Upload /></el-icon>部署
-              </button>
-              <button class="action-btn btn-delete" @click="handleDelete(server)">
-                <el-icon><Delete /></el-icon>删除
-              </button>
-            </div>
-            <button class="expand-toggle" @click="toggleServerExpand(server)">
-              服务
-              <el-icon>
-                <ArrowUp v-if="expandedServers.has(server.id)" />
-                <ArrowDown v-else />
-              </el-icon>
-            </button>
           </div>
           <div v-if="expandedServers.has(server.id)" class="server-services">
             <div class="service-list">
@@ -145,6 +123,30 @@
               </div>
             </div>
           </div>
+            </div>
+            <div class="card-bottom">
+              <div class="row-actions">
+                <button class="action-btn btn-edit" @click="openEditDialog(server)">
+                  <el-icon><Edit /></el-icon>编辑
+                </button>
+                <button class="action-btn btn-test" @click="handleTest(server)">
+                  <el-icon><Connection /></el-icon>测试
+                </button>
+                <button class="action-btn btn-deploy" @click="openDeployDialog(server)">
+                  <el-icon><Upload /></el-icon>部署
+                </button>
+                <button class="action-btn btn-delete" @click="handleDelete(server)">
+                  <el-icon><Delete /></el-icon>删除
+                </button>
+              </div>
+              <button class="expand-toggle" @click="toggleServerExpand(server)">
+                服务
+                <el-icon>
+                  <ArrowUp v-if="expandedServers.has(server.id)" />
+                  <ArrowDown v-else />
+                </el-icon>
+              </button>
+            </div>
           </div>
         </el-col>
       </el-row>
@@ -925,11 +927,9 @@ function getStatusLabel(status: string) {
   border: 1px solid #e5e7eb;
   border-radius: 16px;
   overflow: hidden;
-  padding: 20px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
-  gap: 12px;
   height: 100%;
   box-sizing: border-box;
   transition: all 0.3s ease;
@@ -987,13 +987,21 @@ function getStatusLabel(status: string) {
   min-width: 0;
 }
 
-.server-card-foot {
+.card-top {
+  flex: 1;
+  padding: 20px;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 8px;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.card-bottom {
+  padding: 14px 20px;
   border-top: 1px solid #f3f4f6;
-  padding-top: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
 }
 
 .expand-toggle {
