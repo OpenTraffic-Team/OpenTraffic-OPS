@@ -241,7 +241,7 @@
         <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'">
           <el-alert type="info" :closable="false" show-icon>
             <template #title>
-              龙芯 LoongArch64 首次部署会自动上传 Python 环境到 /opt/opentraffic/py315；ARM aarch64 首次部署会自动上传 Python 环境（trafficlight_env）到部署目录。后续重复部署只更新算法包
+              龙芯 LoongArch64 与 ARM aarch64 首次部署会自动上传 Python 环境（trafficlight_env）到部署目录，后续重复部署只更新算法包
             </template>
           </el-alert>
         </el-form-item>

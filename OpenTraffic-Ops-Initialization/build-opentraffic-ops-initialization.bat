@@ -50,21 +50,21 @@ for %%a in (amd64 arm64 loong64) do (
     )
 )
 
-:: 拷贝龙芯 Python 环境包与 control 默认配置（如存在）
-set "SRC_PY315=..\py315-loong.tar.gz"
-set "DST_PY315=backend\pkg\assets\images\py315-loong.tar.gz"
-if exist "!SRC_PY315!" (
-    xcopy /y /q "!SRC_PY315!" "backend\pkg\assets\images\"
-) else if not exist "!DST_PY315!" (
-    echo [WARN] py315-loong.tar.gz not found, skipping copy
+:: 拷贝龙芯 Python 环境包（如存在）
+set "SRC_ENV_LOONG=..\trafficlight-loong64.tar.gz"
+set "DST_ENV_LOONG=backend\pkg\assets\images\trafficlight-loong64.tar.gz"
+if exist "!SRC_ENV_LOONG!" (
+    xcopy /y /q "!SRC_ENV_LOONG!" "backend\pkg\assets\images\"
+) else if not exist "!DST_ENV_LOONG!" (
+    echo [WARN] trafficlight-loong64.tar.gz not found, skipping copy
 )
 
 :: 拷贝 ARM Python 环境包（如存在）
-set "SRC_PY315_ARM=..\trafficlight-arm64.tar.gz"
-set "DST_PY315_ARM=backend\pkg\assets\images\trafficlight-arm64.tar.gz"
-if exist "!SRC_PY315_ARM!" (
-    xcopy /y /q "!SRC_PY315_ARM!" "backend\pkg\assets\images\"
-) else if not exist "!DST_PY315_ARM!" (
+set "SRC_ENV_ARM=..\trafficlight-arm64.tar.gz"
+set "DST_ENV_ARM=backend\pkg\assets\images\trafficlight-arm64.tar.gz"
+if exist "!SRC_ENV_ARM!" (
+    xcopy /y /q "!SRC_ENV_ARM!" "backend\pkg\assets\images\"
+) else if not exist "!DST_ENV_ARM!" (
     echo [WARN] trafficlight-arm64.tar.gz not found, skipping copy
 )
 
