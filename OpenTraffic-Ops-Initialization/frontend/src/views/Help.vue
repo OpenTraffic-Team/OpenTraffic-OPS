@@ -182,14 +182,14 @@
             <p class="section-desc">部署完成后，平台使用进程文件（PID 文件）来管理服务生命周期，无需 root 权限：</p>
             <pre class="code-block"># 上传二进制文件到部署路径
 # 设置可执行权限
-chmod +x /opt/rtm/opentraffic-ops-proxy-linux-amd64
+chmod +x /opt/opentraffic/opentraffic-ops-proxy-linux-amd64
 
 # 启动服务（通过平台按钮操作）
-cd /opt/rtm && setsid ./opentraffic-ops-proxy-linux-amd64 > /dev/null 2>&1 &lt;/dev/null & echo $! > opentraffic-ops-proxy.pid
+cd /opt/opentraffic && setsid ./opentraffic-ops-proxy-linux-amd64 > /dev/null 2>&1 &lt;/dev/null & echo $! > opentraffic-ops-proxy.pid
 
 # 停止服务（通过平台按钮操作）
-kill $(cat /opt/rtm/opentraffic-ops-proxy.pid)
-rm -f /opt/rtm/opentraffic-ops-proxy.pid</pre>
+kill $(cat /opt/opentraffic/opentraffic-ops-proxy.pid)
+rm -f /opt/opentraffic/opentraffic-ops-proxy.pid</pre>
 
             <div class="tip-box">
               <el-icon><WarningFilled /></el-icon>
@@ -351,7 +351,7 @@ const serverConfigs = reactive([
   { name: 'SSH 端口', desc: 'SSH 服务端口，默认为 <code>22</code>。' },
   { name: '用户名', desc: '用于 SSH 登录的用户名，如 <code>root</code>。' },
   { name: '认证方式', desc: '支持<strong>密码认证</strong>和<strong>密钥认证</strong>两种方式。密码认证需填写 SSH 密码；密钥认证需粘贴私钥内容，可选项填写私钥密码（Passphrase）。' },
-  { name: '部署路径', desc: '远程服务器上的部署目录，二进制文件将上传到此路径。默认为 <code>/opt/rtm</code>。' },
+  { name: '部署路径', desc: '远程服务器上的部署目录，二进制文件将上传到此路径。默认为 <code>/opt/opentraffic</code>。' },
   { name: '描述', desc: '服务器的补充说明信息，便于团队成员理解用途。' },
 ])
 
@@ -360,7 +360,7 @@ const serverOperations = reactive([
   { name: '编辑', desc: '修改服务器的连接配置。如果密码或私钥留空，则保留原有值不做修改。' },
   { name: '测试', desc: '使用保存的凭据尝试建立 SSH 连接，验证配置是否正确。' },
   { name: '部署', desc: '选择二进制文件（opentraffic-ops-proxy 或 opentraffic-ops），通过 SFTP 上传到远程服务器的部署路径。同一服务器上同一服务只能部署一次。' },
-  { name: '配置', desc: '查看和编辑远程服务器上 opentraffic-ops-proxy 的 <code>config.json</code> 配置文件。' },
+  { name: '配置', desc: '查看和编辑远程服务器上 opentraffic-ops-proxy 的 <code>opentraffic-ops-proxy-config.json</code> 配置文件。' },
   { name: '删除', desc: '从平台中移除服务器配置记录。此操作不会删除远程服务器上的任何文件。' },
 ])
 
@@ -372,13 +372,15 @@ const authTypes = reactive([
 const deployBinaries = reactive([
   { key: 'opentraffic-ops-proxy', value: 'OpenTraffic Ops Proxy 采集代理程序，部署到远程服务器后负责采集系统指标并上报。' },
   { key: 'opentraffic-ops', value: 'OpenTraffic Ops 监控平台服务，提供监控数据的聚合、存储和展示能力。' },
+  { key: 'opentraffic-control', value: '交通信号控制算法包（tar），支持 amd64 / arm64 / loong64 架构，可重复部署并保留版本历史。' },
+  { key: 'opentraffic-perception', value: '感知算法包（tar），支持 amd64 / arm64 架构自动识别，ARM64 版本使用 RKNN 推理，可重复部署并保留版本历史。' },
 ])
 
 const deploySteps = reactive([
   { name: '选择服务器', desc: '在服务器管理列表中点击「部署」按钮，进入部署对话框。' },
-  { name: '选择二进制', desc: '选择要部署的文件：opentraffic-ops-proxy 或 opentraffic-ops。' },
+  { name: '选择资源', desc: '选择要部署的文件：opentraffic-ops-proxy、opentraffic-ops、opentraffic-control 或 opentraffic-perception。' },
   { name: '加载配置（可选）', desc: '可加载默认配置或自定义配置文件内容，部署时会自动写入到远程服务器。' },
-  { name: '执行部署', desc: '平台通过 SSH 连接到目标服务器，使用 SFTP 上传二进制文件，设置可执行权限，并创建配置文件。' },
+  { name: '执行部署', desc: '平台通过 SSH 连接到目标服务器，使用 SFTP 上传文件，设置可执行权限，并创建配置文件。' },
   { name: '查看记录', desc: '部署完成后可在「部署记录」中查看详细日志，包括每一步的执行结果。' },
 ])
 
@@ -449,7 +451,7 @@ const faqs = reactive([
   },
   {
     q: '远程部署失败，提示权限不足？',
-    a: '请检查以下几点：<br>1. SSH 用户是否对部署路径（默认 <code>/opt/rtm</code>）有读写权限；<br>2. 部署路径所在磁盘是否有足够空间；<br>3. 目标服务器的 SELinux 或 AppArmor 是否限制了文件执行权限。'
+    a: '请检查以下几点：<br>1. SSH 用户是否对部署路径（默认 <code>/opt/opentraffic</code>）有读写权限；<br>2. 部署路径所在磁盘是否有足够空间；<br>3. 目标服务器的 SELinux 或 AppArmor 是否限制了文件执行权限。'
   },
   {
     q: '部署记录中的「进行中」状态是什么意思？',
@@ -457,7 +459,7 @@ const faqs = reactive([
   },
   {
     q: '如何更新已部署的 opentraffic-ops-proxy 配置？',
-    a: '在服务器管理页面找到目标服务器，点击「配置」按钮，即可查看和编辑远程服务器上的 <code>~/.opentraffic-ops-proxy/config.json</code> 文件。保存后需要手动重启 opentraffic-ops-proxy 服务使配置生效。'
+    a: '在服务器管理页面找到目标服务器，点击「配置」按钮，即可查看和编辑远程服务器上的 <code>~/.opentraffic-ops-proxy/opentraffic-ops-proxy-config.json</code> 文件。保存后需要手动重启 opentraffic-ops-proxy 服务使配置生效。'
   },
 ])
 </script>

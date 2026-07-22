@@ -39,87 +39,47 @@
             </div>
             <span class="host-text">{{ server.host }}:{{ server.port }}</span>
           </div>
+          <p class="server-desc">{{ server.description || '—' }}</p>
           <div class="server-meta">
-            <span class="meta-item">用户 {{ server.username }}</span>
-            <span class="meta-item meta-path" :title="server.deploy_path">{{ server.deploy_path }}</span>
+            <div class="meta-item">
+              <el-icon><User /></el-icon>
+              <span class="meta-value">{{ server.username }}</span>
+            </div>
+            <div class="meta-item">
+              <el-icon><Folder /></el-icon>
+              <span class="meta-value" :title="server.deploy_path">{{ server.deploy_path }}</span>
+            </div>
           </div>
           <div class="service-status-row">
-            <div
-              class="status-item"
-              title="opentraffic-ops-proxy"
-              @click="openServiceConfig(server, 'opentraffic-ops-proxy')"
-            >
-              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops-proxy')"></span>
-              <span class="status-name">proxy</span>
-            </div>
-            <div
-              class="status-item"
-              title="opentraffic-ops"
-              @click="openServiceConfig(server, 'opentraffic-ops')"
-            >
-              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops')"></span>
-              <span class="status-name">monitor</span>
-            </div>
-            <div
-              class="status-item"
-              title="opentraffic-control"
-            >
-              <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-control')"></span>
-              <span class="status-name">control</span>
-            </div>
-          </div>
-          <div v-if="expandedServers.has(server.id)" class="server-services">
-            <div class="service-list">
-              <div v-for="sw in softwareList" :key="sw" class="service-card">
-                <div class="service-card-header">
-                  <span class="service-card-name">{{ sw }}</span>
-                  <el-tag
-                    size="small"
-                    :type="getServiceStatusType(server.id, sw)"
-                    effect="dark"
-                  >
-                    {{ getServiceStatusLabel(server.id, sw) }}
-                  </el-tag>
-                </div>
-                <div class="service-card-actions">
-                  <template v-if="isDeployed(server.id, sw)">
-                    <button
-                      class="action-btn btn-start"
-                      :disabled="getServiceStatus(server.id, sw) === 'running'"
-                      @click="handleStartService(server.id, sw)"
-                    >
-                      <el-icon><VideoPlay /></el-icon>启动
-                    </button>
-                    <button
-                      class="action-btn btn-stop"
-                      :disabled="getServiceStatus(server.id, sw) !== 'running'"
-                      @click="handleStopService(server.id, sw)"
-                    >
-                      <el-icon><VideoPause /></el-icon>停止
-                    </button>
-                    <button
-                      class="action-btn btn-restart"
-                      @click="handleRestartService(server.id, sw)"
-                    >
-                      <el-icon><RefreshRight /></el-icon>重启
-                    </button>
-                    <button
-                      class="action-btn btn-config"
-                      @click="openServiceConfig(server, sw)"
-                    >
-                      <el-icon><Setting /></el-icon>配置
-                    </button>
-                    <button
-                      class="action-btn btn-undeploy"
-                      @click="handleUndeployService(server.id, sw)"
-                    >
-                      <el-icon><Delete /></el-icon>卸载
-                    </button>
-                  </template>
-                  <template v-else>
-                    <span class="not-deployed-tag">未部署</span>
-                  </template>
-                </div>
+            <div class="status-label">服务状态</div>
+            <div class="status-list">
+              <div
+                class="status-item"
+                title="opentraffic-ops-proxy"
+              >
+                <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops-proxy')"></span>
+                <span class="status-name">proxy</span>
+              </div>
+              <div
+                class="status-item"
+                title="opentraffic-ops"
+              >
+                <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-ops')"></span>
+                <span class="status-name">monitor</span>
+              </div>
+              <div
+                class="status-item"
+                title="opentraffic-control"
+              >
+                <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-control')"></span>
+                <span class="status-name">control</span>
+              </div>
+              <div
+                class="status-item"
+                title="opentraffic-perception"
+              >
+                <span class="status-dot" :class="getServiceStatusClass(server.id, 'opentraffic-perception')"></span>
+                <span class="status-name">perception</span>
               </div>
             </div>
           </div>
@@ -139,12 +99,9 @@
                   <el-icon><Delete /></el-icon>删除
                 </button>
               </div>
-              <button class="expand-toggle" @click="toggleServerExpand(server)">
+              <button class="expand-toggle" @click="openServiceDialog(server)">
                 服务
-                <el-icon>
-                  <ArrowUp v-if="expandedServers.has(server.id)" />
-                  <ArrowDown v-else />
-                </el-icon>
+                <el-icon><ArrowRight /></el-icon>
               </button>
             </div>
           </div>
@@ -191,7 +148,7 @@
           </el-form-item>
         </template>
         <el-form-item label="部署路径" required>
-          <el-input v-model="serverForm.deploy_path" placeholder="如：/opt/rtm" />
+          <el-input v-model="serverForm.deploy_path" placeholder="如：/opt/opentraffic" />
         </el-form-item>
         <el-form-item label="描述">
           <el-input v-model="serverForm.description" type="textarea" :rows="2" placeholder="服务器描述" />
@@ -218,32 +175,43 @@
         <el-form-item label="选择部署包" required>
           <el-select v-model="deployForm.binary_name" placeholder="选择要部署的资源" style="width: 100%" popper-class="light-select-dropdown">
             <el-option
-              :label="deployedSoftwares.has('opentraffic-ops-proxy') ? 'opentraffic-ops-proxy (Linux AMD64) — 已部署' : 'opentraffic-ops-proxy (Linux AMD64)'"
+              :label="deployedSoftwares.has('opentraffic-ops-proxy') ? 'opentraffic-ops-proxy（自动识别架构）— 已部署' : 'opentraffic-ops-proxy（自动识别架构）'"
               value="opentraffic-ops-proxy"
               :disabled="deployedSoftwares.has('opentraffic-ops-proxy')"
             />
             <el-option
-              :label="deployedSoftwares.has('opentraffic-ops') ? 'opentraffic-ops (Linux AMD64) — 已部署' : 'opentraffic-ops (Linux AMD64)'"
+              :label="deployedSoftwares.has('opentraffic-ops') ? 'opentraffic-ops（自动识别架构）— 已部署' : 'opentraffic-ops（自动识别架构）'"
               value="opentraffic-ops"
               :disabled="deployedSoftwares.has('opentraffic-ops')"
             />
             <el-option label="opentraffic-control（自动识别架构）" value="opentraffic-control" />
+            <el-option
+              :label="deployedSoftwares.has('opentraffic-perception') ? 'opentraffic-perception（自动识别架构）— 可重复部署' : 'opentraffic-perception（自动识别架构）'"
+              value="opentraffic-perception"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name && deployForm.binary_name !== 'opentraffic-control' && deployedSoftwares.has(deployForm.binary_name)">
+        <el-form-item v-if="deployForm.binary_name && !isRepeatableDeploy(deployForm.binary_name) && deployedSoftwares.has(deployForm.binary_name)">
           <el-alert type="warning" :closable="false" show-icon>
             <template #title>
               该服务已部署，请勿重复部署
             </template>
           </el-alert>
         </el-form-item>
-        <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'" label="版本号">
+        <el-form-item v-if="deployForm.binary_name && isRepeatableDeploy(deployForm.binary_name)" label="版本号">
           <el-input v-model="deployForm.version" placeholder="如：v1.0.0（留空则自动生成时间戳版本）" />
         </el-form-item>
         <el-form-item v-if="deployForm.binary_name === 'opentraffic-control'">
           <el-alert type="info" :closable="false" show-icon>
             <template #title>
               龙芯 LoongArch64 与 ARM aarch64 首次部署会自动上传 Python 环境（trafficlight_env）到部署目录，后续重复部署只更新算法包
+            </template>
+          </el-alert>
+        </el-form-item>
+        <el-form-item v-if="deployForm.binary_name === 'opentraffic-perception'">
+          <el-alert type="info" :closable="false" show-icon>
+            <template #title>
+              x86/amd64 与 ARM aarch64 首次部署会自动创建 Python 虚拟环境并生成默认 drivers/config.json；ARM64 版本使用 RKNN 推理，后续重复部署只更新算法包
             </template>
           </el-alert>
         </el-form-item>
@@ -336,6 +304,7 @@
             <el-option label="opentraffic-ops-proxy" value="opentraffic-ops-proxy" />
             <el-option label="opentraffic-ops" value="opentraffic-ops" />
             <el-option label="opentraffic-control" value="opentraffic-control" />
+            <el-option label="opentraffic-perception" value="opentraffic-perception" />
           </el-select>
         </el-form-item>
         <el-form-item>
@@ -354,6 +323,75 @@
       <template #footer>
         <el-button @click="showConfigDialog = false" :disabled="serverStore.loading">取消</el-button>
         <el-button type="primary" @click="handleSaveConfig" :loading="serverStore.loading">保存</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 服务管理对话框 -->
+    <el-dialog
+      v-model="showServiceDialog"
+      :title="`服务管理 - ${currentServiceServer?.name}`"
+      width="700px"
+      class="dark-dialog"
+      destroy-on-close
+    >
+      <div v-loading="serviceDialogLoading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
+        <el-empty v-if="currentServiceServer && !softwareList.some(sw => isDeployed(currentServiceServer!.id, sw))" description="该服务器暂无已部署服务" />
+        <div class="service-list">
+          <div v-for="sw in softwareList" :key="sw" class="service-card">
+            <div class="service-card-header">
+              <span class="service-card-name">{{ sw }}</span>
+              <el-tag
+                size="small"
+                :type="getServiceStatusType(currentServiceServer!.id, sw)"
+                effect="dark"
+              >
+                {{ getServiceStatusLabel(currentServiceServer!.id, sw) }}
+              </el-tag>
+            </div>
+            <div class="service-card-actions">
+              <template v-if="isDeployed(currentServiceServer!.id, sw)">
+                <button
+                  class="action-btn btn-start"
+                  :disabled="getServiceStatus(currentServiceServer!.id, sw) === 'running'"
+                  @click="handleStartService(currentServiceServer!.id, sw)"
+                >
+                  <el-icon><VideoPlay /></el-icon>启动
+                </button>
+                <button
+                  class="action-btn btn-stop"
+                  :disabled="getServiceStatus(currentServiceServer!.id, sw) !== 'running'"
+                  @click="handleStopService(currentServiceServer!.id, sw)"
+                >
+                  <el-icon><VideoPause /></el-icon>停止
+                </button>
+                <button
+                  class="action-btn btn-restart"
+                  @click="handleRestartService(currentServiceServer!.id, sw)"
+                >
+                  <el-icon><RefreshRight /></el-icon>重启
+                </button>
+                <button
+                  class="action-btn btn-config"
+                  @click="openServiceConfig(currentServiceServer!, sw)"
+                >
+                  <el-icon><Setting /></el-icon>配置
+                </button>
+                <button
+                  class="action-btn btn-undeploy"
+                  @click="handleUndeployService(currentServiceServer!.id, sw)"
+                >
+                  <el-icon><Delete /></el-icon>卸载
+                </button>
+              </template>
+              <template v-else>
+                <span class="not-deployed-tag">未部署</span>
+              </template>
+            </div>
+          </div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button @click="showServiceDialog = false">关闭</el-button>
       </template>
     </el-dialog>
 
@@ -380,8 +418,11 @@ const showDeployDialog = ref(false)
 const showRecordsDialog = ref(false)
 const showLogDialogVisible = ref(false)
 const showConfigDialog = ref(false)
+const showServiceDialog = ref(false)
 const isEdit = ref(false)
 const currentServer = ref<Server | null>(null)
+const currentServiceServer = ref<Server | null>(null)
+const serviceDialogLoading = ref(false)
 const currentRecord = ref<any>(null)
 const configContent = ref('')
 
@@ -394,7 +435,7 @@ const serverForm = reactive<CreateServerRequest>({
   password: '',
   private_key: '',
   passphrase: '',
-  deploy_path: '/opt/rtm',
+  deploy_path: '/opt/opentraffic',
   description: ''
 })
 
@@ -409,20 +450,28 @@ const deployConfigContent = ref('')
 const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
 
-const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control']
+const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control', 'opentraffic-perception']
+
+function isRepeatableDeploy(binaryName: string): boolean {
+  return binaryName === 'opentraffic-control' || binaryName === 'opentraffic-perception'
+}
 
 const serviceStatuses = ref<Record<string, Record<string, ServerServiceStatus>>>({})
 const serverDeployedMap = ref<Record<string, Set<string>>>({})
-const expandedServers = ref<Set<string>>(new Set())
 
 const configFileNameMap: Record<string, string> = {
-  'opentraffic-ops-proxy': 'config.json',
-  'opentraffic-ops': 'config.yaml'
+  'opentraffic-ops-proxy': 'opentraffic-ops-proxy-config.json',
+  'opentraffic-ops': 'opentraffic-ops-config.yaml',
+  'opentraffic-perception': 'drivers/config.json'
 }
 
 function getConfigPathHint(): string {
+  const deployPath = currentServer.value?.deploy_path || '/opt/opentraffic'
   if (configSoftwareName.value === 'opentraffic-control') {
-    return `远程路径：${currentServer.value?.deploy_path || '/opt/rtm'}/opentraffic-control/config/mq_config.json`
+    return `远程路径：${deployPath}/opentraffic-control/config/mq_config.json`
+  }
+  if (configSoftwareName.value === 'opentraffic-perception') {
+    return `远程路径：${deployPath}/opentraffic-perception/opentraffic-perception-linux-{amd64,arm64}/drivers/config.json`
   }
   return `远程路径：~/.${configSoftwareName.value}/${configFileNameMap[configSoftwareName.value] || 'config.json'}`
 }
@@ -445,7 +494,7 @@ function resetServerForm() {
   serverForm.password = ''
   serverForm.private_key = ''
   serverForm.passphrase = ''
-  serverForm.deploy_path = '/opt/rtm'
+  serverForm.deploy_path = '/opt/opentraffic'
   serverForm.description = ''
 }
 
@@ -582,13 +631,13 @@ async function handleDeploy() {
     ElMessage.warning('请选择要部署的资源')
     return
   }
-  if (deployForm.binary_name !== 'opentraffic-control' && deployedSoftwares.value.has(deployForm.binary_name)) {
+  if (!isRepeatableDeploy(deployForm.binary_name) && deployedSoftwares.value.has(deployForm.binary_name)) {
     ElMessage.warning(`服务 ${deployForm.binary_name} 已部署，请勿重复部署`)
     return
   }
   try {
     const payload: DeployRequest = { ...deployForm }
-    if (payload.binary_name === 'opentraffic-control' && !payload.version?.trim()) {
+    if (isRepeatableDeploy(payload.binary_name) && !payload.version?.trim()) {
       payload.version = `v${new Date().toISOString().replace(/[-:T.Z]/g, '').slice(0, 14)}`
     }
     if (deployWithConfig.value && deployConfigContent.value.trim()) {
@@ -665,6 +714,9 @@ function normalizeBinaryName(binaryName: string): string {
   if (binaryName === 'opentraffic-control-linux-amd64') {
     return 'opentraffic-control'
   }
+  if (binaryName === 'opentraffic-perception-linux-amd64' || binaryName === 'opentraffic-perception-linux-arm64') {
+    return 'opentraffic-perception'
+  }
   return binaryName
 }
 
@@ -684,9 +736,9 @@ async function loadServerDeployedSoftwares(serverId: string) {
 
 async function handleUndeployService(serverId: string, software: string) {
   try {
-    const isControl = software === 'opentraffic-control'
+    const isAlgorithmPackage = isRepeatableDeploy(software)
     await ElMessageBox.confirm(
-      isControl
+      isAlgorithmPackage
         ? `确定要卸载算法包 "${software}" 吗？这将删除远程目录并清除部署记录。`
         : `确定要卸载服务 "${software}" 吗？这将停止服务、删除远程文件并清除部署记录。`,
       '警告',
@@ -822,14 +874,18 @@ async function handleRestartService(serverId: string, software: string) {
   }
 }
 
-async function toggleServerExpand(server: Server) {
-  if (expandedServers.value.has(server.id)) {
-    expandedServers.value.delete(server.id)
-    return
+async function openServiceDialog(server: Server) {
+  currentServiceServer.value = server
+  showServiceDialog.value = true
+  serviceDialogLoading.value = true
+  try {
+    await loadServerDeployedSoftwares(server.id)
+    await fetchAllServiceStatusesForServer(server.id)
+  } catch (error: any) {
+    ElMessage.error(`加载服务状态失败: ${error?.message || '未知错误'}`)
+  } finally {
+    serviceDialogLoading.value = false
   }
-  expandedServers.value.add(server.id)
-  await loadServerDeployedSoftwares(server.id)
-  await fetchAllServiceStatusesForServer(server.id)
 }
 
 async function fetchAllServiceStatusesForServer(serverId: string) {
@@ -966,11 +1022,29 @@ function getStatusLabel(status: string) {
 
 .server-meta {
   display: flex;
-  align-items: center;
-  gap: 12px;
+  flex-direction: column;
+  gap: 8px;
   font-size: 12px;
   color: #9ca3af;
   min-width: 0;
+}
+
+.server-meta .meta-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.server-meta .meta-item .el-icon {
+  color: #d1d5db;
+  font-size: 14px;
+}
+
+.server-meta .meta-value {
+  color: #6b7280;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .meta-item {
@@ -1007,13 +1081,15 @@ function getStatusLabel(status: string) {
 .expand-toggle {
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 4px;
-  border: none;
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
-  border-radius: 6px;
-  padding: 4px 10px;
-  font-size: 11px;
+  height: 30px;
+  padding: 0 12px;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  background: transparent;
+  color: #9ca3af;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1022,7 +1098,8 @@ function getStatusLabel(status: string) {
 }
 
 .expand-toggle:hover {
-  background: rgba(99, 102, 241, 0.2);
+  border-color: #d1d5db;
+  color: #6b7280;
 }
 
 .server-services {
@@ -1047,8 +1124,8 @@ function getStatusLabel(status: string) {
 }
 
 .btn-primary {
-  height: 36px;
-  padding: 0 16px;
+  height: 32px;
+  padding: 0 14px;
   background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
 }
@@ -1070,11 +1147,12 @@ function getStatusLabel(status: string) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 3px;
-  padding: 4px 8px;
-  border-radius: 6px;
+  gap: 4px;
+  height: 30px;
+  padding: 0 10px;
+  border-radius: 8px;
   border: none;
-  font-size: 11px;
+  font-size: 13px;
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
@@ -1140,6 +1218,17 @@ function getStatusLabel(status: string) {
 /* 服务状态行 */
 .service-status-row {
   display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.status-label {
+  font-size: 12px;
+  color: #9ca3af;
+}
+
+.status-list {
+  display: flex;
   align-items: center;
   gap: 12px;
 }
@@ -1148,7 +1237,6 @@ function getStatusLabel(status: string) {
   display: flex;
   align-items: center;
   gap: 5px;
-  cursor: pointer;
 }
 
 .status-dot {
