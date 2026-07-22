@@ -31,14 +31,14 @@ func NewDeployService(serverService *ServerService) *DeployService {
 // DeployRequest 部署请求
 type DeployRequest struct {
 	ServerID      string  `json:"server_id" binding:"required"`
-	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control"`
-	Version       string  `json:"version"`        // 可选：部署版本（opentraffic-control 等可重复部署资源使用）
+	BinaryName    string  `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control opentraffic-perception"`
+	Version       string  `json:"version"`        // 可选：部署版本（opentraffic-control/opentraffic-perception 等可重复部署资源使用）
 	ConfigContent *string `json:"config_content"` // 可选：自定义配置内容
 }
 
 // isRepeatableDeploy 判断该资源是否允许重复部署（每次部署都会产生一条新的成功记录）
 func isRepeatableDeploy(binaryName string) bool {
-	return binaryName == "opentraffic-control"
+	return binaryName == "opentraffic-control" || binaryName == "opentraffic-perception"
 }
 
 // Deploy 执行部署
@@ -90,9 +90,12 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	defer client.Close()
 	deployLog.WriteString(fmt.Sprintf("[%s] SSH连接成功\n", time.Now().Format("2006-01-02 15:04:05")))
 
-	// opentraffic-control 算法包走 tar 包部署分支
+	// opentraffic-control / opentraffic-perception 算法包走 tar 包部署分支
 	if req.BinaryName == "opentraffic-control" {
 		return s.deployTarPackage(client, server, req, record, &deployLog)
+	}
+	if req.BinaryName == "opentraffic-perception" {
+		return s.deployPerceptionPackage(client, server, req, record, &deployLog)
 	}
 
 	// 3. 探测远程服务器架构并选择对应二进制
@@ -343,6 +346,138 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	return record, nil
 }
 
+// deployPerceptionPackage 部署 opentraffic-perception tar 包资源（支持 amd64 / arm64）
+func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *model.Server, req *DeployRequest, record *model.DeployRecord, deployLog *strings.Builder) (*model.DeployRecord, error) {
+	const packageDir = "opentraffic-perception"
+
+	arch, err := detectRemoteArch(client)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 探测远程架构失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to detect remote architecture: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 远程架构: %s\n", time.Now().Format("2006-01-02 15:04:05"), arch))
+
+	tarFileName, subDir, err := getPerceptionTarFileName(arch)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, err
+	}
+
+	if !assets.HasBinary(tarFileName) {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 嵌入式 tar 包不存在: %s\n", tarFileName))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("tar package not found: %s", tarFileName)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 使用 tar 包: %s\n", time.Now().Format("2006-01-02 15:04:05"), tarFileName))
+
+	remoteDir := filepath.Join(server.DeployPath, packageDir)
+	remoteTarPath := filepath.Join(remoteDir, tarFileName)
+	workDir := filepath.Join(remoteDir, subDir)
+
+	// 创建远程部署目录
+	mkdirCmd := fmt.Sprintf("mkdir -p %s", remoteDir)
+	if _, err := client.Execute(mkdirCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 创建远程目录失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to create remote directory: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 创建远程目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), remoteDir))
+
+	// 读取嵌入的 tar 包
+	reader, err := assets.GetBinaryReader(tarFileName)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to read tar package: %w", err)
+	}
+	defer reader.Close()
+
+	tarData, err := io.ReadAll(reader)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 tar 包内容失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to read tar content: %w", err)
+	}
+
+	// 上传 tar 包
+	if err := client.UploadFile(bytes.NewReader(tarData), remoteTarPath, int64(len(tarData))); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to upload tar package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 上传 tar 包成功: %s (%d bytes)\n",
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(tarData)))
+
+	// 解压 tar 包（保留顶层目录）
+	extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
+	if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to extract tar package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// 运行 install.sh 准备运行环境（无参数，脚本会按 conda / venv 依次回退）
+	installCmd := fmt.Sprintf("cd %s && bash deploy/install.sh", workDir)
+	if _, err := client.ExecuteWithTimeout(installCmd, 600*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 运行 install.sh 失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to run deploy/install.sh: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 运行 install.sh 成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// 运行 configure.sh 生成默认 drivers/config.json
+	configureCmd := fmt.Sprintf("cd %s && bash deploy/configure.sh", workDir)
+	if _, err := client.ExecuteWithTimeout(configureCmd, 60*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 运行 configure.sh 失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 运行 configure.sh 成功\n", time.Now().Format("2006-01-02 15:04:05")))
+	}
+
+	// 写入用户自定义配置（drivers/config.json）
+	if req.ConfigContent != nil && *req.ConfigContent != "" {
+		configPath := filepath.Join(workDir, "drivers", "config.json")
+		if err := client.WriteFile([]byte(*req.ConfigContent), configPath); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[WARN] 写入 drivers/config.json 失败: %v\n", err))
+		} else {
+			deployLog.WriteString(fmt.Sprintf("[%s] 写入配置文件: %s\n", time.Now().Format("2006-01-02 15:04:05"), configPath))
+		}
+	}
+
+	// 为 deploy 目录下的脚本赋予可执行权限
+	chmodCmd := fmt.Sprintf("chmod +x %s/deploy/*.sh", workDir)
+	if _, err := client.Execute(chmodCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 设置 deploy 脚本可执行权限失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 设置 deploy 脚本可执行权限\n", time.Now().Format("2006-01-02 15:04:05")))
+	}
+
+	// 更新部署记录为成功
+	deployLog.WriteString(fmt.Sprintf("[%s] 部署完成\n", time.Now().Format("2006-01-02 15:04:05")))
+	record.Status = string(model.DeployStatusSuccess)
+	record.Log = deployLog.String()
+	record.RemotePath = workDir
+	if err := s.deployRecordRepo.Update(record); err != nil {
+		return record, fmt.Errorf("deploy succeeded but failed to update record: %w", err)
+	}
+
+	return record, nil
+}
+
+// getPerceptionTarFileName 根据远程架构生成 opentraffic-perception tar 包文件名与实际子目录名
+func getPerceptionTarFileName(arch string) (tarFileName, subDir string, err error) {
+	suffix, ok := archToBinarySuffix[strings.ToLower(strings.TrimSpace(arch))]
+	if !ok {
+		return "", "", fmt.Errorf("unsupported architecture for perception: %s", arch)
+	}
+	if suffix != "linux-amd64" && suffix != "linux-arm64" {
+		return "", "", fmt.Errorf("opentraffic-perception does not support architecture: %s", arch)
+	}
+	return fmt.Sprintf("opentraffic-perception-%s.tar", suffix), fmt.Sprintf("opentraffic-perception-%s", suffix), nil
+}
+
 // getControlTarFileName 根据远程架构生成 opentraffic-control tar 包文件名
 func getControlTarFileName(arch string) (string, error) {
 	suffix, ok := archToBinarySuffix[strings.ToLower(strings.TrimSpace(arch))]
@@ -395,6 +530,8 @@ func (s *DeployService) updateRecordFailed(id int, log string) {
 // controlEnvPackage 返回该架构 control 服务所需的 Python 环境包名；空串表示无需环境包
 func controlEnvPackage(arch string) string {
 	switch strings.ToLower(strings.TrimSpace(arch)) {
+	case "x86_64", "amd64":
+		return "trafficlight-amd64.tar.gz"
 	case "loongarch64":
 		return "trafficlight-loong64.tar.gz"
 	case "aarch64", "arm64":
@@ -467,12 +604,17 @@ func (s *DeployService) ensureControlPythonEnv(client *ssh.Client, remoteDir str
 // UndeployRequest 卸载请求
 type UndeployRequest struct {
 	ServerID   string `json:"server_id" binding:"required"`
-	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control"`
+	BinaryName string `json:"binary_name" binding:"required,oneof=opentraffic-ops-proxy opentraffic-ops opentraffic-control opentraffic-perception"`
 }
 
 // isLegacyControlName 兼容旧记录中使用的 opentraffic-control-linux-amd64 名称
 func isLegacyControlName(binaryName string) bool {
 	return binaryName == "opentraffic-control-linux-amd64"
+}
+
+// isLegacyPerceptionName 兼容旧记录中使用的 opentraffic-perception-linux-amd64 名称
+func isLegacyPerceptionName(binaryName string) bool {
+	return binaryName == "opentraffic-perception-linux-amd64"
 }
 
 // Undeploy 执行卸载
@@ -501,6 +643,16 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 		// 同时删除新名称与旧名称（旧版本使用过 opentraffic-control-linux-amd64）的部署记录
 		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-control")
 		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-control-linux-amd64")
+		return nil
+	}
+
+	// opentraffic-perception 算法包卸载：先停止服务，再删除整个目录
+	if req.BinaryName == "opentraffic-perception" || isLegacyPerceptionName(req.BinaryName) {
+		_ = s.serverService.StopService(req.ServerID, "opentraffic-perception")
+		remoteDir := filepath.Join(server.DeployPath, "opentraffic-perception")
+		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception")
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception-linux-amd64")
 		return nil
 	}
 

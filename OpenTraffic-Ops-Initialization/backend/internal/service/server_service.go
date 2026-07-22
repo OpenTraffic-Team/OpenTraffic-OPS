@@ -243,27 +243,32 @@ var softwareConfigMeta = map[string]struct {
 }{
 	"opentraffic-ops-proxy": {
 		ConfigDir:    "~/.opentraffic-ops-proxy",
-		ConfigFile:   "config.json",
-		EmbeddedName: "config.json",
+		ConfigFile:   "opentraffic-ops-proxy-config.json",
+		EmbeddedName: "opentraffic-ops-proxy-config.json",
 	},
 	"opentraffic-ops": {
 		ConfigDir:    "~/.opentraffic-ops",
-		ConfigFile:   "config.yaml",
-		EmbeddedName: "config.yaml",
+		ConfigFile:   "opentraffic-ops-config.yaml",
+		EmbeddedName: "opentraffic-ops-config.yaml",
 	},
 	"opentraffic-control": {
 		ConfigDir:    "",
 		ConfigFile:   "mq_config.json",
-		EmbeddedName: "mq_config.json",
+		EmbeddedName: "opentraffic-control-config.json",
+	},
+	"opentraffic-perception": {
+		ConfigDir:    "",
+		ConfigFile:   "drivers/config.json",
+		EmbeddedName: "opentraffic-perception-config.json",
 	},
 }
 
 // controlServiceConfig opentraffic-control 服务配置
 var controlServiceConfig = struct {
-	DirName     string
-	StartScript string
+	DirName        string
+	StartScript    string
 	ProcessPattern string
-	PidFileName string
+	PidFileName    string
 }{
 	DirName:        "opentraffic-control",
 	StartScript:    "start_algo.sh",
@@ -271,9 +276,85 @@ var controlServiceConfig = struct {
 	PidFileName:    "opentraffic-control.pid",
 }
 
+// perceptionServiceConfig opentraffic-perception 服务配置
+var perceptionServiceConfig = struct {
+	DirName         string
+	StartScript     string
+	StopScript      string
+	StatusScript    string
+	InstallScript   string
+	ConfigureScript string
+	PidFileName     string
+	ProcessPattern  string
+}{
+	DirName:         "opentraffic-perception",
+	StartScript:     "deploy/start.sh",
+	StopScript:      "deploy/stop.sh",
+	StatusScript:    "deploy/status.sh",
+	InstallScript:   "deploy/install.sh",
+	ConfigureScript: "deploy/configure.sh",
+	PidFileName:     "run_perception.pid",
+	ProcessPattern:  "main.py",
+}
+
+// resolvePerceptionWorkDir 根据远程实际目录判断是 amd64 还是 arm64 工作目录
+func resolvePerceptionWorkDir(client *ssh.Client, deployPath string) (string, error) {
+	candidates := []string{
+		filepath.Join(deployPath, perceptionServiceConfig.DirName, "opentraffic-perception-linux-arm64"),
+		filepath.Join(deployPath, perceptionServiceConfig.DirName, "opentraffic-perception-linux-amd64"),
+	}
+	for _, dir := range candidates {
+		out, _ := client.Execute(fmt.Sprintf("test -d %s && echo exists || echo missing", dir))
+		if strings.TrimSpace(out) == "exists" {
+			return dir, nil
+		}
+	}
+	return "", fmt.Errorf("未找到 opentraffic-perception 工作目录，请确认已部署")
+}
+
+// pkillPattern 生成 pkill/pgrep 使用的防自匹配正则
+func pkillPattern(processPattern string) string {
+	if processPattern == "" {
+		return ""
+	}
+	return fmt.Sprintf("[%c]%s", processPattern[0], processPattern[1:])
+}
+
 // isControlService 判断是否为 opentraffic-control 服务
 func isControlService(name string) bool {
 	return name == controlServiceConfig.DirName || name == "opentraffic-control-linux-amd64"
+}
+
+// isPerceptionService 判断是否为 opentraffic-perception 服务
+func isPerceptionService(name string) bool {
+	return name == perceptionServiceConfig.DirName || name == "opentraffic-perception-linux-amd64"
+}
+
+// isTarPackageService 判断是否为 tar 包部署的算法服务（control / perception）
+func isTarPackageService(name string) bool {
+	return isControlService(name) || isPerceptionService(name)
+}
+
+// tarPackageWorkDir 返回 tar 包服务的实际工作目录（仅用于 control）
+func tarPackageWorkDir(deployPath string, softwareName string) string {
+	return filepath.Join(deployPath, controlServiceConfig.DirName)
+}
+
+// tarPackageConfigDir 返回 tar 包服务的配置文件所在目录（仅用于 control）
+func tarPackageConfigDir(deployPath string, softwareName string) string {
+	return filepath.Join(tarPackageWorkDir(deployPath, softwareName), "config")
+}
+
+// tarPackageConfigPathForService 返回 tar 包服务的完整配置文件路径（control 固定，perception 动态检测架构子目录）
+func tarPackageConfigPathForService(client *ssh.Client, deployPath string, softwareName string, configFile string) (string, error) {
+	if isPerceptionService(softwareName) {
+		workDir, err := resolvePerceptionWorkDir(client, deployPath)
+		if err != nil {
+			return "", err
+		}
+		return filepath.Join(workDir, "drivers", configFile), nil
+	}
+	return filepath.Join(tarPackageConfigDir(deployPath, softwareName), configFile), nil
 }
 
 // getDefaultConfig 从嵌入资源读取指定软件的默认配置，如不存在则返回空JSON
@@ -331,8 +412,11 @@ func (s *ServerService) GetSoftwareConfig(id string, softwareName string) (strin
 	}
 	defer client.Close()
 
-	if isControlService(softwareName) {
-		configPath := filepath.Join(creds.Server.DeployPath, controlServiceConfig.DirName, "config", meta.ConfigFile)
+	if isTarPackageService(softwareName) {
+		configPath, err := tarPackageConfigPathForService(client, creds.Server.DeployPath, softwareName, meta.ConfigFile)
+		if err != nil {
+			return getDefaultConfig(softwareName), nil
+		}
 		data, err := client.ReadFile(configPath)
 		if err != nil {
 			return getDefaultConfig(softwareName), nil
@@ -396,9 +480,12 @@ func (s *ServerService) UpdateSoftwareConfig(id string, softwareName string, con
 	}
 	defer client.Close()
 
-	if isControlService(softwareName) {
-		configDir := filepath.Join(creds.Server.DeployPath, controlServiceConfig.DirName, "config")
-		configPath := filepath.Join(configDir, meta.ConfigFile)
+	if isTarPackageService(softwareName) {
+		configPath, err := tarPackageConfigPathForService(client, creds.Server.DeployPath, softwareName, meta.ConfigFile)
+		if err != nil {
+			return fmt.Errorf("failed to locate config path: %w", err)
+		}
+		configDir := filepath.Dir(configPath)
 		mkdirCmd := fmt.Sprintf("mkdir -p %s", configDir)
 		if _, err := client.Execute(mkdirCmd); err != nil {
 			return fmt.Errorf("failed to create config directory: %w", err)
@@ -470,7 +557,7 @@ func detectRemoteArch(client *ssh.Client) (string, error) {
 // isValidSoftwareName 校验软件名是否受支持（服务状态管理）
 func isValidSoftwareName(name string) bool {
 	_, ok := softwareConfigMeta[name]
-	return ok || isControlService(name)
+	return ok || isTarPackageService(name)
 }
 
 // pidFilePath 生成pid文件远程路径
@@ -503,8 +590,8 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 	}
 	defer client.Close()
 
-	if isControlService(softwareName) {
-		return s.getControlServiceStatus(client, creds.Server.DeployPath)
+	if isTarPackageService(softwareName) {
+		return s.getTarPackageServiceStatus(client, softwareName, creds.Server.DeployPath)
 	}
 
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
@@ -520,12 +607,28 @@ func (s *ServerService) GetServiceStatus(id string, softwareName string) (string
 	return "stopped", nil
 }
 
-// getControlServiceStatus 获取 opentraffic-control 运行状态
-func (s *ServerService) getControlServiceStatus(client *ssh.Client, deployPath string) (string, error) {
-	pidFile := filepath.Join(deployPath, controlServiceConfig.DirName, controlServiceConfig.PidFileName)
+// getTarPackageServiceStatus 获取 tar 包算法服务（control / perception）运行状态
+func (s *ServerService) getTarPackageServiceStatus(client *ssh.Client, softwareName string, deployPath string) (string, error) {
+	var pidFile, statusScript, processPattern, workDir string
+	if isPerceptionService(softwareName) {
+		var err error
+		workDir, err = resolvePerceptionWorkDir(client, deployPath)
+		if err != nil {
+			return "stopped", nil
+		}
+		pidFile = filepath.Join(workDir, perceptionServiceConfig.PidFileName)
+		statusScript = filepath.Join(workDir, perceptionServiceConfig.StatusScript)
+		processPattern = perceptionServiceConfig.ProcessPattern
+	} else {
+		workDir = tarPackageWorkDir(deployPath, softwareName)
+		pidFile = filepath.Join(workDir, controlServiceConfig.PidFileName)
+		processPattern = controlServiceConfig.ProcessPattern
+	}
+
+	// 优先使用服务自带的 status.sh，不存在时回退到 pid 文件 + pgrep
 	checkCmd := fmt.Sprintf(
-		"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '[r]un_algorithms.py' >/dev/null 2>&1; then echo running; else echo stopped; fi",
-		pidFile, pidFile,
+		"if [ -x %s ]; then cd %s && bash %s; elif [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '%s' >/dev/null 2>&1; then echo running; else echo stopped; fi",
+		statusScript, workDir, statusScript, pidFile, pidFile, pkillPattern(processPattern),
 	)
 	output, err := client.Execute(checkCmd)
 	if err != nil {
@@ -563,8 +666,8 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 	}
 	defer client.Close()
 
-	if isControlService(softwareName) {
-		return s.startControlService(client, creds.Server.DeployPath)
+	if isTarPackageService(softwareName) {
+		return s.startTarPackageService(client, softwareName, creds.Server.DeployPath)
 	}
 
 	arch, err := detectRemoteArch(client)
@@ -585,6 +688,14 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 		return fmt.Errorf("failed to start service: %w", err)
 	}
 	return nil
+}
+
+// startTarPackageService 启动 tar 包算法服务（control / perception）
+func (s *ServerService) startTarPackageService(client *ssh.Client, softwareName string, deployPath string) error {
+	if isPerceptionService(softwareName) {
+		return s.startPerceptionService(client, deployPath)
+	}
+	return s.startControlService(client, deployPath)
 }
 
 // startControlService 启动 opentraffic-control
@@ -632,6 +743,47 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	return nil
 }
 
+// startPerceptionService 启动 opentraffic-perception
+func (s *ServerService) startPerceptionService(client *ssh.Client, deployPath string) error {
+	workDir, err := resolvePerceptionWorkDir(client, deployPath)
+	if err != nil {
+		return err
+	}
+	pidFile := filepath.Join(workDir, perceptionServiceConfig.PidFileName)
+
+	// 启动前校验 drivers/config.json，缺失或无效时阻止启动并给出引导
+	configPath := filepath.Join(workDir, "drivers", "config.json")
+	configData, err := client.ReadFile(configPath)
+	if err != nil {
+		return fmt.Errorf("配置文件 %s 不存在，请先在配置管理中填写并保存 drivers/config.json 后再启动", configPath)
+	}
+	var perceptionConfig map[string]interface{}
+	if err := json.Unmarshal(configData, &perceptionConfig); err != nil {
+		return fmt.Errorf("配置文件 drivers/config.json 不是合法的 JSON: %v，请在配置管理中修正后再启动", err)
+	}
+	requiredKeys := []string{"video_path", "radar_reference_path", "output_path"}
+	for _, key := range requiredKeys {
+		if val, ok := perceptionConfig[key].(string); !ok || strings.TrimSpace(val) == "" {
+			return fmt.Errorf("配置文件 drivers/config.json 缺少 %s，请在配置管理中填写有效路径后再启动", key)
+		}
+	}
+
+	// 先停止可能已存在的进程
+	_, _ = client.Execute(fmt.Sprintf("pkill -f '%s' 2>/dev/null || true", pkillPattern(perceptionServiceConfig.ProcessPattern)))
+
+	// 使用 deploy/start.sh 启动；等待进程拉起并写入 pid 文件
+	startCmd := fmt.Sprintf("cd %s && bash %s && sleep 2 && pgrep -f '%s' > %s",
+		workDir, perceptionServiceConfig.StartScript, pkillPattern(perceptionServiceConfig.ProcessPattern), pidFile)
+	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
+		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.Join(workDir, "run.log")))
+		if strings.TrimSpace(logTail) != "" {
+			return fmt.Errorf("failed to start perception service: %w, run.log:\n%s", err, strings.TrimSpace(logTail))
+		}
+		return fmt.Errorf("failed to start perception service: %w", err)
+	}
+	return nil
+}
+
 // StopService 停止指定软件（通过pid文件停止）
 func (s *ServerService) StopService(id string, softwareName string) error {
 	if !isValidSoftwareName(softwareName) {
@@ -657,8 +809,8 @@ func (s *ServerService) StopService(id string, softwareName string) error {
 	}
 	defer client.Close()
 
-	if isControlService(softwareName) {
-		return s.stopControlService(client, creds.Server.DeployPath)
+	if isTarPackageService(softwareName) {
+		return s.stopTarPackageService(client, softwareName, creds.Server.DeployPath)
 	}
 
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
@@ -667,6 +819,14 @@ func (s *ServerService) StopService(id string, softwareName string) error {
 		return fmt.Errorf("failed to stop service: %w", err)
 	}
 	return nil
+}
+
+// stopTarPackageService 停止 tar 包算法服务（control / perception）
+func (s *ServerService) stopTarPackageService(client *ssh.Client, softwareName string, deployPath string) error {
+	if isPerceptionService(softwareName) {
+		return s.stopPerceptionService(client, deployPath)
+	}
+	return s.stopControlService(client, deployPath)
 }
 
 // stopControlService 停止 opentraffic-control
@@ -679,6 +839,26 @@ func (s *ServerService) stopControlService(client *ssh.Client, deployPath string
 	)
 	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
 		return fmt.Errorf("failed to stop control service: %w", err)
+	}
+	return nil
+}
+
+// stopPerceptionService 停止 opentraffic-perception
+func (s *ServerService) stopPerceptionService(client *ssh.Client, deployPath string) error {
+	workDir, err := resolvePerceptionWorkDir(client, deployPath)
+	if err != nil {
+		return err
+	}
+	pidFile := filepath.Join(workDir, perceptionServiceConfig.PidFileName)
+
+	// 优先使用 deploy/stop.sh，不存在时回退到 pid 文件 + pkill
+	stopScript := filepath.Join(workDir, perceptionServiceConfig.StopScript)
+	stopCmd := fmt.Sprintf(
+		"if [ -x %s ]; then cd %s && bash %s; else if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f '%s' 2>/dev/null || true; fi",
+		stopScript, workDir, stopScript, pidFile, pidFile, pidFile, pkillPattern(perceptionServiceConfig.ProcessPattern),
+	)
+	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
+		return fmt.Errorf("failed to stop perception service: %w", err)
 	}
 	return nil
 }
