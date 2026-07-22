@@ -427,21 +427,23 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] perception 工作目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
 
-	// 运行 install.sh 准备运行环境（无参数，脚本会按 conda / venv 依次回退）
+	// 运行 install.sh 准备运行环境
 	installCmd := fmt.Sprintf("cd %s && bash deploy/install.sh", workDir)
-	if _, err := client.ExecuteWithTimeout(installCmd, 600*time.Second); err != nil {
-		deployLog.WriteString(fmt.Sprintf("[ERROR] 运行 install.sh 失败: %v\n", err))
+	installOut, err := client.ExecuteWithTimeout(installCmd, 600*time.Second)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 运行 install.sh 失败: %v\n输出: %s\n", err, installOut))
 		s.updateRecordFailed(record.ID, deployLog.String())
 		return record, fmt.Errorf("failed to run deploy/install.sh: %w", err)
 	}
-	deployLog.WriteString(fmt.Sprintf("[%s] 运行 install.sh 成功\n", time.Now().Format("2006-01-02 15:04:05")))
+	deployLog.WriteString(fmt.Sprintf("[%s] 运行 install.sh 成功\n%s\n", time.Now().Format("2006-01-02 15:04:05"), installOut))
 
 	// 运行 configure.sh 生成默认 drivers/config.json
 	configureCmd := fmt.Sprintf("cd %s && bash deploy/configure.sh", workDir)
-	if _, err := client.ExecuteWithTimeout(configureCmd, 60*time.Second); err != nil {
-		deployLog.WriteString(fmt.Sprintf("[WARN] 运行 configure.sh 失败: %v\n", err))
+	configureOut, err := client.ExecuteWithTimeout(configureCmd, 60*time.Second)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 运行 configure.sh 失败: %v\n输出: %s\n", err, configureOut))
 	} else {
-		deployLog.WriteString(fmt.Sprintf("[%s] 运行 configure.sh 成功\n", time.Now().Format("2006-01-02 15:04:05")))
+		deployLog.WriteString(fmt.Sprintf("[%s] 运行 configure.sh 成功\n%s\n", time.Now().Format("2006-01-02 15:04:05"), configureOut))
 	}
 
 	// 写入用户自定义配置（drivers/config.json）
