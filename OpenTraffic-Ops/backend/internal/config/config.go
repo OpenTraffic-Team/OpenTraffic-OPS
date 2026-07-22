@@ -119,7 +119,7 @@ type AgentConfig struct {
 }
 
 // LoadConfig 加载配置文件
-// 固定从 ~/.opentraffic-ops/config.yaml 加载
+// 固定从 ~/.opentraffic-ops/opentraffic-ops-config.yaml 加载
 func LoadConfig() (*Config, error) {
 	v := viper.New()
 	v.SetConfigType("yaml")
@@ -128,7 +128,7 @@ func LoadConfig() (*Config, error) {
 	if err != nil {
 		return nil, fmt.Errorf("failed to get home dir: %w", err)
 	}
-	configFile := filepath.Join(home, ".opentraffic-ops", "config.yaml")
+	configFile := filepath.Join(home, ".opentraffic-ops", "opentraffic-ops-config.yaml")
 	v.SetConfigFile(configFile)
 
 	if err := v.ReadInConfig(); err != nil {

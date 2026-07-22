@@ -201,7 +201,7 @@ The script will automatically compile the following targets and output to the `d
 ```bash
 # Upload from Windows to Linux server
 scp opentraffic-ops-proxy-linux-amd64 root@your-server:/opt/opentraffic-ops-proxy/
-scp config.json root@your-server:/opt/opentraffic-ops-proxy/
+scp opentraffic-ops-proxy-config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```
 
 #### 2. Run Directly (Testing / Debugging)
@@ -209,10 +209,10 @@ scp config.json root@your-server:/opt/opentraffic-ops-proxy/
 ```bash
 cd /opt/opentraffic-ops-proxy
 chmod +x opentraffic-ops-proxy-linux-amd64
-./opentraffic-ops-proxy-linux-amd64 -c config.json
+./opentraffic-ops-proxy-linux-amd64 -c opentraffic-ops-proxy-config.json
 ```
 
-On first run, a default config file will be automatically created at `~/.opentraffic-ops-proxy/config.json`.
+On first run, a default config file will be automatically created at `~/.opentraffic-ops-proxy/opentraffic-ops-proxy-config.json`.
 
 ### ⚙️ Configuration
 
@@ -263,13 +263,13 @@ Proxy uses Linux-specific system calls (`creack/pty`, `/proc` filesystem access)
 
 ### Connection to platform refused / timeout
 
-- Verify the `platformUrl` in `config.json` points to the correct OpenTraffic Ops server address and port
+- Verify the `platformUrl` in `opentraffic-ops-proxy-config.json` points to the correct OpenTraffic Ops server address and port
 - Check firewall rules between the Proxy host and the platform server
 - Ensure the platform server is running and accessible
 
 ### Config file not found on first run
 
-If you start Proxy without specifying `-c config.json`, it will attempt to create a default config at `~/.opentraffic-ops-proxy/config.json`. Ensure the user running Proxy has write permissions to their home directory.
+If you start Proxy without specifying `-c opentraffic-ops-proxy-config.json`, it will attempt to create a default config at `~/.opentraffic-ops-proxy/opentraffic-ops-proxy-config.json`. Ensure the user running Proxy has write permissions to their home directory.
 
 ### WebSocket keeps disconnecting
 
@@ -279,7 +279,7 @@ If you start Proxy without specifying `-c config.json`, it will attempt to creat
 
 ### Process monitoring shows no data
 
-- Ensure the `processes` array in `config.json` is properly configured with correct `pattern` values
+- Ensure the `processes` array in `opentraffic-ops-proxy-config.json` is properly configured with correct `pattern` values
 - The `pattern` is used to match process names via `ps` / `pgrep`
 
 ---

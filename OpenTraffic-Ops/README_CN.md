@@ -201,7 +201,7 @@ psql -d rtm -f sql/03_chat_tables.sql
 psql -d rtm -f sql/04_alarm_tables.sql
 ```
 
-创建 `~/.opentraffic-ops/config.yaml`（参考 `backend/configs/config.yaml`），修改数据库连接：
+创建 `~/.opentraffic-ops/opentraffic-ops-config.yaml`（参考 `backend/configs/opentraffic-ops-config.yaml`），修改数据库连接：
 
 ```yaml
 datasource:
@@ -275,8 +275,8 @@ build-opentraffic-ops.bat
 
 ```bash
 mkdir -p ~/.opentraffic-ops
-cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
-# 编辑 ~/.opentraffic-ops/config.yaml 修改生产环境配置
+cp backend/configs/opentraffic-ops-config.yaml ~/.opentraffic-ops/opentraffic-ops-config.yaml
+# 编辑 ~/.opentraffic-ops/opentraffic-ops-config.yaml 修改生产环境配置
 
 chmod +x opentraffic-ops-linux-amd64
 ./opentraffic-ops-linux-amd64
@@ -298,18 +298,18 @@ build-opentraffic-ops-proxy.bat
 
 ### ⚙️ 配置说明
 
-后端使用单一配置文件 `config.yaml`，固定从 `~/.opentraffic-ops/config.yaml` 加载，开发和生产环境共用。
+后端使用单一配置文件 `opentraffic-ops-config.yaml`，固定从 `~/.opentraffic-ops/opentraffic-ops-config.yaml` 加载，开发和生产环境共用。
 
-首次运行前，创建配置文件（参考 `backend/configs/config.yaml`）：
+首次运行前，创建配置文件（参考 `backend/configs/opentraffic-ops-config.yaml`）：
 
 ```bash
 # Linux / macOS
 mkdir -p ~/.opentraffic-ops
-cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+cp backend/configs/opentraffic-ops-config.yaml ~/.opentraffic-ops/opentraffic-ops-config.yaml
 
 # Windows
 mkdir %USERPROFILE%\.opentraffic-ops
-copy backend\configs\config.yaml %USERPROFILE%\.opentraffic-ops\config.yaml
+copy backend\configs\opentraffic-ops-config.yaml %USERPROFILE%\.opentraffic-ops\opentraffic-ops-config.yaml
 ```
 
 任意 Key 都可以通过 `RTM_` 前缀的环境变量覆盖（`.` → `_`）：
@@ -367,7 +367,7 @@ logs/
 └── opentraffic-ops-backend-*.log
 ```
 
-`config.yaml` 的 `log` 块中可配置日志级别、文件名、单文件大小、保留份数、保留天数、是否压缩：
+`opentraffic-ops-config.yaml` 的 `log` 块中可配置日志级别、文件名、单文件大小、保留份数、保留天数、是否压缩：
 
 ```yaml
 log:
@@ -385,7 +385,7 @@ log:
 
 ### 数据库连接失败 / 迁移错误
 - 确认 PostgreSQL 正在运行且可访问
-- 检查 `~/.opentraffic-ops/config.yaml` 中的 `datasource` 配置
+- 检查 `~/.opentraffic-ops/opentraffic-ops-config.yaml` 中的 `datasource` 配置
 - 确保按正确顺序执行了 `sql/` 目录下的 DDL 脚本
 
 ### Redis 连接失败
@@ -396,7 +396,7 @@ log:
 ### 前端提示无法连接后端
 - 确认后端在 18081 端口正常运行
 - 检查 `frontend/vite.config.js` 中的 Vite 代理配置
-- 生产环境确保 `config.yaml` 中的 `server.port` 与预期端口一致
+- 生产环境确保 `opentraffic-ops-config.yaml` 中的 `server.port` 与预期端口一致
 
 ### WebSocket 终端无法连接
 - 检查目标 Proxy 是否在线（平台中的主机状态）
@@ -409,7 +409,7 @@ log:
 - 查看通知日志获取发送失败原因
 
 ### Proxy 未向平台注册
-- 检查 Proxy `config.json` 中的 `platformUrl` 是否指向正确的平台地址
+- 检查 Proxy `opentraffic-ops-proxy-config.json` 中的 `platformUrl` 是否指向正确的平台地址
 - 确认 Proxy 主机与平台之间的网络连通性
 - 确保平台的 `/api/v1/proxy/register` 接口可达
 

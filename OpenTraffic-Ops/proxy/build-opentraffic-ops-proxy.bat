@@ -93,6 +93,6 @@ echo   # Upload to your Linux server
 echo   scp dist\opentraffic-ops-proxy-linux-amd64 user@host:/opt/opentraffic-ops-proxy/
 echo   # On server:
 echo   chmod +x /opt/opentraffic-ops-proxy/opentraffic-ops-proxy-linux-amd64
-echo   ./opentraffic-ops-proxy-linux-amd64 -c config.json
+echo   ./opentraffic-ops-proxy-linux-amd64 -c opentraffic-ops-proxy-config.json
 echo.
 pause

@@ -109,5 +109,5 @@ func defaultConfigPath() string {
 	if home == "" {
 		home = "."
 	}
-	return filepath.Join(home, ".opentraffic-ops-proxy", "config.json")
+	return filepath.Join(home, ".opentraffic-ops-proxy", "opentraffic-ops-proxy-config.json")
 }

@@ -201,7 +201,7 @@ psql -d rtm -f sql/03_chat_tables.sql
 psql -d rtm -f sql/04_alarm_tables.sql
 ```
 
-Create `~/.opentraffic-ops/config.yaml` (reference `backend/configs/config.yaml`), and modify database connection:
+Create `~/.opentraffic-ops/opentraffic-ops-config.yaml` (reference `backend/configs/opentraffic-ops-config.yaml`), and modify database connection:
 
 ```yaml
 datasource:
@@ -275,8 +275,8 @@ Upload to Linux server and run:
 
 ```bash
 mkdir -p ~/.opentraffic-ops
-cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
-# Edit ~/.opentraffic-ops/config.yaml for production settings
+cp backend/configs/opentraffic-ops-config.yaml ~/.opentraffic-ops/opentraffic-ops-config.yaml
+# Edit ~/.opentraffic-ops/opentraffic-ops-config.yaml for production settings
 
 chmod +x opentraffic-ops-linux-amd64
 ./opentraffic-ops-linux-amd64
@@ -298,18 +298,18 @@ Output files:
 
 ### ⚙️ Configuration
 
-The backend uses a single `config.yaml` file, always loaded from `~/.opentraffic-ops/config.yaml`, shared between development and production.
+The backend uses a single `opentraffic-ops-config.yaml` file, always loaded from `~/.opentraffic-ops/opentraffic-ops-config.yaml`, shared between development and production.
 
-Before first run, create the config file (reference `backend/configs/config.yaml`):
+Before first run, create the config file (reference `backend/configs/opentraffic-ops-config.yaml`):
 
 ```bash
 # Linux / macOS
 mkdir -p ~/.opentraffic-ops
-cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+cp backend/configs/opentraffic-ops-config.yaml ~/.opentraffic-ops/opentraffic-ops-config.yaml
 
 # Windows
 mkdir %USERPROFILE%\.opentraffic-ops
-copy backend\configs\config.yaml %USERPROFILE%\.opentraffic-ops\config.yaml
+copy backend\configs\opentraffic-ops-config.yaml %USERPROFILE%\.opentraffic-ops\opentraffic-ops-config.yaml
 ```
 
 Any key can be overridden via `RTM_` prefixed environment variables (`.` → `_`):
@@ -367,7 +367,7 @@ logs/
 └── opentraffic-ops-backend-*.log
 ```
 
-Log configuration in `config.yaml`:
+Log configuration in `opentraffic-ops-config.yaml`:
 
 ```yaml
 log:
@@ -385,7 +385,7 @@ log:
 
 ### Database connection failed / migration error
 - Verify PostgreSQL is running and accessible
-- Check `datasource` config in `~/.opentraffic-ops/config.yaml`
+- Check `datasource` config in `~/.opentraffic-ops/opentraffic-ops-config.yaml`
 - Ensure DDL scripts in `sql/` were executed in correct order
 
 ### Redis connection failed
@@ -409,7 +409,7 @@ log:
 - Review notification logs for send failure reasons
 
 ### Proxy not registering with platform
-- Verify `platformUrl` in Proxy `config.json` points to correct platform address
+- Verify `platformUrl` in Proxy `opentraffic-ops-proxy-config.json` points to correct platform address
 - Check network connectivity between Proxy host and platform
 - Ensure platform's `/api/v1/proxy/register` endpoint is reachable
 

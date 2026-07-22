@@ -108,9 +108,9 @@ for %%f in (backend\opentraffic-ops-linux-*) do (
 )
 echo.
 echo Deploy example:
-echo   # 先创建配置文件到 ~/.opentraffic-ops/config.yaml
+echo   # 先创建配置文件到 ~/.opentraffic-ops/opentraffic-ops-config.yaml
 echo   mkdir -p ~/.opentraffic-ops
-echo   cp backend/configs/config.yaml ~/.opentraffic-ops/config.yaml
+echo   cp backend/configs/opentraffic-ops-config.yaml ~/.opentraffic-ops/opentraffic-ops-config.yaml
 echo   chmod +x opentraffic-ops-linux-amd64
 echo   ./opentraffic-ops-linux-amd64
 echo.

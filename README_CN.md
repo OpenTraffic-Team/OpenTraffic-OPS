@@ -67,7 +67,7 @@
 | 实时监控 | 容器实时资源统计（CPU / 内存 / 网络 / 磁盘） |
 | SSH 服务器管理 | 集中管理多台远程 Linux 服务器的 SSH 连接配置（密码或密钥认证） |
 | 远程二进制部署 | 通过 SSH/SFTP 将 `proxy` 和 `OpenTraffic-Ops` 二进制文件部署到远程服务器 |
-| 远程配置编辑 | 在线查看和编辑远程配置文件（`config.json`、`config.yaml`） |
+| 远程配置编辑 | 在线查看和编辑远程配置文件（`opentraffic-ops-proxy-config.json`、`opentraffic-ops-config.yaml`） |
 | 远程服务控制 | 通过 PID 文件在远程主机上启动 / 停止 / 重启服务 |
 | 部署审计 | 完整的操作日志、执行结果和部署历史 |
 

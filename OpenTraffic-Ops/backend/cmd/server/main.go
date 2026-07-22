@@ -33,7 +33,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	// 加载配置（固定路径：~/.opentraffic-ops/config.yaml）
+	// 加载配置（固定路径：~/.opentraffic-ops/opentraffic-ops-config.yaml）
 	cfg, err := config.LoadConfig()
 	if err != nil {
 		fmt.Printf("Failed to load config: %v\n", err)

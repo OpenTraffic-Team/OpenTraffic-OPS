@@ -67,7 +67,7 @@ A single-binary, self-contained deployment dashboard that requires no external w
 | Real-time Monitoring | Live resource stats (CPU / memory / network / disk) for containers |
 | SSH Server Management | Centralized SSH connection configs for multiple remote Linux servers (password or key auth) |
 | Remote Binary Deploy | Deploy `proxy` and `OpenTraffic-Ops` binaries to remote servers via SSH/SFTP |
-| Remote Config Edit | View and edit remote configuration files (`config.json`, `config.yaml`) online |
+| Remote Config Edit | View and edit remote configuration files (`opentraffic-ops-proxy-config.json`, `opentraffic-ops-config.yaml`) online |
 | Remote Service Control | Start / stop / restart services on remote hosts via PID files |
 | Deployment Audit | Full operation logs, execution results, and deployment history |
 
