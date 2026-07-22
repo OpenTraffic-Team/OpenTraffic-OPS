@@ -57,7 +57,7 @@ OpenTraffic Ops Init Deployment Panel is a **single-binary, self-contained** com
 | Real-time Monitoring | View real-time resource usage (CPU / memory / network / disk) of components, with live log refresh and auto-refresh support |
 | SSH Server Management | Centrally manage SSH connection configurations for multiple remote Linux servers, supporting both password and key authentication |
 | Remote Binary Deployment | Deploy `opentraffic-ops-proxy` and `opentraffic-ops` binaries to remote servers via SSH/SFTP with one click |
-| Remote Configuration Management | View and edit software configuration files on remote servers online (`config.json` for proxy, `config.yaml` for platform) |
+| Remote Configuration Management | View and edit software configuration files on remote servers online (`opentraffic-ops-proxy-config.json` for proxy, `opentraffic-ops-config.yaml` for platform) |
 | Remote Service Management | Start, stop, and restart services on remote servers via PID files, without requiring root privileges |
 | Deployment Audit Trail | Complete logging of every remote deployment operation, execution results, and historical records |
 
@@ -127,9 +127,9 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Add / edit / delete remote server SSH configurations
 - Two authentication methods supported: password auth and key auth (supports Passphrase)
 - SSH connection test
-- Server list displays service status (proxy / monitor / control)
+- Server list displays service status (proxy / monitor / control / perception)
 - Expandable rows to view deployed service details
-- Supported operations: start / stop / restart / configure / uninstall remote services; control package supports start / stop / restart / configure / uninstall, with config path `{deploy_path}/opentraffic-control/config/mq_config.json`
+- Supported operations: start / stop / restart / configure / uninstall remote services; control and perception packages support start / stop / restart / configure / uninstall, with config paths `{deploy_path}/opentraffic-control/config/mq_config.json` and `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-{amd64,arm64}/drivers/config.json` respectively
 
 ![Server Management](images/image-1.png)
 
@@ -138,6 +138,8 @@ A core design goal is **eliminating dependency on external web servers** (like N
 - Deploy the `opentraffic-control` algorithm package (tar archive) to remote servers with architecture auto-detection (amd64 / arm64 / loong64) and version tracking
 - **LoongArch64 (龙芯)**: uses a two-package model — Python environment (`trafficlight-loong64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-loong64.tar`, pre-compiled .so) is updated incrementally; runs directly after extraction, no on-board compilation required
 - **ARM aarch64**: uses a two-package model — Python environment (`trafficlight-arm64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-arm64.tar`) is updated incrementally; runs directly after extraction, no conda / pip / build tools required
+- **x86/amd64**: uses a two-package model — Python environment (`trafficlight-amd64.tar.gz`, extracted as `trafficlight_env/` with all dependencies bundled) is deployed to `{deploy_path}/opentraffic-control/trafficlight_env` on first deploy, while the algorithm package (`opentraffic-control-linux-amd64.tar`) is updated incrementally; runs directly after extraction, no conda / pip / build tools required
+- **x86/amd64 and ARM aarch64 perception**: deploy the `opentraffic-perception-linux-{amd64,arm64}.tar` runtime package to remote servers with architecture auto-detection. On first deploy it automatically runs `deploy/install.sh` to create `.venv`, runs `deploy/configure.sh` to generate a default `drivers/config.json`, and writes the user-supplied configuration. Subsequent redeployments update only the algorithm package. The ARM64 build uses RKNN inference
 - Optionally deploy configuration files simultaneously for binaries
 - Support loading default configuration templates
 - Duplicate deployment detection for binaries; algorithm packages allow repeated deployments with version history
@@ -330,6 +332,24 @@ docker run --rm \
 - Run `file trafficlight_env/bin/python3` and confirm it shows `ELF 64-bit LSB ... ARM aarch64`; a mismatch means the wrong env package was used
 - Verify Redis address, port and password in `config/mq_config.json`
 - Check `{deploy_path}/opentraffic-control/run.log` for detailed errors
+
+### x86/amd64 control service fails to start
+- Confirm `{deploy_path}/opentraffic-control/trafficlight_env/bin/python3` exists after first deployment
+- Run `file trafficlight_env/bin/python3` and confirm it shows `ELF 64-bit LSB ... x86-64`; a mismatch means the wrong env package was used
+- Verify Redis address, port and password in `config/mq_config.json`
+- Check `{deploy_path}/opentraffic-control/run.log` for detailed errors
+
+### x86/amd64 perception service fails to start
+- Confirm `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-amd64/.venv/bin/python3` exists after first deployment
+- Confirm the remote server has `python3.13` installed before deploying
+- Verify `video_path`, `radar_reference_path`, `output_path` and Redis settings in `drivers/config.json`
+- Check `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-amd64/run.log` for detailed errors
+
+### ARM aarch64 perception service fails to start
+- Confirm `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-arm64/.venv/bin/python3` exists after first deployment
+- Confirm the remote server has `python3.13` installed before deploying
+- Verify `video_path`, `radar_reference_path`, `output_path` and Redis settings in `drivers/config.json`
+- Check `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-arm64/run.log` for detailed errors
 
 ### Component container start failed (Permission denied)
 - When using bind mounts, ensure host directory owner matches container default user UID

@@ -57,7 +57,7 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 | 实时监控 | 查看组件实时资源占用（CPU / 内存 / 网络 / 磁盘），支持日志实时刷新和自动刷新 |
 | SSH 服务器管理 | 统一管理多台远程 Linux 服务器的 SSH 连接配置，支持密码和密钥两种认证方式 |
 | 远程二进制部署 | 通过 SSH/SFTP 将 opentraffic-ops-proxy 和 opentraffic-ops 二进制文件一键部署到远程服务器 |
-| 远程配置管理 | 在线查看和编辑远程服务器上的软件配置文件（proxy 的 config.json、平台的 config.yaml） |
+| 远程配置管理 | 在线查看和编辑远程服务器上的软件配置文件（proxy 的 `opentraffic-ops-proxy-config.json`、平台的 `opentraffic-ops-config.yaml`） |
 | 远程服务管理 | 通过 PID 文件管理远程服务的启动、停止、重启，无需 root 权限 |
 | 部署记录追溯 | 完整记录每次远程部署的操作日志、执行结果和历史记录 |
 
@@ -127,9 +127,9 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 新增 / 编辑 / 删除远程服务器 SSH 配置
 - 支持两种认证方式：密码认证和密钥认证（支持带 Passphrase 的私钥）
 - SSH 连接测试
-- 服务器列表展示服务状态（proxy / monitor / control）
+- 服务器列表展示服务状态（proxy / monitor / control / perception）
 - 展开行查看已部署服务详情
-- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务；control 算法包支持启动 / 停止 / 重启 / 配置 / 卸载，配置路径为 `{deploy_path}/opentraffic-control/config/mq_config.json`
+- 支持的操作：启动 / 停止 / 重启 / 配置 / 卸载远程服务；control 与 perception 算法包支持启动 / 停止 / 重启 / 配置 / 卸载，配置路径分别为 `{deploy_path}/opentraffic-control/config/mq_config.json` 和 `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-{amd64,arm64}/drivers/config.json`
 
 ![服务器管理](images/image-1.png)
 
@@ -138,6 +138,8 @@ OpenTraffic Ops 部署面板是一个**单二进制、自包含**的综合运维
 - 部署 `opentraffic-control` 算法包（tar 压缩包）到远程服务器，自动识别架构（amd64 / arm64 / loong64），支持版本记录
 - **龙芯 LoongArch64**：采用 Python 环境包（`trafficlight-loong64.tar.gz`，解压为 `trafficlight_env/`，含全部依赖）与算法包（`opentraffic-control-linux-loong64.tar`，预编译 .so）分离部署，Python 环境解压到部署目录 `{deploy_path}/opentraffic-control/trafficlight_env`，首次自动部署，后续只更新算法包，解压即用，无需板载编译
 - **ARM aarch64**：采用 Python 环境包（`trafficlight-arm64.tar.gz`，解压为 `trafficlight_env/`，含全部依赖）与算法包（`opentraffic-control-linux-arm64.tar`）分离部署，Python 环境解压到部署目录 `{deploy_path}/opentraffic-control/trafficlight_env`，首次自动部署，后续只更新算法包，解压即用，无需 conda / pip / 编译环境
+- **x86/amd64**：采用 Python 环境包（`trafficlight-amd64.tar.gz`，解压为 `trafficlight_env/`，含全部依赖）与算法包（`opentraffic-control-linux-amd64.tar`）分离部署，Python 环境解压到部署目录 `{deploy_path}/opentraffic-control/trafficlight_env`，首次自动部署，后续只更新算法包，解压即用，无需 conda / pip / 编译环境
+- **x86/amd64 与 ARM aarch64 感知服务**：将 `opentraffic-perception-linux-{amd64,arm64}.tar` 感知算法包部署到远程服务器，自动识别目标架构，首次自动运行 `deploy/install.sh` 创建 `.venv`、运行 `deploy/configure.sh` 生成默认 `drivers/config.json` 并写入用户配置；后续重复部署只更新算法包。ARM64 版本使用 RKNN 推理
 - 部署二进制文件时可选同时部署配置文件
 - 支持加载默认配置模板
 - 二进制文件防重复部署检测；算法包允许重复部署并保留版本历史
@@ -330,6 +332,24 @@ docker run --rm \
 - 执行 `file trafficlight_env/bin/python3` 确认显示 `ELF 64-bit LSB ... ARM aarch64`，架构不匹配说明环境包用错
 - 检查 `config/mq_config.json` 中的 Redis 地址、端口、密码是否正确
 - 查看 `{deploy_path}/opentraffic-control/run.log` 中的具体错误
+
+### x86/amd64 控制服务启动失败
+- 确认首次部署时 `{deploy_path}/opentraffic-control/trafficlight_env/bin/python3` 已存在
+- 执行 `file trafficlight_env/bin/python3` 确认显示 `ELF 64-bit LSB ... x86-64`，架构不匹配说明环境包用错
+- 检查 `config/mq_config.json` 中的 Redis 地址、端口、密码是否正确
+- 查看 `{deploy_path}/opentraffic-control/run.log` 中的具体错误
+
+### x86/amd64 感知服务启动失败
+- 确认首次部署后 `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-amd64/.venv/bin/python3` 已存在
+- 确认远程服务器已安装 `python3.13`
+- 检查 `drivers/config.json` 中的 `video_path`、`radar_reference_path`、`output_path` 与 Redis 地址、端口、密码是否正确
+- 查看 `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-amd64/run.log` 中的具体错误
+
+### ARM aarch64 感知服务启动失败
+- 确认首次部署后 `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-arm64/.venv/bin/python3` 已存在
+- 确认远程服务器已安装 `python3.13`
+- 检查 `drivers/config.json` 中的 `video_path`、`radar_reference_path`、`output_path` 与 Redis 地址、端口、密码是否正确
+- 查看 `{deploy_path}/opentraffic-perception/opentraffic-perception-linux-arm64/run.log` 中的具体错误
 
 ### 组件容器启动失败（Permission denied）
 - 使用绑定挂载时，确保宿主机目录的属主与容器默认用户 UID 一致
