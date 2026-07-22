@@ -427,6 +427,13 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] perception 工作目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
 
+	// 确保 python3.13 可以创建 venv
+	if err := ensurePythonVenvSupport(client, deployLog); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, err
+	}
+
 	// 运行 install.sh 准备运行环境
 	installCmd := fmt.Sprintf("cd %s && bash deploy/install.sh", workDir)
 	installOut, err := client.ExecuteWithTimeout(installCmd, 600*time.Second)
@@ -486,6 +493,27 @@ func getPerceptionTarFileName(arch string) (tarFileName string, err error) {
 		return "", fmt.Errorf("opentraffic-perception does not support architecture: %s", suffix)
 	}
 	return fmt.Sprintf("opentraffic-perception-%s.tar", suffix), nil
+}
+
+// ensurePythonVenvSupport 检查并尝试安装 python3.13 venv 支持（ensurepip）
+func ensurePythonVenvSupport(client *ssh.Client, deployLog *strings.Builder) error {
+	if _, err := client.Execute("python3.13 -m ensurepip --version"); err == nil {
+		return nil
+	}
+	deployLog.WriteString("[WARN] python3.13 ensurepip 不可用，尝试安装 python3.13-venv\n")
+
+	// 优先尝试直接安装（root 用户）
+	if _, err := client.ExecuteWithTimeout("apt-get update && apt-get install -y python3.13-venv", 180*time.Second); err == nil {
+		return nil
+	}
+	deployLog.WriteString("[WARN] 直接安装失败，尝试使用 sudo\n")
+
+	// 非 root 用户尝试 sudo
+	if _, err := client.ExecuteWithTimeout("sudo apt-get update && sudo apt-get install -y python3.13-venv", 180*time.Second); err == nil {
+		return nil
+	}
+
+	return fmt.Errorf("无法为 python3.13 创建虚拟环境，请手动安装 python3.13-venv（apt install python3.13-venv）后重试")
 }
 
 // getControlTarFileName 根据远程架构生成 opentraffic-control tar 包文件名
