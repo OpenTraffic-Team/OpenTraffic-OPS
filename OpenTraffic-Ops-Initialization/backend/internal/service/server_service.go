@@ -629,10 +629,18 @@ func (s *ServerService) getTarPackageServiceStatus(client *ssh.Client, softwareN
 	}
 
 	// 优先使用服务自带的 status.sh，不存在时回退到 pid 文件 + pgrep
-	checkCmd := fmt.Sprintf(
-		"if [ -x %s ]; then cd %s && bash %s; elif [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '%s' >/dev/null 2>&1; then echo running; else echo stopped; fi",
-		statusScript, workDir, statusScript, pidFile, pidFile, pkillPattern(processPattern),
-	)
+	var checkCmd string
+	if statusScript != "" {
+		checkCmd = fmt.Sprintf(
+			"if [ -x %s ]; then cd %s && bash %s; elif [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '%s' >/dev/null 2>&1; then echo running; else echo stopped; fi",
+			statusScript, workDir, statusScript, pidFile, pidFile, pkillPattern(processPattern),
+		)
+	} else {
+		checkCmd = fmt.Sprintf(
+			"if [ -f %s ] && kill -0 $(cat %s) 2>/dev/null; then echo running; elif pgrep -f '%s' >/dev/null 2>&1; then echo running; else echo stopped; fi",
+			pidFile, pidFile, pkillPattern(processPattern),
+		)
+	}
 	output, err := client.Execute(checkCmd)
 	if err != nil {
 		return "unknown", nil
