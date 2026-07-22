@@ -297,14 +297,17 @@ var perceptionServiceConfig = struct {
 	ProcessPattern:  "main.py",
 }
 
-// resolvePerceptionWorkDir 根据远程实际目录判断是 amd64 还是 arm64 工作目录
+// resolvePerceptionWorkDir 根据远程实际目录判断 perception 工作目录（支持扁平解压或带架构子目录）
 func resolvePerceptionWorkDir(client *ssh.Client, deployPath string) (string, error) {
+	baseDir := filepath.Join(deployPath, perceptionServiceConfig.DirName)
 	candidates := []string{
-		filepath.Join(deployPath, perceptionServiceConfig.DirName, "opentraffic-perception-linux-arm64"),
-		filepath.Join(deployPath, perceptionServiceConfig.DirName, "opentraffic-perception-linux-amd64"),
+		baseDir,
+		filepath.Join(baseDir, "opentraffic-perception-linux-arm64"),
+		filepath.Join(baseDir, "opentraffic-perception-linux-amd64"),
 	}
 	for _, dir := range candidates {
-		out, _ := client.Execute(fmt.Sprintf("test -d %s && echo exists || echo missing", dir))
+		scriptPath := filepath.Join(dir, "deploy", "install.sh")
+		out, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", scriptPath))
 		if strings.TrimSpace(out) == "exists" {
 			return dir, nil
 		}

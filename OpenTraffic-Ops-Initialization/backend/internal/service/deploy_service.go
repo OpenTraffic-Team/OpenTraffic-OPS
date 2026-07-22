@@ -358,7 +358,7 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 远程架构: %s\n", time.Now().Format("2006-01-02 15:04:05"), arch))
 
-	tarFileName, subDir, err := getPerceptionTarFileName(arch)
+	tarFileName, err := getPerceptionTarFileName(arch)
 	if err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
@@ -374,7 +374,6 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 
 	remoteDir := filepath.Join(server.DeployPath, packageDir)
 	remoteTarPath := filepath.Join(remoteDir, tarFileName)
-	workDir := filepath.Join(remoteDir, subDir)
 
 	// 创建远程部署目录
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", remoteDir)
@@ -410,7 +409,7 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	deployLog.WriteString(fmt.Sprintf("[%s] 上传 tar 包成功: %s (%d bytes)\n",
 		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(tarData)))
 
-	// 解压 tar 包（保留顶层目录）
+	// 解压 tar 包到远程目录
 	extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
 	if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
@@ -418,6 +417,15 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 		return record, fmt.Errorf("failed to extract tar package: %w", err)
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+	// 根据实际解压结构定位工作目录（扁平或带架构子目录）
+	workDir, err := resolvePerceptionWorkDir(client, server.DeployPath)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 定位 perception 工作目录失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return record, fmt.Errorf("failed to resolve perception work directory: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] perception 工作目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
 
 	// 运行 install.sh 准备运行环境（无参数，脚本会按 conda / venv 依次回退）
 	installCmd := fmt.Sprintf("cd %s && bash deploy/install.sh", workDir)
@@ -466,16 +474,16 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	return record, nil
 }
 
-// getPerceptionTarFileName 根据远程架构生成 opentraffic-perception tar 包文件名与实际子目录名
-func getPerceptionTarFileName(arch string) (tarFileName, subDir string, err error) {
+// getPerceptionTarFileName 根据远程架构生成 opentraffic-perception tar 包文件名
+func getPerceptionTarFileName(arch string) (tarFileName string, err error) {
 	suffix, ok := archToBinarySuffix[strings.ToLower(strings.TrimSpace(arch))]
 	if !ok {
-		return "", "", fmt.Errorf("unsupported architecture for perception: %s", arch)
+		return "", fmt.Errorf("unsupported architecture for perception: %s", arch)
 	}
 	if suffix != "linux-amd64" && suffix != "linux-arm64" {
-		return "", "", fmt.Errorf("opentraffic-perception does not support architecture: %s", arch)
+		return "", fmt.Errorf("opentraffic-perception does not support architecture: %s", suffix)
 	}
-	return fmt.Sprintf("opentraffic-perception-%s.tar", suffix), fmt.Sprintf("opentraffic-perception-%s", suffix), nil
+	return fmt.Sprintf("opentraffic-perception-%s.tar", suffix), nil
 }
 
 // getControlTarFileName 根据远程架构生成 opentraffic-control tar 包文件名
