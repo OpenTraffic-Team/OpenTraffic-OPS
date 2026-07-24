@@ -3,6 +3,7 @@ package service
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"path/filepath"
 	"opentraffic-ops-init-backend/internal/model"
 	"opentraffic-ops-init-backend/internal/repository"
@@ -258,7 +259,7 @@ var softwareConfigMeta = map[string]struct {
 	},
 	"opentraffic-perception": {
 		ConfigDir:    "",
-		ConfigFile:   "drivers/config.json",
+		ConfigFile:   "config.json",
 		EmbeddedName: "opentraffic-perception-config.json",
 	},
 }
@@ -285,7 +286,6 @@ var perceptionServiceConfig = struct {
 	InstallScript   string
 	ConfigureScript string
 	PidFileName     string
-	ProcessPattern  string
 }{
 	DirName:         "opentraffic-perception",
 	StartScript:     "deploy/start.sh",
@@ -294,25 +294,40 @@ var perceptionServiceConfig = struct {
 	InstallScript:   "deploy/install.sh",
 	ConfigureScript: "deploy/configure.sh",
 	PidFileName:     "run_perception.pid",
-	ProcessPattern:  "main.py",
 }
 
 // resolvePerceptionWorkDir 根据远程实际目录判断 perception 工作目录（支持扁平解压或带架构子目录）
 func resolvePerceptionWorkDir(client *ssh.Client, deployPath string) (string, error) {
-	baseDir := filepath.Join(deployPath, perceptionServiceConfig.DirName)
+	baseDir := filepath.ToSlash(filepath.Join(deployPath, perceptionServiceConfig.DirName))
 	candidates := []string{
+		filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-loong64")),
+		filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-arm64")),
+		filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-amd64")),
 		baseDir,
-		filepath.Join(baseDir, "opentraffic-perception-linux-arm64"),
-		filepath.Join(baseDir, "opentraffic-perception-linux-amd64"),
 	}
 	for _, dir := range candidates {
-		scriptPath := filepath.Join(dir, "deploy", "install.sh")
+		scriptPath := filepath.ToSlash(filepath.Join(dir, "deploy", "install.sh"))
 		out, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", scriptPath))
 		if strings.TrimSpace(out) == "exists" {
 			return dir, nil
 		}
 	}
 	return "", fmt.Errorf("未找到 opentraffic-perception 工作目录，请确认已部署")
+}
+
+// resolvePerceptionProcessPattern 根据工作目录内容判断感知服务实际进程入口
+func resolvePerceptionProcessPattern(client *ssh.Client, workDir string) string {
+	loongsonEntry := filepath.ToSlash(filepath.Join(workDir, "loongson_deploy", "main_loongson.py"))
+	out, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", loongsonEntry))
+	if strings.TrimSpace(out) == "exists" {
+		return "main_loongson.py"
+	}
+	rknnEntry := filepath.ToSlash(filepath.Join(workDir, "run_local_rknn.sh"))
+	out, _ = client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", rknnEntry))
+	if strings.TrimSpace(out) == "exists" {
+		return "run_local_rknn.sh"
+	}
+	return "run_main.py"
 }
 
 // pkillPattern 生成 pkill/pgrep 使用的防自匹配正则
@@ -340,12 +355,12 @@ func isTarPackageService(name string) bool {
 
 // tarPackageWorkDir 返回 tar 包服务的实际工作目录（仅用于 control）
 func tarPackageWorkDir(deployPath string, softwareName string) string {
-	return filepath.Join(deployPath, controlServiceConfig.DirName)
+	return filepath.ToSlash(filepath.Join(deployPath, controlServiceConfig.DirName))
 }
 
 // tarPackageConfigDir 返回 tar 包服务的配置文件所在目录（仅用于 control）
 func tarPackageConfigDir(deployPath string, softwareName string) string {
-	return filepath.Join(tarPackageWorkDir(deployPath, softwareName), "config")
+	return filepath.ToSlash(filepath.Join(tarPackageWorkDir(deployPath, softwareName), "config"))
 }
 
 // tarPackageConfigPathForService 返回 tar 包服务的完整配置文件路径（control 固定，perception 动态检测架构子目录）
@@ -355,9 +370,9 @@ func tarPackageConfigPathForService(client *ssh.Client, deployPath string, softw
 		if err != nil {
 			return "", err
 		}
-		return filepath.Join(workDir, "drivers", configFile), nil
+		return filepath.ToSlash(filepath.Join(workDir, "drivers", configFile)), nil
 	}
-	return filepath.Join(tarPackageConfigDir(deployPath, softwareName), configFile), nil
+	return filepath.ToSlash(filepath.Join(tarPackageConfigDir(deployPath, softwareName), configFile)), nil
 }
 
 // getDefaultConfig 从嵌入资源读取指定软件的默认配置，如不存在则返回空JSON
@@ -434,7 +449,7 @@ func (s *ServerService) GetSoftwareConfig(id string, softwareName string) (strin
 		fallbackDir := strings.TrimPrefix(meta.ConfigDir, "~/")
 		configDir = fmt.Sprintf("/home/%s/%s", creds.Server.Username, fallbackDir)
 	}
-	configPath := filepath.Join(configDir, meta.ConfigFile)
+	configPath := filepath.ToSlash(filepath.Join(configDir, meta.ConfigFile))
 
 	data, err := client.ReadFile(configPath)
 	if err != nil {
@@ -445,8 +460,10 @@ func (s *ServerService) GetSoftwareConfig(id string, softwareName string) (strin
 
 // UpdateSoftwareConfig 更新远程服务器上指定软件的配置
 func (s *ServerService) UpdateSoftwareConfig(id string, softwareName string, content string) error {
+	log.Printf("[DEBUG] UpdateSoftwareConfig called: serverID=%s software=%s contentLen=%d", id, softwareName, len(content))
 	meta, ok := softwareConfigMeta[softwareName]
 	if !ok {
+		log.Printf("[DEBUG] UpdateSoftwareConfig unknown software: %s", softwareName)
 		return fmt.Errorf("unknown software: %s", softwareName)
 	}
 
@@ -484,11 +501,56 @@ func (s *ServerService) UpdateSoftwareConfig(id string, softwareName string, con
 	defer client.Close()
 
 	if isTarPackageService(softwareName) {
+		log.Printf("[DEBUG] UpdateSoftwareConfig isTarPackageService=true")
+		// perception 可能存在扁平目录和架构子目录两种结构，写入所有有效工作目录
+		if isPerceptionService(softwareName) {
+			baseDir := filepath.ToSlash(filepath.Join(creds.Server.DeployPath, perceptionServiceConfig.DirName))
+			candidates := []string{
+				filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-loong64")),
+				filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-arm64")),
+				filepath.ToSlash(filepath.Join(baseDir, "opentraffic-perception-linux-amd64")),
+				baseDir,
+			}
+			var lastErr error
+			written := false
+			for _, dir := range candidates {
+				installPath := filepath.ToSlash(filepath.Join(dir, "deploy", "install.sh"))
+				out, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", installPath))
+				exists := strings.TrimSpace(out) == "exists"
+				log.Printf("[DEBUG] checking candidate dir=%s installExists=%v", dir, exists)
+				if !exists {
+					continue
+				}
+				configPath := filepath.ToSlash(filepath.Join(dir, "drivers", meta.ConfigFile))
+				configDir := filepath.ToSlash(filepath.Dir(configPath))
+				mkdirCmd := fmt.Sprintf("mkdir -p %s", configDir)
+				if _, err := client.Execute(mkdirCmd); err != nil {
+					lastErr = fmt.Errorf("failed to create config directory %s: %w", configDir, err)
+					log.Printf("[DEBUG] mkdir failed %s: %v", configDir, err)
+					continue
+				}
+				if err := client.WriteFile([]byte(content), configPath); err != nil {
+					lastErr = fmt.Errorf("failed to write config file %s: %w", configPath, err)
+					log.Printf("[DEBUG] WriteFile failed %s: %v", configPath, err)
+					continue
+				}
+				log.Printf("[DEBUG] WriteFile succeeded %s", configPath)
+				written = true
+			}
+			if !written {
+				if lastErr != nil {
+					return lastErr
+				}
+				return fmt.Errorf("failed to locate perception config path")
+			}
+			return nil
+		}
+
 		configPath, err := tarPackageConfigPathForService(client, creds.Server.DeployPath, softwareName, meta.ConfigFile)
 		if err != nil {
 			return fmt.Errorf("failed to locate config path: %w", err)
 		}
-		configDir := filepath.Dir(configPath)
+		configDir := filepath.ToSlash(filepath.Dir(configPath))
 		mkdirCmd := fmt.Sprintf("mkdir -p %s", configDir)
 		if _, err := client.Execute(mkdirCmd); err != nil {
 			return fmt.Errorf("failed to create config directory: %w", err)
@@ -506,7 +568,7 @@ func (s *ServerService) UpdateSoftwareConfig(id string, softwareName string, con
 		fallbackDir := strings.TrimPrefix(meta.ConfigDir, "~/")
 		configDir = fmt.Sprintf("/home/%s/%s", creds.Server.Username, fallbackDir)
 	}
-	configPath := filepath.Join(configDir, meta.ConfigFile)
+	configPath := filepath.ToSlash(filepath.Join(configDir, meta.ConfigFile))
 
 	if err := client.WriteFile([]byte(content), configPath); err != nil {
 		return fmt.Errorf("failed to write config file: %w", err)
@@ -565,7 +627,7 @@ func isValidSoftwareName(name string) bool {
 
 // pidFilePath 生成pid文件远程路径
 func pidFilePath(deployPath string, softwareName string) string {
-	return filepath.Join(deployPath, softwareName+".pid")
+	return filepath.ToSlash(filepath.Join(deployPath, softwareName+".pid"))
 }
 
 // GetServiceStatus 获取指定软件的运行状态（通过pid文件检测）
@@ -619,12 +681,12 @@ func (s *ServerService) getTarPackageServiceStatus(client *ssh.Client, softwareN
 		if err != nil {
 			return "stopped", nil
 		}
-		pidFile = filepath.Join(workDir, perceptionServiceConfig.PidFileName)
-		statusScript = filepath.Join(workDir, perceptionServiceConfig.StatusScript)
-		processPattern = perceptionServiceConfig.ProcessPattern
+		pidFile = filepath.ToSlash(filepath.Join(workDir, perceptionServiceConfig.PidFileName))
+		statusScript = filepath.ToSlash(filepath.Join(workDir, perceptionServiceConfig.StatusScript))
+		processPattern = resolvePerceptionProcessPattern(client, workDir)
 	} else {
 		workDir = tarPackageWorkDir(deployPath, softwareName)
-		pidFile = filepath.Join(workDir, controlServiceConfig.PidFileName)
+		pidFile = filepath.ToSlash(filepath.Join(workDir, controlServiceConfig.PidFileName))
 		processPattern = controlServiceConfig.ProcessPattern
 	}
 
@@ -645,8 +707,15 @@ func (s *ServerService) getTarPackageServiceStatus(client *ssh.Client, softwareN
 	if err != nil {
 		return "unknown", nil
 	}
-	status := strings.TrimSpace(output)
-	if status == "running" {
+	// status.sh 可能输出多行（如 "status: running\npid: ..."），取第一行非空内容判断
+	firstLine := ""
+	for _, line := range strings.Split(output, "\n") {
+		if trimmed := strings.TrimSpace(line); trimmed != "" {
+			firstLine = strings.ToLower(trimmed)
+			break
+		}
+	}
+	if firstLine == "running" || strings.HasPrefix(firstLine, "status: running") {
 		return "running", nil
 	}
 	return "stopped", nil
@@ -690,7 +759,7 @@ func (s *ServerService) StartService(id string, softwareName string) error {
 		return err
 	}
 
-	remotePath := filepath.Join(creds.Server.DeployPath, binaryName)
+	remotePath := filepath.ToSlash(filepath.Join(creds.Server.DeployPath, binaryName))
 	pidFile := pidFilePath(creds.Server.DeployPath, softwareName)
 	// setsid 创建新 session，使后台进程脱离 SSH session 追踪；
 	// setsid 启动 sh，sh 直接后台运行 binary 并输出真实 PID，确保 pidfile 记录的是 binary 的 PID
@@ -711,11 +780,11 @@ func (s *ServerService) startTarPackageService(client *ssh.Client, softwareName 
 
 // startControlService 启动 opentraffic-control
 func (s *ServerService) startControlService(client *ssh.Client, deployPath string) error {
-	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
-	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
+	deployDir := filepath.ToSlash(filepath.Join(deployPath, controlServiceConfig.DirName))
+	pidFile := filepath.ToSlash(filepath.Join(deployDir, controlServiceConfig.PidFileName))
 
 	// 启动前校验 mq_config.json，缺失或无效时阻止启动并给出引导
-	configPath := filepath.Join(deployDir, "config", "mq_config.json")
+	configPath := filepath.ToSlash(filepath.Join(deployDir, "config", "mq_config.json"))
 	configData, err := client.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("配置文件 %s 不存在，请先在配置管理中填写并保存 mq_config.json 后再启动", configPath)
@@ -733,19 +802,19 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 
 	arch, _ := detectRemoteArch(client)
 
-	// 启动脚本内部已后台运行；执行后等待进程拉起并写入 pid 文件
-	startCmd := fmt.Sprintf("cd %s && ./%s && sleep 2 && pgrep -f '[r]un_algorithms.py' > %s",
+	// 使用 bash 显式执行启动脚本，避免脚本含 CRLF 时 shebang 解析失败
+	startCmd := fmt.Sprintf("cd %s && bash %s && sleep 2 && pgrep -f '[r]un_algorithms.py' > %s",
 		deployDir, controlServiceConfig.StartScript, pidFile)
 	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
 		// 附带 run.log 尾部，便于定位启动失败原因
 		if controlEnvPackage(arch) != "" {
-			venvPython := filepath.Join(deployDir, "trafficlight_env", "bin", "python3")
+			venvPython := filepath.ToSlash(filepath.Join(deployDir, "trafficlight_env", "bin", "python3"))
 			checkOut, _ := client.Execute(fmt.Sprintf("test -f %s && echo exists || echo missing", venvPython))
 			if strings.TrimSpace(checkOut) != "exists" {
 				return fmt.Errorf("failed to start control service: Python 环境缺失（%s 不存在），请重新部署 opentraffic-control 以自动安装 trafficlight_env", venvPython)
 			}
 		}
-		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.Join(deployDir, "run.log")))
+		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.ToSlash(filepath.Join(deployDir, "run.log"))))
 		if strings.TrimSpace(logTail) != "" {
 			return fmt.Errorf("failed to start control service: %w, run.log:\n%s", err, strings.TrimSpace(logTail))
 		}
@@ -754,16 +823,35 @@ func (s *ServerService) startControlService(client *ssh.Client, deployPath strin
 	return nil
 }
 
+// getPerceptionVideoPath 从感知配置中安全读取第一个摄像头的 rtsp_url
+func getPerceptionVideoPath(config map[string]interface{}) (string, bool) {
+	intersection, ok := config["intersection"].(map[string]interface{})
+	if !ok {
+		return "", false
+	}
+	cameras, ok := intersection["cameras"].([]interface{})
+	if !ok || len(cameras) == 0 {
+		return "", false
+	}
+	camera0, ok := cameras[0].(map[string]interface{})
+	if !ok {
+		return "", false
+	}
+	rtspURL, ok := camera0["rtsp_url"].(string)
+	return rtspURL, ok
+}
+
 // startPerceptionService 启动 opentraffic-perception
 func (s *ServerService) startPerceptionService(client *ssh.Client, deployPath string) error {
 	workDir, err := resolvePerceptionWorkDir(client, deployPath)
 	if err != nil {
 		return err
 	}
-	pidFile := filepath.Join(workDir, perceptionServiceConfig.PidFileName)
+	processPattern := resolvePerceptionProcessPattern(client, workDir)
 
 	// 启动前校验 drivers/config.json，缺失或无效时阻止启动并给出引导
-	configPath := filepath.Join(workDir, "drivers", "config.json")
+	configPath := filepath.ToSlash(filepath.Join(workDir, "drivers", "config.json"))
+	log.Printf("[DEBUG] startPerceptionService reading config from %s", configPath)
 	configData, err := client.ReadFile(configPath)
 	if err != nil {
 		return fmt.Errorf("配置文件 %s 不存在，请先在配置管理中填写并保存 drivers/config.json 后再启动", configPath)
@@ -772,21 +860,29 @@ func (s *ServerService) startPerceptionService(client *ssh.Client, deployPath st
 	if err := json.Unmarshal(configData, &perceptionConfig); err != nil {
 		return fmt.Errorf("配置文件 drivers/config.json 不是合法的 JSON: %v，请在配置管理中修正后再启动", err)
 	}
-	requiredKeys := []string{"video_path", "radar_reference_path", "output_path"}
-	for _, key := range requiredKeys {
-		if val, ok := perceptionConfig[key].(string); !ok || strings.TrimSpace(val) == "" {
-			return fmt.Errorf("配置文件 drivers/config.json 缺少 %s，请在配置管理中填写有效路径后再启动", key)
+
+	requiredFields := []struct {
+		name   string
+		getter func(map[string]interface{}) (string, bool)
+	}{
+		{"intersection.cameras[0].rtsp_url", getPerceptionVideoPath},
+		{"radarReferenceJsonl", func(c map[string]interface{}) (string, bool) { v, ok := c["radarReferenceJsonl"].(string); return v, ok }},
+		{"jsonlOutputDir", func(c map[string]interface{}) (string, bool) { v, ok := c["jsonlOutputDir"].(string); return v, ok }},
+	}
+	for _, field := range requiredFields {
+		val, ok := field.getter(perceptionConfig)
+		if !ok || strings.TrimSpace(val) == "" {
+			return fmt.Errorf("配置文件 drivers/config.json 缺少 %s，请在配置管理中填写有效路径后再启动", field.name)
 		}
 	}
 
 	// 先停止可能已存在的进程
-	_, _ = client.Execute(fmt.Sprintf("pkill -f '%s' 2>/dev/null || true", pkillPattern(perceptionServiceConfig.ProcessPattern)))
+	_, _ = client.Execute(fmt.Sprintf("pkill -f '%s' 2>/dev/null || true", pkillPattern(processPattern)))
 
-	// 使用 deploy/start.sh 启动；等待进程拉起并写入 pid 文件
-	startCmd := fmt.Sprintf("cd %s && bash %s && sleep 2 && pgrep -f '%s' > %s",
-		workDir, perceptionServiceConfig.StartScript, pkillPattern(perceptionServiceConfig.ProcessPattern), pidFile)
-	if _, err := client.ExecuteWithTimeout(startCmd, 120*time.Second); err != nil {
-		logTail, _ := client.Execute(fmt.Sprintf("tail -20 %s 2>/dev/null", filepath.Join(workDir, "run.log")))
+	// start.sh 内部已用 nohup 后台启动 run_local_rknn.sh 并写 pid 文件，同步执行即可
+	startCmd := fmt.Sprintf("cd %s && bash %s", workDir, perceptionServiceConfig.StartScript)
+	if _, err := client.ExecuteWithTimeout(startCmd, 60*time.Second); err != nil {
+		logTail, _ := client.Execute(fmt.Sprintf("tail -30 %s 2>/dev/null", filepath.ToSlash(filepath.Join(workDir, "run.log"))))
 		if strings.TrimSpace(logTail) != "" {
 			return fmt.Errorf("failed to start perception service: %w, run.log:\n%s", err, strings.TrimSpace(logTail))
 		}
@@ -842,8 +938,8 @@ func (s *ServerService) stopTarPackageService(client *ssh.Client, softwareName s
 
 // stopControlService 停止 opentraffic-control
 func (s *ServerService) stopControlService(client *ssh.Client, deployPath string) error {
-	deployDir := filepath.Join(deployPath, controlServiceConfig.DirName)
-	pidFile := filepath.Join(deployDir, controlServiceConfig.PidFileName)
+	deployDir := filepath.ToSlash(filepath.Join(deployPath, controlServiceConfig.DirName))
+	pidFile := filepath.ToSlash(filepath.Join(deployDir, controlServiceConfig.PidFileName))
 	stopCmd := fmt.Sprintf(
 		"if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f '[r]un_algorithms.py' 2>/dev/null || true",
 		pidFile, pidFile, pidFile,
@@ -860,13 +956,16 @@ func (s *ServerService) stopPerceptionService(client *ssh.Client, deployPath str
 	if err != nil {
 		return err
 	}
-	pidFile := filepath.Join(workDir, perceptionServiceConfig.PidFileName)
+	pidFile := filepath.ToSlash(filepath.Join(workDir, perceptionServiceConfig.PidFileName))
+	processPattern := resolvePerceptionProcessPattern(client, workDir)
 
-	// 优先使用 deploy/stop.sh，不存在时回退到 pid 文件 + pkill
-	stopScript := filepath.Join(workDir, perceptionServiceConfig.StopScript)
+	// 优先使用 deploy/stop.sh，同时清理 pid 文件，并回退到 pkill
+	stopScript := filepath.ToSlash(filepath.Join(workDir, perceptionServiceConfig.StopScript))
 	stopCmd := fmt.Sprintf(
-		"if [ -x %s ]; then cd %s && bash %s; else if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; pkill -f '%s' 2>/dev/null || true; fi",
-		stopScript, workDir, stopScript, pidFile, pidFile, pidFile, pkillPattern(perceptionServiceConfig.ProcessPattern),
+		"if [ -x %s ]; then cd %s && bash %s; fi; "+
+			"if [ -f %s ]; then kill $(cat %s) 2>/dev/null; rm -f %s; fi; "+
+			"pkill -f '%s' 2>/dev/null || true",
+		stopScript, workDir, stopScript, pidFile, pidFile, pidFile, pkillPattern(processPattern),
 	)
 	if _, err := client.ExecuteWithTimeout(stopCmd, 60*time.Second); err != nil {
 		return fmt.Errorf("failed to stop perception service: %w", err)

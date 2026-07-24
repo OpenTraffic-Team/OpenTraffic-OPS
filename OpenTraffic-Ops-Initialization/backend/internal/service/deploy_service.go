@@ -121,14 +121,14 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 	deployLog.WriteString(fmt.Sprintf("[%s] 使用二进制: %s\n", time.Now().Format("2006-01-02 15:04:05"), binaryFileName))
 
 	// 更新部署记录中的远程路径
-	remotePath := filepath.Join(server.DeployPath, binaryFileName)
+	remotePath := filepath.ToSlash(filepath.Join(server.DeployPath, binaryFileName))
 	record.RemotePath = remotePath
 	if err := s.deployRecordRepo.Update(record); err != nil {
 		return record, fmt.Errorf("failed to update deploy record: %w", err)
 	}
 
 	// 4. 创建远程部署目录
-	mkdirCmd := fmt.Sprintf("mkdir -p %s", server.DeployPath)
+	mkdirCmd := fmt.Sprintf("mkdir -p %s", filepath.ToSlash(server.DeployPath))
 	if _, err := client.Execute(mkdirCmd); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 创建远程目录失败: %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
@@ -181,7 +181,7 @@ func (s *DeployService) Deploy(req *DeployRequest, userName string) (*model.Depl
 			fallbackDir := strings.TrimPrefix(meta.ConfigDir, "~/")
 			configDir = fmt.Sprintf("/home/%s/%s", server.Username, fallbackDir)
 		}
-		configPath := filepath.Join(configDir, meta.ConfigFile)
+		configPath := filepath.ToSlash(filepath.Join(configDir, meta.ConfigFile))
 
 		if req.ConfigContent != nil && *req.ConfigContent != "" {
 			// 用户提供了自定义配置，直接写入
@@ -245,8 +245,8 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 使用 tar 包: %s\n", time.Now().Format("2006-01-02 15:04:05"), tarFileName))
 
-	remoteDir := filepath.Join(server.DeployPath, packageDir)
-	remoteTarPath := filepath.Join(remoteDir, tarFileName)
+	remoteDir := filepath.ToSlash(filepath.Join(server.DeployPath, packageDir))
+	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, tarFileName))
 
 	// 创建远程部署目录
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", remoteDir)
@@ -313,8 +313,8 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 
 	// 写入用户自定义配置（mq_config.json）
 	if req.ConfigContent != nil && *req.ConfigContent != "" {
-		configDir := filepath.Join(remoteDir, "config")
-		configPath := filepath.Join(configDir, "mq_config.json")
+		configDir := filepath.ToSlash(filepath.Join(remoteDir, "config"))
+		configPath := filepath.ToSlash(filepath.Join(configDir, "mq_config.json"))
 		mkdirConfigCmd := fmt.Sprintf("mkdir -p %s", configDir)
 		if _, err := client.Execute(mkdirConfigCmd); err != nil {
 			deployLog.WriteString(fmt.Sprintf("[WARN] 创建配置目录失败: %v\n", err))
@@ -326,12 +326,20 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	}
 
 	// 为启动脚本赋予可执行权限
-	startScriptPath := filepath.Join(remoteDir, controlServiceConfig.StartScript)
+	startScriptPath := filepath.ToSlash(filepath.Join(remoteDir, controlServiceConfig.StartScript))
 	chmodCmd := fmt.Sprintf("chmod +x %s", startScriptPath)
 	if _, err := client.Execute(chmodCmd); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[WARN] 设置启动脚本可执行权限失败: %v\n", err))
 	} else {
 		deployLog.WriteString(fmt.Sprintf("[%s] 设置启动脚本可执行权限: %s\n", time.Now().Format("2006-01-02 15:04:05"), startScriptPath))
+	}
+
+	// 转换启动脚本换行符为 LF，防止 Windows CRLF 导致 shebang 解析失败
+	fixLineEndingCmd := fmt.Sprintf("sed -i 's/\\r$//' %s", startScriptPath)
+	if _, err := client.Execute(fixLineEndingCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 转换启动脚本换行符失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 转换启动脚本换行符: %s\n", time.Now().Format("2006-01-02 15:04:05"), startScriptPath))
 	}
 
 	// 更新部署记录为成功
@@ -372,8 +380,8 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 使用 tar 包: %s\n", time.Now().Format("2006-01-02 15:04:05"), tarFileName))
 
-	remoteDir := filepath.Join(server.DeployPath, packageDir)
-	remoteTarPath := filepath.Join(remoteDir, tarFileName)
+	remoteDir := filepath.ToSlash(filepath.Join(server.DeployPath, packageDir))
+	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, tarFileName))
 
 	// 创建远程部署目录
 	mkdirCmd := fmt.Sprintf("mkdir -p %s", remoteDir)
@@ -409,23 +417,67 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 	deployLog.WriteString(fmt.Sprintf("[%s] 上传 tar 包成功: %s (%d bytes)\n",
 		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(tarData)))
 
-	// 解压 tar 包到远程目录
-	extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
-	if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
-		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
-		s.updateRecordFailed(record.ID, deployLog.String())
-		return record, fmt.Errorf("failed to extract tar package: %w", err)
-	}
-	deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+	// 根据是否存在外置环境包选择解压布局
+	envPackage := perceptionEnvPackage(arch)
+	useBundledEnv := envPackage != "" && assets.HasBinary(envPackage)
 
-	// 根据实际解压结构定位工作目录（扁平或带架构子目录）
-	workDir, err := resolvePerceptionWorkDir(client, server.DeployPath)
-	if err != nil {
-		deployLog.WriteString(fmt.Sprintf("[ERROR] 定位 perception 工作目录失败: %v\n", err))
-		s.updateRecordFailed(record.ID, deployLog.String())
-		return record, fmt.Errorf("failed to resolve perception work directory: %w", err)
+	var workDir string
+	if useBundledEnv {
+		// 外置环境包模式（ARM64 / Loong64）：运行包解压到同名子目录，环境包解压到部署目录
+		runDirName := strings.TrimSuffix(tarFileName, ".tar")
+		workDir = filepath.ToSlash(filepath.Join(remoteDir, runDirName))
+		mkdirRunCmd := fmt.Sprintf("mkdir -p %s", workDir)
+		if _, err := client.Execute(mkdirRunCmd); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[ERROR] 创建 perception 运行目录失败: %v\n", err))
+			s.updateRecordFailed(record.ID, deployLog.String())
+			return record, fmt.Errorf("failed to create perception run directory: %w", err)
+		}
+
+		extractCmd := fmt.Sprintf("cd %s && tar -xf ../%s && rm -f ../%s", workDir, tarFileName, tarFileName)
+		if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
+			s.updateRecordFailed(record.ID, deployLog.String())
+			return record, fmt.Errorf("failed to extract tar package: %w", err)
+		}
+		deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包到运行目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
+
+		if err := s.ensurePerceptionPythonEnv(client, remoteDir, envPackage, deployLog, record); err != nil {
+			return record, err
+		}
+	} else {
+		// AMD64 或不存在环境包时保持原有扁平解压逻辑
+		extractCmd := fmt.Sprintf("cd %s && tar -xf %s && rm -f %s", remoteDir, tarFileName, tarFileName)
+		if _, err := client.ExecuteWithTimeout(extractCmd, 120*time.Second); err != nil {
+			deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 tar 包失败: %v\n", err))
+			s.updateRecordFailed(record.ID, deployLog.String())
+			return record, fmt.Errorf("failed to extract tar package: %w", err)
+		}
+		deployLog.WriteString(fmt.Sprintf("[%s] 解压 tar 包成功\n", time.Now().Format("2006-01-02 15:04:05")))
+
+		// 根据实际解压结构定位工作目录（扁平或带架构子目录）
+		workDir, err = resolvePerceptionWorkDir(client, server.DeployPath)
+		if err != nil {
+			deployLog.WriteString(fmt.Sprintf("[ERROR] 定位 perception 工作目录失败: %v\n", err))
+			s.updateRecordFailed(record.ID, deployLog.String())
+			return record, fmt.Errorf("failed to resolve perception work directory: %w", err)
+		}
+		deployLog.WriteString(fmt.Sprintf("[%s] perception 工作目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
 	}
-	deployLog.WriteString(fmt.Sprintf("[%s] perception 工作目录: %s\n", time.Now().Format("2006-01-02 15:04:05"), workDir))
+
+	// 转换 deploy 脚本换行符并赋予可执行权限，防止 CRLF 导致 shebang 解析失败
+	fixLineEndingCmd := fmt.Sprintf("sed -i 's/\\r$//' %s/deploy/*.sh", workDir)
+	if _, err := client.Execute(fixLineEndingCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 转换 deploy 脚本换行符失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 转换 deploy 脚本换行符\n", time.Now().Format("2006-01-02 15:04:05")))
+	}
+
+	chmodCmd := fmt.Sprintf("chmod +x %s/deploy/*.sh", workDir)
+	if _, err := client.Execute(chmodCmd); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[WARN] 设置 deploy 脚本可执行权限失败: %v\n", err))
+	} else {
+		deployLog.WriteString(fmt.Sprintf("[%s] 设置 deploy 脚本可执行权限\n", time.Now().Format("2006-01-02 15:04:05")))
+	}
 
 	// 运行 install.sh 准备运行环境
 	installCmd := fmt.Sprintf("cd %s && bash deploy/install.sh", workDir)
@@ -448,20 +500,12 @@ func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *mode
 
 	// 写入用户自定义配置（drivers/config.json）
 	if req.ConfigContent != nil && *req.ConfigContent != "" {
-		configPath := filepath.Join(workDir, "drivers", "config.json")
+		configPath := filepath.ToSlash(filepath.Join(workDir, "drivers", "config.json"))
 		if err := client.WriteFile([]byte(*req.ConfigContent), configPath); err != nil {
 			deployLog.WriteString(fmt.Sprintf("[WARN] 写入 drivers/config.json 失败: %v\n", err))
 		} else {
 			deployLog.WriteString(fmt.Sprintf("[%s] 写入配置文件: %s\n", time.Now().Format("2006-01-02 15:04:05"), configPath))
 		}
-	}
-
-	// 为 deploy 目录下的脚本赋予可执行权限
-	chmodCmd := fmt.Sprintf("chmod +x %s/deploy/*.sh", workDir)
-	if _, err := client.Execute(chmodCmd); err != nil {
-		deployLog.WriteString(fmt.Sprintf("[WARN] 设置 deploy 脚本可执行权限失败: %v\n", err))
-	} else {
-		deployLog.WriteString(fmt.Sprintf("[%s] 设置 deploy 脚本可执行权限\n", time.Now().Format("2006-01-02 15:04:05")))
 	}
 
 	// 更新部署记录为成功
@@ -482,7 +526,7 @@ func getPerceptionTarFileName(arch string) (tarFileName string, err error) {
 	if !ok {
 		return "", fmt.Errorf("unsupported architecture for perception: %s", arch)
 	}
-	if suffix != "linux-amd64" && suffix != "linux-arm64" {
+	if suffix != "linux-amd64" && suffix != "linux-arm64" && suffix != "linux-loong64" {
 		return "", fmt.Errorf("opentraffic-perception does not support architecture: %s", suffix)
 	}
 	return fmt.Sprintf("opentraffic-perception-%s.tar", suffix), nil
@@ -550,9 +594,20 @@ func controlEnvPackage(arch string) string {
 	return ""
 }
 
+// perceptionEnvPackage 返回该架构 perception 服务所需的外置 Python 环境包名；空串表示无需环境包
+func perceptionEnvPackage(arch string) string {
+	switch strings.ToLower(strings.TrimSpace(arch)) {
+	case "aarch64", "arm64":
+		return "opentraffic-perception-env-linux-arm64.tar.gz"
+	case "loongarch64":
+		return "opentraffic-perception-env-linux-loong64.tar.gz"
+	}
+	return ""
+}
+
 // ensureControlPythonEnv 确保 trafficlight_env 虚拟环境已解压到部署目录
 func (s *DeployService) ensureControlPythonEnv(client *ssh.Client, remoteDir string, packageName string, deployLog *strings.Builder, record *model.DeployRecord) error {
-	pythonPath := filepath.Join(remoteDir, "trafficlight_env", "bin", "python3")
+	pythonPath := filepath.ToSlash(filepath.Join(remoteDir, "trafficlight_env", "bin", "python3"))
 
 	checkCmd := fmt.Sprintf("test -f %s && echo exists || echo missing", pythonPath)
 	output, err := client.Execute(checkCmd)
@@ -590,7 +645,7 @@ func (s *DeployService) ensureControlPythonEnv(client *ssh.Client, remoteDir str
 		return fmt.Errorf("failed to read python env content: %w", err)
 	}
 
-	remoteTarPath := filepath.Join(remoteDir, packageName)
+	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, packageName))
 	if err := client.UploadFile(bytes.NewReader(data), remoteTarPath, int64(len(data))); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 Python 环境包失败: %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
@@ -607,6 +662,68 @@ func (s *DeployService) ensureControlPythonEnv(client *ssh.Client, remoteDir str
 		return fmt.Errorf("failed to extract python env package: %w", err)
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] Python 环境部署完成: %s\n",
+		time.Now().Format("2006-01-02 15:04:05"), pythonPath))
+	return nil
+}
+
+// ensurePerceptionPythonEnv 确保 opentraffic-perception 外置 Python 环境已解压到部署目录
+func (s *DeployService) ensurePerceptionPythonEnv(client *ssh.Client, remoteDir string, packageName string, deployLog *strings.Builder, record *model.DeployRecord) error {
+	envDirName := strings.TrimSuffix(packageName, ".tar.gz")
+	pythonPath := filepath.ToSlash(filepath.Join(remoteDir, envDirName, "bin", "python"))
+
+	checkCmd := fmt.Sprintf("test -x %s && echo exists || echo missing", pythonPath)
+	output, err := client.Execute(checkCmd)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 检查 perception Python 环境失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to check perception python env: %w", err)
+	}
+	if strings.TrimSpace(output) == "exists" {
+		deployLog.WriteString(fmt.Sprintf("[%s] perception Python 环境已存在: %s\n",
+			time.Now().Format("2006-01-02 15:04:05"), pythonPath))
+		return nil
+	}
+
+	if !assets.HasBinary(packageName) {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 嵌入式 perception Python 环境包不存在: %s\n", packageName))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("embedded perception python env package not found: %s", packageName)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] perception Python 环境不存在，开始部署 %s\n",
+		time.Now().Format("2006-01-02 15:04:05"), packageName))
+
+	reader, err := assets.GetBinaryReader(packageName)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 perception Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to read perception python env package: %w", err)
+	}
+	defer reader.Close()
+
+	data, err := io.ReadAll(reader)
+	if err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 perception Python 环境包内容失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to read perception python env content: %w", err)
+	}
+
+	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, packageName))
+	if err := client.UploadFile(bytes.NewReader(data), remoteTarPath, int64(len(data))); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 perception Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to upload perception python env package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] 上传 perception Python 环境包成功: %s (%d bytes)\n",
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(data)))
+
+	extractCmd := fmt.Sprintf("cd %s && tar -xzf %s && rm -f %s",
+		remoteDir, packageName, packageName)
+	if _, err := client.ExecuteWithTimeout(extractCmd, 300*time.Second); err != nil {
+		deployLog.WriteString(fmt.Sprintf("[ERROR] 解压 perception Python 环境包失败: %v\n", err))
+		s.updateRecordFailed(record.ID, deployLog.String())
+		return fmt.Errorf("failed to extract perception python env package: %w", err)
+	}
+	deployLog.WriteString(fmt.Sprintf("[%s] perception Python 环境部署完成: %s\n",
 		time.Now().Format("2006-01-02 15:04:05"), pythonPath))
 	return nil
 }
@@ -645,10 +762,10 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 	// opentraffic-control 算法包卸载：先停止服务，再删除整个目录
 	if req.BinaryName == "opentraffic-control" || isLegacyControlName(req.BinaryName) {
 		_ = s.serverService.StopService(req.ServerID, "opentraffic-control")
-		remoteDir := filepath.Join(server.DeployPath, "opentraffic-control")
+		remoteDir := filepath.ToSlash(filepath.Join(server.DeployPath, "opentraffic-control"))
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
 		// 同时兼容旧路径
-		oldRemoteDir := filepath.Join(server.DeployPath, "ops/opentraffic-control")
+		oldRemoteDir := filepath.ToSlash(filepath.Join(server.DeployPath, "ops/opentraffic-control"))
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", oldRemoteDir))
 		// 同时删除新名称与旧名称（旧版本使用过 opentraffic-control-linux-amd64）的部署记录
 		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-control")
@@ -659,10 +776,12 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 	// opentraffic-perception 算法包卸载：先停止服务，再删除整个目录
 	if req.BinaryName == "opentraffic-perception" || isLegacyPerceptionName(req.BinaryName) {
 		_ = s.serverService.StopService(req.ServerID, "opentraffic-perception")
-		remoteDir := filepath.Join(server.DeployPath, "opentraffic-perception")
+		remoteDir := filepath.ToSlash(filepath.Join(server.DeployPath, "opentraffic-perception"))
 		_, _ = client.Execute(fmt.Sprintf("rm -rf %s", remoteDir))
 		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception")
 		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception-linux-amd64")
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception-linux-arm64")
+		_ = s.deployRecordRepo.DeleteByServerAndBinary(req.ServerID, "opentraffic-perception-linux-loong64")
 		return nil
 	}
 
@@ -684,7 +803,7 @@ func (s *DeployService) Undeploy(req *UndeployRequest) error {
 			// 兼容旧记录：未探测到架构时默认 amd64
 			binaryFileName = fmt.Sprintf("%s-linux-amd64", req.BinaryName)
 		}
-		remotePath = filepath.Join(server.DeployPath, binaryFileName)
+		remotePath = filepath.ToSlash(filepath.Join(server.DeployPath, binaryFileName))
 	}
 
 	// 4. 停止进程并删除pid文件

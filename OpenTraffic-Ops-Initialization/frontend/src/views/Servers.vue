@@ -15,8 +15,8 @@
     </div>
 
     <!-- 服务器卡片网格 -->
-    <div class="server-grid-wrap" v-loading="serverStore.loading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
-      <el-empty v-if="!serverStore.loading && serverStore.servers.length === 0" description="暂无服务器，点击右上角新增" />
+    <div class="server-grid-wrap" v-loading="pageLoading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
+      <el-empty v-if="!pageLoading && serverStore.servers.length === 0" description="暂无服务器，点击右上角新增" />
       <el-row :gutter="20">
         <el-col
           v-for="server in serverStore.servers"
@@ -116,6 +116,8 @@
       width="700px"
       class="dark-dialog"
       destroy-on-close
+      :append-to-body="true"
+      :close-on-click-modal="false"
     >
       <el-form :model="serverForm" label-width="100px" class="dark-form">
         <el-form-item label="名称" required>
@@ -167,6 +169,9 @@
       width="800px"
       class="dark-dialog"
       destroy-on-close
+      :close-on-click-modal="false"
+      :append-to-body="true"
+      :before-close="handleDeployDialogClose"
     >
       <el-form :model="deployForm" label-width="120px" class="dark-form">
         <el-form-item label="目标服务器">
@@ -211,7 +216,7 @@
         <el-form-item v-if="deployForm.binary_name === 'opentraffic-perception'">
           <el-alert type="info" :closable="false" show-icon>
             <template #title>
-              x86/amd64 与 ARM aarch64 首次部署会自动创建 Python 虚拟环境并生成默认 drivers/config.json；ARM64 版本使用 RKNN 推理，后续重复部署只更新算法包
+              x86/amd64、ARM aarch64 与龙芯 LoongArch64 首次部署会自动创建 Python 虚拟环境并生成默认 drivers/config.json；ARM64 / Loong64 版本使用外置环境包，后续重复部署只更新算法包
             </template>
           </el-alert>
         </el-form-item>
@@ -254,6 +259,7 @@
       title="部署记录"
       width="1000px"
       class="dark-dialog"
+      :append-to-body="true"
     >
       <el-table :data="serverStore.deployRecords" class="dark-table" max-height="400">
         <el-table-column prop="id" label="ID" width="60" />
@@ -283,6 +289,7 @@
       :title="`部署日志 - ${currentRecord?.binary_name}`"
       width="800px"
       class="dark-dialog"
+      :append-to-body="true"
     >
       <div class="log-content">
         <pre v-if="currentRecord?.log">{{ currentRecord.log }}</pre>
@@ -297,6 +304,8 @@
       width="850px"
       class="dark-dialog"
       destroy-on-close
+      :append-to-body="true"
+      :close-on-click-modal="false"
     >
       <el-form class="dark-form">
         <el-form-item label="软件类型">
@@ -333,6 +342,9 @@
       width="700px"
       class="dark-dialog"
       destroy-on-close
+      :close-on-click-modal="false"
+      :append-to-body="true"
+      :before-close="handleServiceDialogClose"
     >
       <div v-loading="serviceDialogLoading" element-loading-background="rgba(245, 247, 250, 0.8)" element-loading-text="加载中...">
         <el-empty v-if="currentServiceServer && !softwareList.some(sw => isDeployed(currentServiceServer!.id, sw))" description="该服务器暂无已部署服务" />
@@ -352,23 +364,30 @@
               <template v-if="isDeployed(currentServiceServer!.id, sw)">
                 <button
                   class="action-btn btn-start"
-                  :disabled="getServiceStatus(currentServiceServer!.id, sw) === 'running'"
+                  :disabled="getServiceStatus(currentServiceServer!.id, sw) === 'running' || isServiceActionLoading(currentServiceServer!.id, sw, 'start')"
                   @click="handleStartService(currentServiceServer!.id, sw)"
                 >
-                  <el-icon><VideoPlay /></el-icon>启动
+                  <el-icon v-if="isServiceActionLoading(currentServiceServer!.id, sw, 'start')" class="is-loading"><Loading /></el-icon>
+                  <el-icon v-else><VideoPlay /></el-icon>
+                  启动
                 </button>
                 <button
                   class="action-btn btn-stop"
-                  :disabled="getServiceStatus(currentServiceServer!.id, sw) !== 'running'"
+                  :disabled="getServiceStatus(currentServiceServer!.id, sw) !== 'running' || isServiceActionLoading(currentServiceServer!.id, sw, 'stop')"
                   @click="handleStopService(currentServiceServer!.id, sw)"
                 >
-                  <el-icon><VideoPause /></el-icon>停止
+                  <el-icon v-if="isServiceActionLoading(currentServiceServer!.id, sw, 'stop')" class="is-loading"><Loading /></el-icon>
+                  <el-icon v-else><VideoPause /></el-icon>
+                  停止
                 </button>
                 <button
                   class="action-btn btn-restart"
+                  :disabled="isServiceActionLoading(currentServiceServer!.id, sw, 'restart')"
                   @click="handleRestartService(currentServiceServer!.id, sw)"
                 >
-                  <el-icon><RefreshRight /></el-icon>重启
+                  <el-icon v-if="isServiceActionLoading(currentServiceServer!.id, sw, 'restart')" class="is-loading"><Loading /></el-icon>
+                  <el-icon v-else><RefreshRight /></el-icon>
+                  重启
                 </button>
                 <button
                   class="action-btn btn-config"
@@ -391,7 +410,7 @@
         </div>
       </div>
       <template #footer>
-        <el-button @click="showServiceDialog = false">关闭</el-button>
+        <el-button @click="showServiceDialog = false" :disabled="isAnyServiceActionLoading()">关闭</el-button>
       </template>
     </el-dialog>
 
@@ -423,6 +442,7 @@ const isEdit = ref(false)
 const currentServer = ref<Server | null>(null)
 const currentServiceServer = ref<Server | null>(null)
 const serviceDialogLoading = ref(false)
+const pageLoading = ref(false)
 const currentRecord = ref<any>(null)
 const configContent = ref('')
 
@@ -449,8 +469,25 @@ const deployWithConfig = ref(false)
 const deployConfigContent = ref('')
 const configSoftwareName = ref('opentraffic-ops-proxy')
 const deployedSoftwares = ref<Set<string>>(new Set())
+const serviceActionLoading = ref<Record<string, boolean>>({})
 
 const softwareList = ['opentraffic-ops-proxy', 'opentraffic-ops', 'opentraffic-control', 'opentraffic-perception']
+
+function getServiceActionKey(serverId: string, software: string, action: string): string {
+  return `${serverId}:${software}:${action}`
+}
+
+function isServiceActionLoading(serverId: string, software: string, action: string): boolean {
+  return serviceActionLoading.value[getServiceActionKey(serverId, software, action)] || false
+}
+
+function setServiceActionLoading(serverId: string, software: string, action: string, loading: boolean) {
+  serviceActionLoading.value[getServiceActionKey(serverId, software, action)] = loading
+}
+
+function isAnyServiceActionLoading(): boolean {
+  return Object.values(serviceActionLoading.value).some(Boolean)
+}
 
 function isRepeatableDeploy(binaryName: string): boolean {
   return binaryName === 'opentraffic-control' || binaryName === 'opentraffic-perception'
@@ -471,17 +508,20 @@ function getConfigPathHint(): string {
     return `远程路径：${deployPath}/opentraffic-control/config/mq_config.json`
   }
   if (configSoftwareName.value === 'opentraffic-perception') {
-    return `远程路径：${deployPath}/opentraffic-perception/opentraffic-perception-linux-{amd64,arm64}/drivers/config.json`
+    return `远程路径：${deployPath}/opentraffic-perception/opentraffic-perception-linux-{amd64,arm64,loong64}/drivers/config.json`
   }
   return `远程路径：~/.${configSoftwareName.value}/${configFileNameMap[configSoftwareName.value] || 'config.json'}`
 }
 
 onMounted(() => {
+  pageLoading.value = true
   serverStore.fetchServers().then(() => {
     fetchAllServiceStatuses()
     for (const server of serverStore.servers) {
       loadServerDeployedSoftwares(server.id)
     }
+  }).finally(() => {
+    pageLoading.value = false
   })
 })
 
@@ -714,7 +754,7 @@ function normalizeBinaryName(binaryName: string): string {
   if (binaryName === 'opentraffic-control-linux-amd64') {
     return 'opentraffic-control'
   }
-  if (binaryName === 'opentraffic-perception-linux-amd64' || binaryName === 'opentraffic-perception-linux-arm64') {
+  if (binaryName === 'opentraffic-perception-linux-amd64' || binaryName === 'opentraffic-perception-linux-arm64' || binaryName === 'opentraffic-perception-linux-loong64') {
     return 'opentraffic-perception'
   }
   return binaryName
@@ -840,6 +880,7 @@ async function refreshServiceStatus(serverId: string, software: string) {
 }
 
 async function handleStartService(serverId: string, software: string) {
+  setServiceActionLoading(serverId, software, 'start', true)
   try {
     await serverStore.startService(serverId, software)
     ElMessage.success(`${software} 启动成功`)
@@ -848,10 +889,13 @@ async function handleStartService(serverId: string, software: string) {
   } catch (error: any) {
     ElMessage.error(`启动失败: ${error?.message || '未知错误'}`)
     setTimeout(() => refreshServiceStatus(serverId, software), 2000)
+  } finally {
+    setServiceActionLoading(serverId, software, 'start', false)
   }
 }
 
 async function handleStopService(serverId: string, software: string) {
+  setServiceActionLoading(serverId, software, 'stop', true)
   try {
     await serverStore.stopService(serverId, software)
     ElMessage.success(`${software} 停止成功`)
@@ -859,10 +903,13 @@ async function handleStopService(serverId: string, software: string) {
     await refreshServiceStatus(serverId, software)
   } catch (error: any) {
     ElMessage.error(`停止失败: ${error?.message || '未知错误'}`)
+  } finally {
+    setServiceActionLoading(serverId, software, 'stop', false)
   }
 }
 
 async function handleRestartService(serverId: string, software: string) {
+  setServiceActionLoading(serverId, software, 'restart', true)
   try {
     await serverStore.restartService(serverId, software)
     ElMessage.success(`${software} 重启成功`)
@@ -871,6 +918,8 @@ async function handleRestartService(serverId: string, software: string) {
   } catch (error: any) {
     ElMessage.error(`重启失败: ${error?.message || '未知错误'}`)
     setTimeout(() => refreshServiceStatus(serverId, software), 2500)
+  } finally {
+    setServiceActionLoading(serverId, software, 'restart', false)
   }
 }
 
@@ -907,6 +956,22 @@ async function fetchAllServiceStatusesForServer(serverId: string) {
       }
     }
   }
+}
+
+function handleDeployDialogClose(done: () => void) {
+  if (serverStore.loading) {
+    ElMessage.warning('部署进行中，请勿关闭对话框')
+    return
+  }
+  done()
+}
+
+function handleServiceDialogClose(done: () => void) {
+  if (isAnyServiceActionLoading()) {
+    ElMessage.warning('服务操作进行中，请勿关闭对话框')
+    return
+  }
+  done()
 }
 
 function getStatusType(status: string) {

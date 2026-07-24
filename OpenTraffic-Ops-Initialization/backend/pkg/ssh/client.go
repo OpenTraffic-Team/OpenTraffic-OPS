@@ -157,8 +157,9 @@ func (c *Client) ExecuteWithTimeout(command string, timeout time.Duration) (stri
 
 // UploadFile 通过SFTP上传文件
 func (c *Client) UploadFile(reader io.Reader, remotePath string, size int64) error {
+	remotePath = filepath.ToSlash(remotePath)
 	// 确保目标目录存在
-	dir := filepath.Dir(remotePath)
+	dir := filepath.ToSlash(filepath.Dir(remotePath))
 	if err := c.sftp.MkdirAll(dir); err != nil {
 		return fmt.Errorf("failed to create remote directory %s: %w", dir, err)
 	}
@@ -202,6 +203,7 @@ func (c *Client) ExecuteWithLog(command string) (stdout, stderr string, err erro
 
 // ReadFile 通过SFTP读取远程文件
 func (c *Client) ReadFile(remotePath string) ([]byte, error) {
+	remotePath = filepath.ToSlash(remotePath)
 	remoteFile, err := c.sftp.Open(remotePath)
 	if err != nil {
 		return nil, fmt.Errorf("failed to open remote file %s: %w", remotePath, err)
@@ -217,8 +219,9 @@ func (c *Client) ReadFile(remotePath string) ([]byte, error) {
 
 // WriteFile 通过SFTP写入远程文件
 func (c *Client) WriteFile(data []byte, remotePath string) error {
+	remotePath = filepath.ToSlash(remotePath)
 	// 确保目标目录存在
-	dir := filepath.Dir(remotePath)
+	dir := filepath.ToSlash(filepath.Dir(remotePath))
 	if err := c.sftp.MkdirAll(dir); err != nil {
 		return fmt.Errorf("failed to create remote directory %s: %w", dir, err)
 	}
