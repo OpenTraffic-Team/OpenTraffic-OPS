@@ -216,7 +216,7 @@
         <el-form-item v-if="deployForm.binary_name === 'opentraffic-perception'">
           <el-alert type="info" :closable="false" show-icon>
             <template #title>
-              x86/amd64、ARM aarch64 与龙芯 LoongArch64 首次部署会自动创建 Python 虚拟环境并生成默认 drivers/config.json；ARM64 / Loong64 版本使用外置环境包，后续重复部署只更新算法包
+              x86/amd64、ARM aarch64 与龙芯 LoongArch64 首次部署均使用外置 Python 环境包并生成默认 drivers/config.json，后续重复部署只更新算法包
             </template>
           </el-alert>
         </el-form-item>

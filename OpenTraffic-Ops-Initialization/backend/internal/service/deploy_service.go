@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"os"
 	"path/filepath"
 	"opentraffic-ops-init-backend/internal/model"
 	"opentraffic-ops-init-backend/internal/repository"
@@ -354,7 +355,7 @@ func (s *DeployService) deployTarPackage(client *ssh.Client, server *model.Serve
 	return record, nil
 }
 
-// deployPerceptionPackage 部署 opentraffic-perception tar 包资源（支持 amd64 / arm64）
+// deployPerceptionPackage 部署 opentraffic-perception tar 包资源（支持 amd64 / arm64 / loong64，均使用外置环境包）
 func (s *DeployService) deployPerceptionPackage(client *ssh.Client, server *model.Server, req *DeployRequest, record *model.DeployRecord, deployLog *strings.Builder) (*model.DeployRecord, error) {
 	const packageDir = "opentraffic-perception"
 
@@ -581,6 +582,16 @@ func (s *DeployService) updateRecordFailed(id int, log string) {
 	_ = s.deployRecordRepo.UpdateStatus(id, model.DeployStatusFailed, log)
 }
 
+// readerSize 返回流式上传的文件大小；无法获取时返回 -1（跳过 UploadFile 的大小校验）
+func readerSize(r io.Reader) int64 {
+	if statter, ok := r.(interface{ Stat() (os.FileInfo, error) }); ok {
+		if fi, err := statter.Stat(); err == nil {
+			return fi.Size()
+		}
+	}
+	return -1
+}
+
 // controlEnvPackage 返回该架构 control 服务所需的 Python 环境包名；空串表示无需环境包
 func controlEnvPackage(arch string) string {
 	switch strings.ToLower(strings.TrimSpace(arch)) {
@@ -597,6 +608,8 @@ func controlEnvPackage(arch string) string {
 // perceptionEnvPackage 返回该架构 perception 服务所需的外置 Python 环境包名；空串表示无需环境包
 func perceptionEnvPackage(arch string) string {
 	switch strings.ToLower(strings.TrimSpace(arch)) {
+	case "x86_64", "amd64":
+		return "opentraffic-perception-env-linux-amd64.tar.gz"
 	case "aarch64", "arm64":
 		return "opentraffic-perception-env-linux-arm64.tar.gz"
 	case "loongarch64":
@@ -638,21 +651,15 @@ func (s *DeployService) ensureControlPythonEnv(client *ssh.Client, remoteDir str
 	}
 	defer reader.Close()
 
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 Python 环境包内容失败: %v\n", err))
-		s.updateRecordFailed(record.ID, deployLog.String())
-		return fmt.Errorf("failed to read python env content: %w", err)
-	}
-
 	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, packageName))
-	if err := client.UploadFile(bytes.NewReader(data), remoteTarPath, int64(len(data))); err != nil {
+	size := readerSize(reader)
+	if err := client.UploadFile(reader, remoteTarPath, size); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 Python 环境包失败: %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
 		return fmt.Errorf("failed to upload python env package: %w", err)
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 上传 Python 环境包成功: %s (%d bytes)\n",
-		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(data)))
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, size))
 
 	extractCmd := fmt.Sprintf("cd %s && tar -xzf %s && rm -f %s",
 		remoteDir, packageName, packageName)
@@ -700,21 +707,15 @@ func (s *DeployService) ensurePerceptionPythonEnv(client *ssh.Client, remoteDir 
 	}
 	defer reader.Close()
 
-	data, err := io.ReadAll(reader)
-	if err != nil {
-		deployLog.WriteString(fmt.Sprintf("[ERROR] 读取 perception Python 环境包内容失败: %v\n", err))
-		s.updateRecordFailed(record.ID, deployLog.String())
-		return fmt.Errorf("failed to read perception python env content: %w", err)
-	}
-
 	remoteTarPath := filepath.ToSlash(filepath.Join(remoteDir, packageName))
-	if err := client.UploadFile(bytes.NewReader(data), remoteTarPath, int64(len(data))); err != nil {
+	size := readerSize(reader)
+	if err := client.UploadFile(reader, remoteTarPath, size); err != nil {
 		deployLog.WriteString(fmt.Sprintf("[ERROR] 上传 perception Python 环境包失败: %v\n", err))
 		s.updateRecordFailed(record.ID, deployLog.String())
 		return fmt.Errorf("failed to upload perception python env package: %w", err)
 	}
 	deployLog.WriteString(fmt.Sprintf("[%s] 上传 perception Python 环境包成功: %s (%d bytes)\n",
-		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, len(data)))
+		time.Now().Format("2006-01-02 15:04:05"), remoteTarPath, size))
 
 	extractCmd := fmt.Sprintf("cd %s && tar -xzf %s && rm -f %s",
 		remoteDir, packageName, packageName)
