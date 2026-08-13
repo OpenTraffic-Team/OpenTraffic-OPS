@@ -2,9 +2,9 @@ import request from './index'
 import type { DeployRequest, DeployRecord } from '@/types'
 
 export const deployApi = {
-  // 部署二进制文件（control 算法包含大体积环境包上传，放宽超时到 15 分钟）
+  // 部署二进制文件（后端已异步化，立即返回记录，进度通过 getRecord 轮询）
   deploy(data: DeployRequest) {
-    return request.post<any, DeployRecord>('/deploy', data, { timeout: 900000 })
+    return request.post<any, DeployRecord>('/deploy', data)
   },
 
   // 卸载二进制文件

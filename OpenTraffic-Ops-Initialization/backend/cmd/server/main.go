@@ -26,6 +26,11 @@ func main() {
 		log.Fatalf("Failed to init database: %v", err)
 	}
 
+	// 服务重启后，上次未完成（pending）的部署已随进程中断，标记为失败
+	if err := repository.NewDeployRecordRepository().FailStalePending(); err != nil {
+		log.Printf("Failed to mark stale pending deploy records: %v", err)
+	}
+
 	// 创建加密器
 	encryptor := crypto.NewEncryptor(cfg.EncryptionKey)
 

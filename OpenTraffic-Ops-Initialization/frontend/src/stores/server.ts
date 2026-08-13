@@ -123,6 +123,11 @@ export const useServerStore = defineStore('server', () => {
     }
   }
 
+  // 查询单条部署记录（供部署进度轮询使用，不触碰全局 loading 避免界面闪烁）
+  async function fetchDeployRecord(id: number): Promise<DeployRecord> {
+    return deployApi.getRecord(id)
+  }
+
   async function getProxyConfig(id: string) {
     loading.value = true
     error.value = null
@@ -260,6 +265,7 @@ export const useServerStore = defineStore('server', () => {
     deploy,
     undeploy,
     fetchDeployRecords,
+    fetchDeployRecord,
     getProxyConfig,
     updateProxyConfig,
     getSoftwareConfig,

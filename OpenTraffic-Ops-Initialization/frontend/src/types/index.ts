@@ -143,6 +143,7 @@ export interface DeployRecord {
   binary_name: string
   remote_path: string
   status: 'pending' | 'success' | 'failed'
+  progress: number
   log: string
   created_at: string
 }

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"opentraffic-ops-init-backend/internal/model"
+
+	"gorm.io/gorm"
 )
 
 // DeployRecordRepository 部署记录仓储
@@ -53,6 +55,33 @@ func (r *DeployRecordRepository) UpdateStatus(id int, status model.DeployStatus,
 		Updates(map[string]interface{}{
 			"status": status,
 			"log":    log,
+		}).Error
+}
+
+// UpdateProgress 增量更新部署进度与日志，供部署后台任务上报，不触碰状态
+func (r *DeployRecordRepository) UpdateProgress(id int, progress int, log string) error {
+	return DB.Model(&model.DeployRecord{}).
+		Where("id = ?", id).
+		Updates(map[string]interface{}{
+			"progress": progress,
+			"log":      log,
+		}).Error
+}
+
+// UpdateRemotePath 只更新部署记录的远程路径，避免整行 Save 覆盖后台任务写入的进度
+func (r *DeployRecordRepository) UpdateRemotePath(id int, remotePath string) error {
+	return DB.Model(&model.DeployRecord{}).
+		Where("id = ?", id).
+		Update("remote_path", remotePath).Error
+}
+
+// FailStalePending 将残留 pending 状态的记录标记为失败（服务重启导致部署中断）
+func (r *DeployRecordRepository) FailStalePending() error {
+	return DB.Model(&model.DeployRecord{}).
+		Where("status = ?", string(model.DeployStatusPending)).
+		Updates(map[string]interface{}{
+			"status": string(model.DeployStatusFailed),
+			"log":    gorm.Expr("log || ?", "\n[ERROR] 服务重启，部署中断"),
 		}).Error
 }
 

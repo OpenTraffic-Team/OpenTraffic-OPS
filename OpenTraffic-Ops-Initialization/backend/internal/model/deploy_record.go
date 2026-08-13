@@ -20,6 +20,7 @@ type DeployRecord struct {
 	RemotePath     string    `json:"remote_path"`                         // 远程文件路径
 	Version        string    `json:"version"`                             // 部署版本（algo_md 等可重复部署资源使用）
 	Status         string    `gorm:"not null" json:"status"`              // pending / success / failed
+	Progress       int       `gorm:"not null;default:0" json:"progress"`  // 部署进度 0-100，pending 阶段由后台任务增量更新
 	Log            string    `gorm:"type:text" json:"log"`                // 部署日志
 	CreatedAt      time.Time `json:"created_at"`
 }

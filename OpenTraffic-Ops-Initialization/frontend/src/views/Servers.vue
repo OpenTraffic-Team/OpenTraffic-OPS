@@ -253,6 +253,38 @@
       </template>
     </el-dialog>
 
+    <!-- 部署进度对话框 -->
+    <el-dialog
+      v-model="showDeployProgressDialog"
+      :title="`部署进度 - ${activeDeployRecord?.binary_name || ''}`"
+      width="800px"
+      class="dark-dialog"
+      :append-to-body="true"
+      :close-on-click-modal="false"
+      @close="handleDeployProgressClose"
+    >
+      <div class="deploy-progress-wrapper">
+        <el-progress
+          :percentage="activeDeployRecord?.progress ?? 0"
+          :status="deployProgressStatus"
+          :stroke-width="16"
+          striped
+          :striped-flow="activeDeployRecord?.status === 'pending'"
+        />
+        <div class="deploy-progress-status">
+          <el-tag size="small" :type="getStatusType(activeDeployRecord?.status || 'pending')" effect="dark">
+            {{ getStatusLabel(activeDeployRecord?.status || 'pending') }}
+          </el-tag>
+          <span v-if="activeDeployRecord?.status === 'pending'" class="deploy-progress-hint">
+            大文件上传与解压耗时较长，可关闭对话框，稍后到「部署记录」查看结果
+          </span>
+        </div>
+        <div class="log-content deploy-progress-log" ref="deployLogPreRef">
+          <pre>{{ activeDeployRecord?.log || '等待部署开始…' }}</pre>
+        </div>
+      </div>
+    </el-dialog>
+
     <!-- 部署记录对话框 -->
     <el-dialog
       v-model="showRecordsDialog"
@@ -425,10 +457,10 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, onMounted } from 'vue'
+import { ref, reactive, computed, watch, nextTick, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import { useServerStore } from '@/stores/server'
-import type { Server, CreateServerRequest, DeployRequest, ServerServiceStatus } from '@/types'
+import type { Server, CreateServerRequest, DeployRequest, DeployRecord, ServerServiceStatus } from '@/types'
 
 const serverStore = useServerStore()
 
@@ -436,6 +468,15 @@ const showServerDialog = ref(false)
 const showDeployDialog = ref(false)
 const showRecordsDialog = ref(false)
 const showLogDialogVisible = ref(false)
+const showDeployProgressDialog = ref(false)
+const activeDeployRecord = ref<DeployRecord | null>(null)
+const deployPollTimer = ref<number | null>(null)
+const deployLogPreRef = ref<HTMLElement | null>(null)
+const deployProgressStatus = computed(() => {
+  if (activeDeployRecord.value?.status === 'success') return 'success'
+  if (activeDeployRecord.value?.status === 'failed') return 'exception'
+  return undefined
+})
 const showConfigDialog = ref(false)
 const showServiceDialog = ref(false)
 const isEdit = ref(false)
@@ -684,21 +725,64 @@ async function handleDeploy() {
       payload.config_content = deployConfigContent.value.trim()
     }
     const record = await serverStore.deploy(payload)
-    if (record.status === 'success') {
-      ElMessage.success('部署成功')
-    } else {
-      ElMessage.warning('部署失败，请查看日志')
-    }
+    // 后端已异步执行部署，关闭表单并打开进度对话框轮询结果
     showDeployDialog.value = false
-    // 部署成功后刷新部署记录和服务状态
-    if (currentServer.value) {
-      await loadServerDeployedSoftwares(currentServer.value.id)
-      await refreshServiceStatus(currentServer.value.id, payload.binary_name)
-    }
+    openDeployProgress(record)
   } catch (error: any) {
     ElMessage.error(`部署失败: ${error?.message || '未知错误'}`)
   }
 }
+
+function openDeployProgress(record: DeployRecord) {
+  activeDeployRecord.value = record
+  showDeployProgressDialog.value = true
+  startDeployPolling(record.id)
+}
+
+function startDeployPolling(recordId: number) {
+  stopDeployPolling()
+  deployPollTimer.value = window.setInterval(async () => {
+    try {
+      const record = await serverStore.fetchDeployRecord(recordId)
+      activeDeployRecord.value = record
+      if (record.status !== 'pending') {
+        stopDeployPolling()
+        if (record.status === 'success') {
+          ElMessage.success('部署成功')
+        } else {
+          ElMessage.error('部署失败，请查看日志')
+        }
+        if (currentServer.value) {
+          await loadServerDeployedSoftwares(currentServer.value.id)
+          await refreshServiceStatus(currentServer.value.id, record.binary_name)
+        }
+      }
+    } catch {
+      // 单次轮询失败忽略，下个周期自动重试
+    }
+  }, 2000)
+}
+
+function stopDeployPolling() {
+  if (deployPollTimer.value !== null) {
+    clearInterval(deployPollTimer.value)
+    deployPollTimer.value = null
+  }
+}
+
+function handleDeployProgressClose() {
+  stopDeployPolling()
+}
+
+// 日志更新时自动滚动到底部
+watch(() => activeDeployRecord.value?.log, async () => {
+  await nextTick()
+  if (deployLogPreRef.value) {
+    deployLogPreRef.value.scrollTop = deployLogPreRef.value.scrollHeight
+  }
+})
+
+onUnmounted(stopDeployPolling)
 
 async function openRecordsDialog() {
   await serverStore.fetchDeployRecords()
@@ -1426,6 +1510,22 @@ function getStatusLabel(status: string) {
   line-height: 1.6;
   white-space: pre-wrap;
   word-break: break-all;
+}
+
+.deploy-progress-status {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 12px 0;
+}
+
+.deploy-progress-hint {
+  color: #9ca3af;
+  font-size: 12px;
+}
+
+.deploy-progress-log {
+  max-height: 320px;
 }
 
 .log-empty {
