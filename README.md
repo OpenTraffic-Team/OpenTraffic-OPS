@@ -197,27 +197,20 @@ go run cmd/server/main.go
 # 1. Create PostgreSQL database
 psql -c "CREATE DATABASE rtm WITH ENCODING = 'UTF8';"
 
-# 2. Import DDL
-cd OpenTraffic-Ops
-psql -d rtm -f sql/01_sys_tables.sql
-psql -d rtm -f sql/03_bu_tables.sql
-psql -d rtm -f sql/alarm/01_alarm_tables.sql
-psql -d rtm -f sql/chat/01_chat_tables.sql
-
-# 3. Start backend
-cd backend
+# 2. Start backend (first startup against an empty database auto-creates tables and the default admin/admin123 account)
+cd OpenTraffic-Ops/backend
 go mod download
 go run cmd/server/main.go
 # Service runs on http://localhost:18081
 
-# 4. Start frontend (dev mode)
+# 3. Start frontend (dev mode)
 cd ../frontend
 npm install
 npm run dev
 # Dev server on http://localhost:80
 ```
 
-Default credentials for both systems: `admin` / `admin123`
+Default credentials for both systems: `admin` / `admin123` (the monitoring platform auto-creates this account on first startup against an empty database; change the password soon after)
 
 ### 📦 Build Production Binaries (Windows host cross-compiling to Linux)
 

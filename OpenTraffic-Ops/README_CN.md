@@ -194,11 +194,15 @@ cd OpenTraffic-Ops
 CREATE DATABASE rtm WITH ENCODING = 'UTF8';
 ```
 
+后端启动时会自动检测表结构：**连接空库时自动建表，并创建默认账号 `admin` / `admin123`**（请首次登录后尽快修改密码），无需手动执行 SQL。
+
+如需手动初始化，DDL 脚本位于 `backend/internal/schema/sql/`：
+
 ```bash
-psql -d rtm -f sql/01_sys_tables.sql
-psql -d rtm -f sql/02_bu_tables.sql
-psql -d rtm -f sql/03_chat_tables.sql
-psql -d rtm -f sql/04_alarm_tables.sql
+psql -d rtm -f backend/internal/schema/sql/01_sys_tables.sql
+psql -d rtm -f backend/internal/schema/sql/02_bu_tables.sql
+psql -d rtm -f backend/internal/schema/sql/03_chat_tables.sql
+psql -d rtm -f backend/internal/schema/sql/04_alarm_tables.sql
 ```
 
 创建 `~/.opentraffic-ops/opentraffic-ops-config.yaml`（参考 `backend/configs/opentraffic-ops-config.yaml`），修改数据库连接：
@@ -234,7 +238,7 @@ npm run dev
 
 #### 5. 访问系统
 
-打开浏览器访问 `http://localhost`，默认账号密码：
+打开浏览器访问 `http://localhost`，默认账号密码（空库首次启动时自动创建）：
 - 用户名：`admin`
 - 密码：`admin123`
 

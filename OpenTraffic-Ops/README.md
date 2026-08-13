@@ -194,11 +194,15 @@ cd OpenTraffic-Ops
 CREATE DATABASE rtm WITH ENCODING = 'UTF8';
 ```
 
+The backend checks the schema at startup: **when connected to an empty database it creates all tables automatically and seeds the default account `admin` / `admin123`** (change the password after first login). No manual SQL execution is required.
+
+To initialize manually instead, the DDL scripts live in `backend/internal/schema/sql/`:
+
 ```bash
-psql -d rtm -f sql/01_sys_tables.sql
-psql -d rtm -f sql/02_bu_tables.sql
-psql -d rtm -f sql/03_chat_tables.sql
-psql -d rtm -f sql/04_alarm_tables.sql
+psql -d rtm -f backend/internal/schema/sql/01_sys_tables.sql
+psql -d rtm -f backend/internal/schema/sql/02_bu_tables.sql
+psql -d rtm -f backend/internal/schema/sql/03_chat_tables.sql
+psql -d rtm -f backend/internal/schema/sql/04_alarm_tables.sql
 ```
 
 Create `~/.opentraffic-ops/opentraffic-ops-config.yaml` (reference `backend/configs/opentraffic-ops-config.yaml`), and modify database connection:
@@ -234,7 +238,7 @@ Frontend dev server starts at `http://localhost:80`, proxying `/dev-api` and `/d
 
 #### 5. Access System
 
-Open browser and visit `http://localhost`. Default credentials:
+Open browser and visit `http://localhost`. Default credentials (auto-created on first startup against an empty database):
 - Username: `admin`
 - Password: `admin123`
 

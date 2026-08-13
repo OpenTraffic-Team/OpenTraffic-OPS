@@ -16,6 +16,7 @@ import (
 	"opentraffic-ops-backend/internal/config"
 	"opentraffic-ops-backend/internal/middleware"
 	"opentraffic-ops-backend/internal/router"
+	"opentraffic-ops-backend/internal/schema"
 	"opentraffic-ops-backend/internal/service"
 	"opentraffic-ops-backend/pkg/response"
 	"opentraffic-ops-backend/pkg/static"
@@ -57,7 +58,11 @@ func main() {
 	if err != nil {
 		zap.L().Fatal("Failed to init database", zap.Error(err))
 	}
-	_ = db
+
+	// 检查并初始化数据库表结构（空库自动建表 + 创建默认 admin 账号）
+	if err := schema.Init(db); err != nil {
+		zap.L().Fatal("Failed to init database schema", zap.Error(err))
+	}
 
 	// 初始化Redis
 	if err := config.InitRedis(&cfg.Redis); err != nil {

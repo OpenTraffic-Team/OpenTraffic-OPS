@@ -197,27 +197,20 @@ go run cmd/server/main.go
 # 1. 创建 PostgreSQL 数据库
 psql -c "CREATE DATABASE rtm WITH ENCODING = 'UTF8';"
 
-# 2. 导入 DDL
-cd OpenTraffic-Ops
-psql -d rtm -f sql/01_sys_tables.sql
-psql -d rtm -f sql/03_bu_tables.sql
-psql -d rtm -f sql/alarm/01_alarm_tables.sql
-psql -d rtm -f sql/chat/01_chat_tables.sql
-
-# 3. 启动后端
-cd backend
+# 2. 启动后端（空库首次启动会自动建表并创建默认账号 admin/admin123）
+cd OpenTraffic-Ops/backend
 go mod download
 go run cmd/server/main.go
 # 服务运行在 http://localhost:18081
 
-# 4. 启动前端（开发模式）
+# 3. 启动前端（开发模式）
 cd ../frontend
 npm install
 npm run dev
 # 开发服务器运行在 http://localhost:80
 ```
 
-两个系统的默认凭据：`admin` / `admin123`
+两个系统的默认凭据：`admin` / `admin123`（监控平台为空库首次启动时自动创建，请尽快修改密码）
 
 ### 📦 构建生产二进制文件（Windows 主机交叉编译到 Linux）
 
