@@ -1,18 +1,20 @@
 # OpenTraffic Ops
 
-<p align="center">
-  <a href="./LICENSE"><img src="https://img.shields.io/badge/License-Apache_2.0-blue.svg" alt="License: Apache 2.0"></a>
-  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go 1.25+">
-  <img src="https://img.shields.io/badge/Vue-3.3-4FC08D?logo=vue.js&logoColor=white" alt="Vue 3">
-  <img src="https://img.shields.io/badge/Postgres-15+-4169E1?logo=postgresql&logoColor=white" alt="PostgreSQL 15+">
-  <img src="https://img.shields.io/badge/Redis-7+-DC382D?logo=redis&logoColor=white" alt="Redis 7+">
-</p>
+<div align="center">
 
-<p align="center">
-  <img src="https://img.shields.io/badge/HuggingFace-%F0%9F%A4%97-FFD21E" alt="HuggingFace">
-  <img src="https://img.shields.io/badge/X-000000?logo=x&logoColor=white" alt="X">
-  <img src="https://img.shields.io/badge/%E5%B0%8F%E7%BA%A2%E4%B9%A6-FF2442" alt="小红书">
-</p>
+[![License](https://img.shields.io/badge/License-Apache%202.0-blue.svg?style=for-the-badge)](LICENSE)
+[![Go](https://img.shields.io/badge/Go-1.25+-00ADD8?style=for-the-badge&logo=go&logoColor=white)](https://go.dev/)
+[![Vue](https://img.shields.io/badge/Vue-3.3-4FC08D?style=for-the-badge&logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://www.postgresql.org/)
+[![Redis](https://img.shields.io/badge/Redis-7+-DC382D?style=for-the-badge&logo=redis&logoColor=white)](https://redis.io/)
+
+<br/>
+
+[![HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-Models-FFD21E?style=for-the-badge)](https://huggingface.co/)
+[![X](https://img.shields.io/badge/X-Follow-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/)
+[![小红书](https://img.shields.io/badge/小红书-Follow-FF2442?style=for-the-badge)](https://www.xiaohongshu.com/)
+
+</div>
 
 <p align="center">
   <a href="README_CN.md">中文</a>
