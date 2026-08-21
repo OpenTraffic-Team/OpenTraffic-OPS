@@ -10,9 +10,8 @@
 
 <br/>
 
-[![HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-Models-FFD21E?style=for-the-badge)](https://huggingface.co/)
-[![X](https://img.shields.io/badge/X-Follow-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/)
-[![小红书](https://img.shields.io/badge/小红书-Follow-FF2442?style=for-the-badge)](https://www.xiaohongshu.com/)
+[![HuggingFace](https://img.shields.io/badge/🤗%20HuggingFace-Models-FFD21E?style=for-the-badge)](https://huggingface.co/OpenTraffic)
+[![X](https://img.shields.io/badge/X-Follow-000000?style=for-the-badge&logo=x&logoColor=white)](https://x.com/OpenTraffic_CN)
 
 </div>
 
